@@ -186,7 +186,7 @@ function renderWedge() {
   return new ImageResponse(
     (
       <Frame>
-        <Eyebrow text="read the trace · spot the bug" />
+        <Eyebrow text="chapter 07 · mutation and state" />
         <div
           style={{
             display: "flex",
@@ -281,7 +281,7 @@ function renderWedge() {
 
         <div style={{ display: "flex", flex: 1 }} />
 
-        <Footer rightText="ch07 · mutation and state" />
+        <Footer rightText="" />
       </Frame>
     ),
     { width: W, height: H },
@@ -292,7 +292,7 @@ function renderIde() {
   return new ImageResponse(
     (
       <Frame>
-        <Eyebrow text="live python · in your browser" />
+        <Eyebrow text="chapter 13 · llm apis" />
         <div
           style={{
             display: "flex",
@@ -462,7 +462,7 @@ function renderCapstone() {
   return new ImageResponse(
     (
       <Frame>
-        <Eyebrow text="chapter 22 · the capstone" />
+        <Eyebrow text="chapter 25 · capstone" />
         <div
           style={{
             display: "flex",
