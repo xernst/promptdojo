@@ -17,6 +17,7 @@ import FollowOnXPill from "@/components/FollowOnXPill";
 import LoginToSave from "@/components/LoginToSave";
 import ContinuePill from "@/components/SiteHeader/ContinuePill";
 import HeaderDrawer from "@/components/SiteHeader/Drawer";
+import Wordmark from "@/components/Wordmark";
 
 export default function FloatingNav() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -39,10 +40,10 @@ export default function FloatingNav() {
         <div className="flex h-11 items-center gap-4 whitespace-nowrap px-4 sm:px-5">
           <Link
             href="/"
-            className="inline-flex shrink-0 items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-300 transition hover:text-green-400"
+            aria-label="promptdojo home"
+            className="inline-flex shrink-0 items-center transition hover:opacity-90"
           >
-            <span className="text-green-500">❯</span>
-            <span>promptdojo</span>
+            <Wordmark size="text-[13px]" className="lowercase tracking-wide" />
           </Link>
 
           {/* Desktop nav */}

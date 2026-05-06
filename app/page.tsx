@@ -91,9 +91,7 @@ export default async function Home() {
 
       <header className="relative mb-24 pt-8 sm:pt-14">
         <div className="mb-10 flex items-start justify-between gap-4">
-          <div className="text-[11px] uppercase tracking-[0.42em]">
-            <Wordmark size="text-[11px]" />
-          </div>
+          <Wordmark size="text-base sm:text-lg" className="lowercase tracking-tight" />
           <StreakWidget />
         </div>
 

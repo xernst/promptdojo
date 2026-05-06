@@ -16,6 +16,7 @@ import GitHubStatsPill from "@/components/GitHubStatsPill";
 import CourseProgress from "@/components/v2/CourseProgress";
 import ContinuePill from "@/components/SiteHeader/ContinuePill";
 import HeaderDrawer from "@/components/SiteHeader/Drawer";
+import Wordmark from "@/components/Wordmark";
 
 type Props = {
   onLesson: boolean;
@@ -29,10 +30,10 @@ export default function FlatHeader({ onLesson }: Props) {
         <div className="flex items-center justify-between gap-2 px-4 py-2 sm:px-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-400 transition hover:text-green-400"
+            aria-label="promptdojo home"
+            className="inline-flex items-center transition hover:opacity-90"
           >
-            <span className="text-green-500">❯</span>
-            <span>promptdojo</span>
+            <Wordmark size="text-[13px]" className="lowercase tracking-wide" />
           </Link>
           <ContinuePill />
           <nav

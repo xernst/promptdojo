@@ -5,6 +5,7 @@ import { Check, Circle } from "lucide-react";
 import { loadProgress } from "@/lib/storage";
 import { exerciseKey } from "@/lib/storage";
 import { cn } from "@/lib/utils";
+import Wordmark from "@/components/Wordmark";
 
 type ChapterLite = {
   slug: string;
@@ -40,9 +41,9 @@ export default function ChapterNav({ chapters, activeChapter, activeExercise }: 
   return (
     <nav className="flex h-full flex-col overflow-y-auto border-r border-ink-800 bg-ink-950">
       <div className="border-b border-ink-800 p-4">
-        <Link href="/" className="block">
-          <div className="text-sm font-bold tracking-tight text-green-400">promptdojo</div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">python · vibe edition</div>
+        <Link href="/" aria-label="promptdojo home" className="block">
+          <Wordmark size="text-sm" />
+          <div className="mt-1 text-[10px] uppercase tracking-widest text-ink-500">python · vibe edition</div>
         </Link>
       </div>
       <div className="flex-1 px-2 py-3">

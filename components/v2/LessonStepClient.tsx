@@ -11,6 +11,7 @@ import PersistentIDE, {
 } from "./PersistentIDE";
 import StepRouter, { type StepIDEBridge } from "./StepRouter";
 import V2ChapterNav, { type ChapterNavTree } from "./ChapterNav";
+import Wordmark from "@/components/Wordmark";
 import type { Chapter, Lesson, Step, StepAttempt, UserProfile } from "@/lib/content/schema";
 import {
   loadProgressV2,
@@ -161,9 +162,10 @@ export default function LessonStepClient({
             <div className="t-mono-meta flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <Link
                 href="/"
-                className="text-ink-400 transition-colors hover:text-green-400"
+                aria-label="promptdojo home"
+                className="inline-flex items-center gap-1 text-ink-400 transition-colors hover:text-green-400"
               >
-                promptdojo
+                <Wordmark size="text-[11px]" className="lowercase" />
               </Link>
               <span className="text-ink-600">›</span>
               {phase && (
