@@ -106,7 +106,7 @@ export default function PredictStepView({
           className={cn(
             "flex items-start gap-2 rounded-md border px-3 py-2 text-sm",
             submitted.passed
-              ? "border-green-700/50 bg-green-700/5 text-green-700"
+              ? "border-green-700/50 bg-green-700/5 text-green-400"
               : "border-ink-700 bg-ink-800/40 text-ink-400",
           )}
         >

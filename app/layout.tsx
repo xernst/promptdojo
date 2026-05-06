@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`dark ${fraunces.variable} ${jetbrains.variable}`}>
       <body className="min-h-screen bg-ink-950 text-ink-100 antialiased font-display">
+        <a href="#main" className="skip-link">skip to content</a>
         <SiteHeader />
         {children}
         <BrainDump />

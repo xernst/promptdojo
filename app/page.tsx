@@ -88,7 +88,7 @@ export default async function Home() {
   const legacyChapters = getChapters();
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10 sm:py-16">
+    <main id="main" className="mx-auto max-w-6xl px-6 py-10 sm:py-16">
       <PyodidePreloader />
 
       <header className="relative mb-24 pt-8 sm:pt-14">

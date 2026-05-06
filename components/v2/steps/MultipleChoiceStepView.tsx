@@ -94,7 +94,7 @@ export default function MultipleChoiceStepView({
                   "border-ink-800 bg-ink-900",
                   !submitted && "hover:border-ink-600",
                   isSelected && !submitted && "border-green-500 bg-ink-800",
-                  showCorrect && "border-green-700/60 bg-green-700/5 text-green-700",
+                  showCorrect && "border-green-700/60 bg-green-700/5 text-green-400",
                   showWrong && "border-ink-700 bg-ink-800/40 text-ink-400",
                 )}
               >
@@ -131,7 +131,7 @@ export default function MultipleChoiceStepView({
             aria-live="polite"
             className={cn(
               "inline-flex items-center gap-1.5 text-sm",
-              correctSet.has(selected ?? "") ? "text-green-700" : "text-ink-400",
+              correctSet.has(selected ?? "") ? "text-green-400" : "text-ink-400",
             )}
           >
             {correctSet.has(selected ?? "") ? (

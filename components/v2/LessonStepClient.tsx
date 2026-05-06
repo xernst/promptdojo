@@ -155,6 +155,9 @@ export default function LessonStepClient({
         );
         return (
           <div className="flex flex-col gap-1.5">
+            <h1 className="sr-only">
+              {lesson.title} — step {stepIndex + 1} of {totalSteps}
+            </h1>
             {phase && (
               <div className="t-mono-meta">
                 phase {String(phase.number).padStart(2, "0")} · {phase.name}

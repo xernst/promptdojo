@@ -56,7 +56,7 @@ export default function LessonShell({
         <aside className="hidden w-60 shrink-0 border-r border-ink-800 bg-ink-900 lg:flex lg:flex-col">
           {sidebar}
         </aside>
-        <main className="flex min-h-0 w-full flex-1 lg:grid lg:grid-cols-[minmax(0,480px)_minmax(0,1fr)]">
+        <main id="main" className="flex min-h-0 w-full flex-1 lg:grid lg:grid-cols-[minmax(0,480px)_minmax(0,1fr)]">
           <section
             className={cn(
               "min-h-0 min-w-0 flex-1 flex-col border-r border-ink-800",

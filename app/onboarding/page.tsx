@@ -158,7 +158,7 @@ export default function OnboardingPage() {
   }, [step, draft, finish, next, update]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 py-10 sm:py-16">
+    <main id="main" className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 py-10 sm:py-16">
       <PyodidePreloader />
       <header className="mb-10 flex items-center justify-between">
         <Link href="/" className="block">

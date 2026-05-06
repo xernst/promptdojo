@@ -25,7 +25,7 @@ export default async function ChangelogPage() {
   );
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+    <main id="main" className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
       <Link href="/" className="dojo-btn-tertiary">
         ← home
       </Link>

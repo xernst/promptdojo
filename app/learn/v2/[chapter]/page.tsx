@@ -81,7 +81,7 @@ export default async function V2ChapterOverviewPage({
             activeStepIndex={-1}
           />
         </aside>
-        <main className="flex min-h-0 w-full flex-1 flex-col">
+        <main id="main" className="flex min-h-0 w-full flex-1 flex-col">
           <div className="flex-1 min-h-0 overflow-auto">
             <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
               <div className="t-eyebrow">

@@ -12,7 +12,7 @@ import CourseProgress from "@/components/v2/CourseProgress";
 
 export default function SiteHeader() {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-6">
+    <header className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-6">
       <a
         href="/about"
         className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-400 transition hover:text-green-400"
@@ -20,12 +20,12 @@ export default function SiteHeader() {
         <span className="text-green-500">❯</span>
         <span>what is this?</span>
       </a>
-      <div className="flex flex-wrap items-center gap-2">
+      <nav aria-label="site" className="flex flex-wrap items-center gap-2">
         <GitHubStatsPill />
         <CourseProgress />
         <LoginToSave />
         <FollowOnXPill />
-      </div>
-    </div>
+      </nav>
+    </header>
   );
 }

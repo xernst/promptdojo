@@ -91,7 +91,7 @@ const faqs = [
 
 export default function AboutPage() {
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
+    <main id="main" className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
       {/* ───────── 1. HERO ─────────────────────────────────────── */}
       <section className="border-b border-ink-800 pb-16">
         <div className="mb-6 inline-flex items-center gap-2 t-eyebrow">

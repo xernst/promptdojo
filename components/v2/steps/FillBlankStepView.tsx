@@ -157,7 +157,7 @@ export default function FillBlankStepView({
             aria-live="polite"
             className={cn(
               "inline-flex items-center gap-1.5 text-sm",
-              allCorrect ? "text-green-700" : "text-ink-400",
+              allCorrect ? "text-green-400" : "text-ink-400",
             )}
           >
             {allCorrect ? (

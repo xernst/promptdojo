@@ -76,7 +76,7 @@ export default function V2ChapterNav({
                   isActive
                     ? "bg-ink-800 text-ink-100"
                     : chapterDone
-                      ? "text-green-700 hover:bg-ink-800/50"
+                      ? "text-green-400 hover:bg-ink-800/50"
                       : "text-ink-400 hover:bg-ink-800/50 hover:text-ink-200",
                 )}
               >
@@ -145,7 +145,7 @@ function ChapterDetail({
                 isActiveLesson
                   ? "text-green-400"
                   : lessonDone
-                    ? "text-green-700 hover:text-green-500"
+                    ? "text-green-400 hover:text-green-500"
                     : "text-ink-500 hover:text-ink-200",
               )}
             >

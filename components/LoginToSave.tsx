@@ -82,10 +82,52 @@ export default function LoginToSave() {
   const [error, setError] = useState<string | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const closeModal = useCallback(() => {
+    setOpen(false);
+    // Return focus to the trigger when the dialog closes — WCAG 2.4.3.
+    triggerRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     setEmail(readEmail());
   }, []);
+
+  // Escape closes; Tab cycles within the dialog (focus trap).
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'button, input, [href], select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      const enabled = Array.from(focusable).filter(
+        (el) => !el.hasAttribute("disabled"),
+      );
+      if (enabled.length === 0) return;
+      const first = enabled[0];
+      const last = enabled[enabled.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, closeModal]);
 
   // Auto-sync on progress change when logged in.
   useEffect(() => {
@@ -153,6 +195,7 @@ export default function LoginToSave() {
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => {
           setOpen(true);
@@ -176,10 +219,12 @@ export default function LoginToSave() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="lts-title"
+          aria-describedby="lts-desc"
           className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink-950/80 px-4 pt-24 pb-12 backdrop-blur-sm"
-          onClick={() => setOpen(false)}
+          onClick={closeModal}
         >
           <div
+            ref={panelRef}
             className="w-full max-w-md border border-ink-800 bg-ink-900 p-6"
             onClick={(e) => e.stopPropagation()}
           >
@@ -191,7 +236,7 @@ export default function LoginToSave() {
                 login to save
               </h2>
               <button
-                onClick={() => setOpen(false)}
+                onClick={closeModal}
                 className="font-mono text-xs text-ink-500 hover:text-ink-300"
                 aria-label="close"
               >
@@ -199,7 +244,10 @@ export default function LoginToSave() {
               </button>
             </div>
 
-            <p className="mb-5 font-display text-sm leading-relaxed text-ink-400">
+            <p
+              id="lts-desc"
+              className="mb-5 font-display text-sm leading-relaxed text-ink-400"
+            >
               type your email. we sync your progress across devices. no
               password. no spam. same email anywhere else, same dojo.
             </p>
@@ -211,12 +259,19 @@ export default function LoginToSave() {
               }}
               className="space-y-3"
             >
+              <label htmlFor="lts-email" className="sr-only">
+                your email
+              </label>
               <input
+                id="lts-email"
                 type="email"
                 inputMode="email"
                 autoComplete="email"
                 autoFocus
                 placeholder="you@somewhere.dev"
+                aria-describedby="lts-desc"
+                aria-invalid={status === "error" ? "true" : undefined}
+                aria-errormessage={status === "error" ? "lts-error" : undefined}
                 value={input}
                 onChange={(e) => {
                   setInput(e.target.value);
@@ -230,7 +285,13 @@ export default function LoginToSave() {
               />
 
               {error ? (
-                <p className="font-mono text-xs text-rose-400">{error}</p>
+                <p
+                  id="lts-error"
+                  role="alert"
+                  className="font-mono text-xs text-rose-400"
+                >
+                  {error}
+                </p>
               ) : null}
 
               <div className="flex items-center gap-3">
