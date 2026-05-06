@@ -183,7 +183,7 @@ body {
   font-size: clamp(64px, 9vw, 120px);
   line-height: 0.92;
   letter-spacing: -0.045em;
-  font-variation-settings: "opsz" 144, "SOFT" 0;
+  font-variation-settings: "opsz" 144;
   color: var(--color-ink-100);
 }
 .t-section {

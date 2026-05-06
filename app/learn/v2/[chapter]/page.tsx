@@ -18,6 +18,14 @@ export async function generateStaticParams() {
   return listAllV2ChapterRoutes();
 }
 
+// Per-chapter OG cards for the three story chapters that ship hand-designed
+// art (Marketing #4 / PR 7). Other chapters fall back to the wedge OG.
+const OG_BY_CHAPTER: Record<string, string> = {
+  "mutation-and-state": "/og/launch/wedge",
+  "llm-apis": "/og/launch/ide",
+  capstone: "/og/launch/capstone",
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -30,6 +38,7 @@ export async function generateMetadata({
   const title = `${chapter.title} · promptdojo`;
   const description = chapter.blurb;
   const url = `/learn/v2/${chapter.slug}`;
+  const ogImage = OG_BY_CHAPTER[chapterSlug] ?? "/og/launch/wedge";
 
   return {
     title,
@@ -41,12 +50,14 @@ export async function generateMetadata({
       description,
       url,
       siteName: "promptdojo",
+      images: [{ url: ogImage, width: 1600, height: 900 }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
       creator: "@TFisPython",
+      images: [ogImage],
     },
   };
 }

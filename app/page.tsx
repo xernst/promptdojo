@@ -4,6 +4,7 @@ import { getChapters } from "@/lib/content";
 import { getV2Toc, getV2Chapter } from "@/lib/content-v2";
 import HomeClient from "@/components/v2/HomeClient";
 import PhaseBandedRail from "@/components/v2/PhaseBandedRail";
+import PriceBand from "@/components/PriceBand";
 import StatStrip from "@/components/StatStrip";
 import StreakWidget from "@/components/StreakWidget";
 import PyodidePreloader from "@/components/PyodidePreloader";
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     type: "website",
     title: "promptdojo — free interactive python course for ai builders",
     description:
-      "ai writes this. it's wrong. learn the python you need to read what ai wrote, catch what it got wrong, and direct it deliberately. 22 chapters, free forever.",
+      "ai writes this. it's wrong. learn the python you need to read what ai wrote, catch what it got wrong, and direct it deliberately. 25 chapters, free forever.",
     url: "https://promptdojo.dev/",
     siteName: "promptdojo",
     images: [{ url: "/og/launch/wedge", width: 1600, height: 900, alt: "ai writes this. it's wrong." }],
@@ -104,12 +105,12 @@ export default async function Home() {
           <em className="italic text-green-500">it&apos;s wrong.</em>
         </h1>
 
-        <p className="t-body mt-8 max-w-2xl">
+        <p className="t-body mt-12 max-w-2xl">
           a python school for the version of you that lives in cursor.
           25 chapters · 624 interactive steps · runs in your browser · free forever.
         </p>
 
-        <div className="mt-10">
+        <div className="mt-16">
           <HeroBugSnippet />
         </div>
 
@@ -160,6 +161,8 @@ export default async function Home() {
       </section>
 
       <StatStrip className="mt-24 mb-12" />
+
+      <PriceBand />
 
       <section>
         <h2 className="t-eyebrow mb-12">

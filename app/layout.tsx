@@ -4,7 +4,7 @@ import "./globals.css";
 import BrainDump from "@/components/BrainDump";
 import SiteHeader from "@/components/SiteHeader";
 
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", axes: ["SOFT", "WONK"] });
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
