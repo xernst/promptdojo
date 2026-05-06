@@ -3,7 +3,9 @@ import Link from "next/link";
 import { getChapter, getChapters } from "@/lib/content";
 
 export function generateStaticParams() {
-  return getChapters().map((c) => ({ chapter: c.slug }));
+  const chapters = getChapters();
+  if (chapters.length === 0) return [{ chapter: "_unavailable" }];
+  return chapters.map((c) => ({ chapter: c.slug }));
 }
 
 export default async function ChapterPage({ params }: { params: Promise<{ chapter: string }> }) {

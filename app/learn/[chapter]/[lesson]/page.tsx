@@ -9,6 +9,8 @@ export function generateStaticParams() {
       out.push({ chapter: c.slug, lesson: e.slug });
     }
   }
+  if (out.length === 0)
+    return [{ chapter: "_unavailable", lesson: "_unavailable" }];
   return out;
 }
 
