@@ -1,13 +1,13 @@
 "use client";
 
 // Aggressively boot Pyodide as soon as the page mounts, so by the time the
-// user navigates from the landing/onboarding flow into their first lesson,
+// user navigates from the landing/start flow into their first lesson,
 // the worker is already warm. Cold-load is ~5-10s of WASM download — we
-// just hide it behind onboarding clicks.
+// just hide it behind start-flow clicks.
 //
 // The worker is a singleton in lib/use-pyodide.ts, so repeat preloads are
 // no-ops. Mount this component on any page that renders BEFORE the lesson
-// shell (landing, /onboarding) and the lesson IDE will see status="ready"
+// shell (landing, /start) and the lesson IDE will see status="ready"
 // immediately when it mounts.
 
 import { useEffect } from "react";
