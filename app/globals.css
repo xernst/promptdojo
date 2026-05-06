@@ -242,6 +242,13 @@ body {
   letter-spacing: 0.05em;
   color: var(--color-ink-500);
 }
+/* Pattern #7 from 02-ui-design-cartesian-lift.md — colored-display-word
+   emphasis at heading scale. One ember word per section heading. */
+.t-emph {
+  color: var(--color-green-500);
+  font-style: italic;
+  font-variation-settings: "opsz" 144;
+}
 .t-code {
   font-family: var(--font-mono);
   font-weight: 400;

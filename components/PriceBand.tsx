@@ -6,7 +6,7 @@
 export default function PriceBand() {
   return (
     <section className="my-24 flex min-h-[60vh] flex-col items-center justify-center border-y border-ink-800 py-24 text-center">
-      <div className="t-eyebrow tracking-[0.6em]">forever</div>
+      <div className="t-eyebrow tracking-[0.6em]">forever.</div>
       <div
         className="mt-6 font-mono font-black leading-none text-ink-100"
         style={{ fontSize: "clamp(72px, 22vw, 360px)" }}

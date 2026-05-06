@@ -9,7 +9,7 @@ const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrai
 
 export const metadata: Metadata = {
   title: {
-    default: "promptdojo — free interactive python course",
+    default: "promptdojo — free runnable python course",
     template: "%s",
   },
   description:

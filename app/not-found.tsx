@@ -9,7 +9,7 @@ import StatStrip from "@/components/StatStrip";
 export const metadata = {
   title: "page not found · promptdojo",
   description:
-    "this lesson does not exist (yet). 25 chapters, 624 steps, but not this one.",
+    "this lesson does not exist (yet). 25 chapters, 624 runnable steps, but not this one.",
   robots: { index: false },
 };
 

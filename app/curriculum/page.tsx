@@ -14,7 +14,7 @@ import { getV2Toc, getV2Chapter } from "@/lib/content-v2";
 export const metadata: Metadata = {
   title: "the curriculum · promptdojo",
   description:
-    "25 chapters, 624 steps. read · run · fix. free, open-source, no signup.",
+    "25 chapters, 624 runnable steps. read · run · fix. free, open-source, no signup.",
   alternates: { canonical: "/curriculum" },
 };
 

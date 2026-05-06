@@ -193,10 +193,10 @@ function Welcome({ onContinue }: { onContinue: () => void }) {
       </h1>
       <p className="mt-4 max-w-xl text-lg text-ink-300">
         ai is your co-pilot, not your crutch. you&apos;ll learn the shapes you
-        need to direct it, read it, and catch when it&apos;s wrong.
+        need to direct it, read what it wrote, and catch when it&apos;s wrong.
       </p>
       <p className="mt-2 max-w-xl text-sm text-ink-500">
-        five questions. under a minute. then you write code.
+        five questions. under a minute. then you ship code.
       </p>
       <div className="mt-10">
         <button

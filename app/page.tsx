@@ -14,13 +14,13 @@ import { formatDateShort, githubStats } from "@/lib/github-stats";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://promptdojo.pages.dev"),
-  title: "promptdojo — free interactive python course for ai builders",
+  title: "promptdojo — free runnable python course for ai builders",
   description:
-    "free, open-source python course for pms, marketers, and ops folks who use cursor and claude code daily. 25 chapters, 624 interactive steps, runs in your browser. no signup, no paywall.",
+    "free, open-source python course for pms, marketers, and ops folks who use cursor and claude code daily. 25 chapters, 624 runnable steps, runs in your browser. no signup, no paywall.",
   alternates: { canonical: "https://promptdojo.dev/" },
   openGraph: {
     type: "website",
-    title: "promptdojo — free interactive python course for ai builders",
+    title: "promptdojo — free runnable python course for ai builders",
     description:
       "ai writes this. it's wrong. learn the python you need to read what ai wrote, catch what it got wrong, and direct it deliberately. 25 chapters, free forever.",
     url: "https://promptdojo.dev/",
@@ -107,7 +107,7 @@ export default async function Home() {
 
         <p className="t-body mt-12 max-w-2xl">
           a python school for the version of you that lives in cursor.
-          25 chapters · 624 interactive steps · runs in your browser · free forever.
+          25 chapters · 624 runnable steps · runs in your browser · free forever.
         </p>
 
         <div className="mt-16">
@@ -166,7 +166,7 @@ export default async function Home() {
 
       <section>
         <h2 className="t-eyebrow mb-12">
-          25 chapters · 624 steps · free forever
+          25 chapters. 624 runnable steps. free forever.
         </h2>
         <PhaseBandedRail
           chapters={v2Chapters}
@@ -210,14 +210,33 @@ export default async function Home() {
           </kbd>{" "}
           anywhere to park a thought without losing your place.
         </p>
-        <div className="t-mono-meta">
+        <div className="t-mono-meta flex flex-wrap items-baseline gap-x-2">
           {(() => {
             const lc = formatDateShort(githubStats.lastCommitISO);
-            return lc ? <>last commit {lc} · </> : null;
+            return lc ? <span>shipped {lc}</span> : null;
           })()}
+          <span className="text-ink-700">·</span>
           <Link href="/changelog" className="hover:text-green-400">
             changelog
           </Link>
+          <span className="text-ink-700">·</span>
+          <a
+            href="https://github.com/xernst/promptdojo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-green-400"
+          >
+            github
+          </a>
+          <span className="text-ink-700">·</span>
+          <a
+            href="https://x.com/TFisPython"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-green-400"
+          >
+            @TFisPython
+          </a>
         </div>
       </footer>
     </main>

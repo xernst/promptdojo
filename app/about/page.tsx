@@ -8,7 +8,7 @@ import { formatDateShort, githubStats } from "@/lib/github-stats";
 export const metadata: Metadata = {
   title: "what is promptdojo? — about the project",
   description:
-    "promptdojo is a free, open-source python school for builders in the ai era. read what it is, why it exists, what's inside, and how it works.",
+    "promptdojo is a free, open-source python school for builders in the ai era. read what it is, why it exists, what's inside, and how it works. 25 chapters, 624 runnable steps, free forever.",
 };
 
 const wedgeColumns = [
@@ -109,7 +109,7 @@ export default function AboutPage() {
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <Link href="/learn/v2/variables" className="dojo-btn-primary">
-            start the course →
+            start chapter 1 →
           </Link>
           <Link href="/" className="dojo-btn-secondary">
             back to home
@@ -123,10 +123,10 @@ export default function AboutPage() {
         <div className="t-eyebrow mb-3">the wedge</div>
         <h2 className="t-section">
           every course teaches you what python{" "}
-          <em className="italic text-green-400">is</em>.
+          <em className="t-emph">is</em>.
           <br />
           you need to know what it{" "}
-          <em className="italic text-green-400">isn&apos;t</em>.
+          <em className="t-emph">isn&apos;t</em>.
         </h2>
         <div className="mt-8 grid gap-6 sm:grid-cols-3">
           {wedgeColumns.map((c) => (
@@ -146,7 +146,7 @@ export default function AboutPage() {
       <section className="border-b border-ink-800 py-16">
         <div className="t-eyebrow mb-3">the curriculum</div>
         <h2 className="t-section">
-          25 chapters. 624 interactive steps. zero install.
+          25 chapters. 624 <em className="t-emph">runnable</em> steps. zero install.
         </h2>
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
           {PHASES.map((p) => (
@@ -167,7 +167,9 @@ export default function AboutPage() {
       {/* ───────── 4. HOW IT WORKS ──────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
         <div className="t-eyebrow mb-3">the loop</div>
-        <h2 className="t-section">read. run. fix. repeat 624 times.</h2>
+        <h2 className="t-section">
+          <em className="t-emph">read</em>. <em className="t-emph">run</em>. <em className="t-emph">fix</em>. repeat 624 times.
+        </h2>
         <div className="mt-8 grid gap-3 md:grid-cols-3">
           {steps.map((c) => (
             <div key={c.n} className="border border-ink-800 bg-ink-900 p-5">
@@ -189,9 +191,9 @@ export default function AboutPage() {
       <section className="border-b border-ink-800 py-16">
         <div className="t-eyebrow mb-3">why this, not codecademy</div>
         <h2 className="t-section">
-          the old way assumes you&apos;ll write the code.
+          the old way assumes you&apos;ll <em className="t-emph">write</em> the code.
           <br />
-          you won&apos;t.
+          you <em className="t-emph">won&apos;t</em>.
         </h2>
         <div className="mt-8 overflow-hidden border border-ink-800">
           <table className="w-full border-collapse font-display text-sm">
@@ -253,7 +255,9 @@ export default function AboutPage() {
       {/* ───────── 7. FREE FOREVER ──────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
         <div className="t-eyebrow mb-3">free forever</div>
-        <h2 className="t-section">$0. open source. no upsell. ever.</h2>
+        <h2 className="t-section">
+          $0. <em className="t-emph">open source</em>. no upsell. <em className="t-emph">ever</em>.
+        </h2>
         <p className="t-body mt-6 max-w-2xl">
           there is no paid tier. no premium chapters. no certificate-store.
           login is optional and only saves your progress across devices —
@@ -295,7 +299,8 @@ export default function AboutPage() {
       {/* ───────── 8. FAQ ───────────────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
         <div className="t-eyebrow mb-3">faq</div>
-        <h2 className="t-section">quick answers.</h2>
+        <h2 className="t-section">quick <em className="t-emph">answers</em>.</h2>
+        <p className="t-mono-meta mt-3">last revised 2026-05-06</p>
         <dl className="mt-8 space-y-6">
           {faqs.map((f) => (
             <div key={f.q} className="border-l-2 border-ink-800 pl-5">
@@ -312,14 +317,14 @@ export default function AboutPage() {
 
       {/* ───────── 9. CTA + FOOTER ──────────────────────────────── */}
       <section className="py-16">
-        <h2 className="t-section">stop reading. start fixing.</h2>
+        <h2 className="t-section">stop reading. start <em className="t-emph">fixing</em>.</h2>
         <p className="t-body mt-4 max-w-xl">
           chapter 01 is variables. chapter 25 is a working cli agent. the only
           step that matters is the next one.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link href="/learn/v2/variables" className="dojo-btn-primary">
-            start the course →
+            start chapter 1 →
           </Link>
           <Link href="/" className="dojo-btn-tertiary">
             ← home

@@ -161,7 +161,7 @@ function renderHook() {
         >
           <span>22 chapters</span>
           <span style={{ color: ink700, margin: "0 14px" }}>·</span>
-          <span>624 interactive steps</span>
+          <span>624 runnable steps</span>
           <span style={{ color: ink700, margin: "0 14px" }}>·</span>
           <span style={{ color: ember }}>free forever</span>
         </div>

@@ -117,7 +117,7 @@ export default async function ChapterOgImage({
               color: ink400,
             }}
           >
-            {stepCount ? `${stepCount} interactive steps` : "interactive python"}
+            {stepCount ? `${stepCount} runnable steps` : "runnable python"}
           </div>
         </div>
       </div>
