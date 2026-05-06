@@ -145,6 +145,12 @@ export type ProgressV2 = {
    */
   completedChapters?: string[];
   createdAt: string;
+  /**
+   * ISO timestamp of the last write. Stamped automatically by
+   * updateProgressV2. Drives the welcome-back card's "last visited Nd ago"
+   * recency text. Optional so older saved sessions load without migration.
+   */
+  lastSeenAt?: string;
 };
 
 function freshUserId(): string {
@@ -196,6 +202,7 @@ export function loadProgressV2(): ProgressV2 {
       completedChapters: parsed.completedChapters ?? [],
       userId: parsed.userId ?? seed.userId,
       createdAt: parsed.createdAt ?? seed.createdAt,
+      lastSeenAt: parsed.lastSeenAt,
     };
   } catch {
     return freshV2();
@@ -212,7 +219,10 @@ export function updateProgressV2(
   fn: (p: ProgressV2) => ProgressV2,
 ): ProgressV2 {
   const cur = loadProgressV2();
-  const next = fn(cur);
+  // Stamp lastSeenAt on every write — this is the canonical "last seen"
+  // signal the welcome-back resolver reads. Cheap (<1ms localStorage op),
+  // backward-compat (additive optional field).
+  const next = { ...fn(cur), lastSeenAt: new Date().toISOString() };
   saveProgressV2(next);
   return next;
 }

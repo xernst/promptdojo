@@ -45,6 +45,13 @@ export default async function Home() {
       const stepIds = detail
         ? detail.lessons.flatMap((l) => l.steps.map((s) => s.id))
         : [];
+      const lessonSummaries = detail
+        ? detail.lessons.map((l) => ({
+            slug: l.slug,
+            title: l.title,
+            stepCount: l.steps.length,
+          }))
+        : [];
       return {
         meta: {
           slug: entry.slug,
@@ -59,6 +66,7 @@ export default async function Home() {
           hasOverview,
         },
         stepIds,
+        lessons: lessonSummaries,
       };
     }),
   );
@@ -66,12 +74,14 @@ export default async function Home() {
   const stepIdsByChapter: Record<string, string[]> = Object.fromEntries(
     v2ChaptersWithStepIds.map((c) => [c.meta.slug, c.stepIds]),
   );
-
-  const fallback = {
-    chapterSlug: "variables",
-    lessonSlug: "naming-things",
-    stepIndex: 0,
-  };
+  // PR 4 — feeds the welcome-back resolver. Pure data, no chapter blob.
+  const chapterSummaries = v2ChaptersWithStepIds.map((c) => ({
+    slug: c.meta.slug,
+    title: c.meta.title,
+    number: c.meta.number,
+    totalSteps: c.meta.stepCount,
+    lessons: c.lessons,
+  }));
 
   const legacyChapters = getChapters();
 
@@ -118,12 +128,8 @@ export default async function Home() {
       </header>
 
       <HomeClient
-        fallback={fallback}
-        chapters={v2Chapters.map((c) => ({
-          slug: c.slug,
-          title: c.title,
-          number: c.number,
-        }))}
+        chapters={chapterSummaries}
+        stepIdsByChapter={stepIdsByChapter}
       />
 
       <section className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-3">
