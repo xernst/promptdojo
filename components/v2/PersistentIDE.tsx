@@ -2,8 +2,11 @@
 
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
+import { closeBrackets } from "@codemirror/autocomplete";
+import { bracketMatching } from "@codemirror/language";
+import { indentWithTab } from "@codemirror/commands";
+import { EditorView, keymap } from "@codemirror/view";
+import { dojoTheme } from "@/lib/codemirror-theme";
 import { Loader2, Lock, Play, Terminal } from "lucide-react";
 import {
   forwardRef,
@@ -206,8 +209,13 @@ const PersistentIDE = forwardRef<PersistentIDEHandle, Props>(function Persistent
   const extensions = useMemo(() => {
     const baseExtensions =
       activeFile?.language === "python" || activeFile?.language === undefined
-        ? [python()]
-        : [];
+        ? [
+            python(),
+            bracketMatching(),
+            closeBrackets(),
+            keymap.of([indentWithTab]),
+          ]
+        : [bracketMatching(), closeBrackets()];
     if (activeFile?.readOnly) {
       return [...baseExtensions, EditorView.editable.of(false)];
     }
@@ -252,7 +260,7 @@ const PersistentIDE = forwardRef<PersistentIDEHandle, Props>(function Persistent
             key={`${stepId}:${activeFile.name}`}
             value={activeCode}
             height="100%"
-            theme={oneDark}
+            theme={dojoTheme}
             extensions={extensions}
             onChange={handleChange}
             readOnly={activeFile.readOnly ?? false}

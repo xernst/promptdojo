@@ -1,7 +1,7 @@
 "use client";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { dojoTheme } from "@/lib/codemirror-theme";
 import { useCallback, useEffect, useState } from "react";
 import { Play, Send, Loader2 } from "lucide-react";
 import { usePyodide } from "@/lib/use-pyodide";
@@ -95,7 +95,7 @@ export default function CodeEditor({
         <CodeMirror
           value={code}
           height="100%"
-          theme={oneDark}
+          theme={dojoTheme}
           extensions={[python()]}
           onChange={onChange}
           basicSetup={{

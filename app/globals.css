@@ -144,6 +144,12 @@ body {
   .cursor-blink { animation: none; opacity: 1; }
 }
 
+/* CodeMirror caret blink — same 1.0 Hz heartbeat as the wordmark cursor. */
+.cm-cursor { animation: blink-1hz 1s steps(1) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .cm-cursor { animation: none; }
+}
+
 /* ────────────────────────────────────────────────────────────────────────
    v2 system tokens — type scale, card pattern, button hierarchy, focus +
    hover canon, skeleton primitive. Per design-kit/audit-v2/04-ui-design.md.
