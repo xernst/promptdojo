@@ -1,0 +1,17 @@
+slug: evaluator-optimizer
+title: "Evaluator-optimizer — write a draft, let a judge critique it, revise"
+estMinutes: 12
+prerequisites:
+  - the-loop
+  - multi-step-tools
+  - routing
+order:
+  - 01-intro.read.md
+  - 02-when-it-earns-its-keep.mc.yaml
+  - 03-judge-output-shape.read.md
+  - 04-predict-the-iterations.predict.yaml
+  - 05-fill-the-exit.fill.yaml
+  - 06-fix-the-judge-parsing.fix.yaml
+  - 07-fix-the-missing-cap.fix.yaml
+  - 08-write-the-evaluator-optimizer.write.yaml
+  - 09-checkpoint.checkpoint.yaml

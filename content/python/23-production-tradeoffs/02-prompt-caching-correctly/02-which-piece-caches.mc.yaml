@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 55
+concept: cache-eligible-content
+code: |
+  pieces = {
+      "A": "The system prompt — same on every call.",
+      "B": "The user's question — different every call.",
+      "C": "Tool definitions — same on every call.",
+      "D": "A few-shot examples block — same across the day, swapped weekly.",
+  }
+  for k, v in pieces.items():
+      print(f"{k}: {v}")
+prompt: |
+  Caching works on STABLE prefixes — content that is identical
+  across calls. Which TWO pieces above are NOT cache-eligible
+  (they vary per call, so they can't be shared)?
+options:
+  - id: only_b
+    label: "B only — the user's question is the only thing that varies"
+  - id: b_and_d
+    label: "B (user question) and D (few-shot — swapped weekly)"
+    explain: "D changes weekly, but the cache TTL is 5 min or 1 hour. Within a single TTL window, D is constant — so it IS cacheable. Caching ≠ permanent."
+  - id: a_and_c
+    label: "A (system prompt) and C (tools)"
+    explain: "Stable content is exactly what you WANT to cache. Marking these as variable defeats the optimization entirely."
+  - id: a_and_b
+    label: "A and B"
+    explain: "A is stable — the canonical thing to cache. B is the only one that varies."
+answerIds:
+  - only_b
+hint:
+  - level: 1
+    body: 'Cache eligibility = "is this byte-identical to last call within the TTL window?" System prompts, tool definitions, examples — all stable across many calls. Only the user input varies.'

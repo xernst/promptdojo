@@ -1,0 +1,43 @@
+xp: 4
+estSeconds: 100
+concept: independent-eval-assertion
+prompt: |
+  Cursor wrote this eval: it calls the agent, gets the answer, then
+  asserts the answer equals what the agent returned. The eval ALWAYS
+  passes — it's checking the agent against itself. Tautological.
+
+  Fix the eval to assert against an INDEPENDENT ground truth string
+  ("Paris") that came from a fact-check, not from the agent.
+
+  Expected output:
+  ```
+  pass: True
+  ```
+brokenCode: |
+  def run_agent(question):
+      return {"answer": "Paris is the capital."}
+
+  question = "capital of France?"
+  result = run_agent(question)
+  agent_said = result["answer"]
+
+  # bug: assertion compares the agent's answer to itself.
+  passed = agent_said in result["answer"]
+  print(f"pass: {passed}")
+bugLines:
+  - 9
+grader:
+  kind: stdout-equality
+  expected: "pass: True"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Replace `agent_said` (which is the agent''s output) with an INDEPENDENT ground-truth string like `"Paris"`. The check `"Paris" in result["answer"]` actually verifies correctness.'
+  - level: 2
+    body: |
+      Change line 9 to:
+
+      ```python
+      passed = "Paris" in result["answer"]
+      ```
+revealAfter: 4

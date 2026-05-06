@@ -1,0 +1,16 @@
+slug: validate-tool-inputs
+title: "Validate tool inputs — when the model invents arguments"
+estMinutes: 12
+prerequisites:
+  - build-a-cli-agent
+  - wire-the-real-model
+order:
+  - 01-intro.read.md
+  - 02-which-input-needs-validation.mc.yaml
+  - 03-the-validator-surface.read.md
+  - 04-predict-the-error.predict.yaml
+  - 05-fill-the-validate-call.fill.yaml
+  - 06-fix-the-untyped-tool.fix.yaml
+  - 07-fix-the-error-leak.fix.yaml
+  - 08-write-the-validator.write.yaml
+  - 09-checkpoint.checkpoint.yaml

@@ -1,0 +1,51 @@
+xp: 4
+estSeconds: 100
+concept: fix-upstream-not-symptom
+prompt: |
+  The agent returned malformed JSON. The downstream parser is
+  catching the error and returning `"unknown"`. This *hides* the
+  symptom but doesn't fix the bug — the next user gets the same
+  wrong answer, packaged as `"unknown"`.
+
+  The trace shows the bug is upstream: the prompt didn't tell the
+  model to return JSON. The fix is to return a `dict` describing
+  the upstream class so the caller can route to the right fix.
+
+  Fix the parser to RETURN
+  `{"class": "prompt", "fix_layer": "the prompt", "raw": <the raw model output>}`
+  instead of swallowing the error with `"unknown"`.
+
+  Expected output:
+  ```
+  {'class': 'prompt', 'fix_layer': 'the prompt', 'raw': 'I think the answer is 42'}
+  ```
+brokenCode: |
+  import json
+
+  def parse_model_output(raw_text):
+      try:
+          return json.loads(raw_text)
+      except json.JSONDecodeError:
+          # bug: hides the failure class. caller sees "unknown" forever.
+          return "unknown"
+
+  raw = "I think the answer is 42"
+  result = parse_model_output(raw)
+  print(result)
+bugLines:
+  - 7
+grader:
+  kind: stdout-equality
+  expected: "{'class': 'prompt', 'fix_layer': 'the prompt', 'raw': 'I think the answer is 42'}"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Replace `return "unknown"` with a return of the diagnostic dict including the raw text. The caller then knows WHICH layer to fix.'
+  - level: 2
+    body: |
+      Change line 7 to:
+
+      ```python
+      return {"class": "prompt", "fix_layer": "the prompt", "raw": raw_text}
+      ```
+revealAfter: 4

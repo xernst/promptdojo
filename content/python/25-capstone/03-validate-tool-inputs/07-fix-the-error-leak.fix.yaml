@@ -1,0 +1,57 @@
+xp: 4
+estSeconds: 95
+concept: error-as-tool-result
+prompt: |
+  The validator now runs first — but on failure the dispatcher
+  raises `ValueError` instead of returning a string. That bubbles
+  up through the agent loop and crashes it. The model never sees
+  the error and can't self-correct.
+
+  Fix the dispatcher to RETURN a string on validation failure
+  (formatted as `"VALIDATION_ERROR: <reason>"`) so the agent loop
+  can package it as a `tool_result` block and feed it back to the
+  model.
+
+  Expected output:
+  ```
+  VALIDATION_ERROR: missing required field: q
+  ```
+brokenCode: |
+  def validate(args, schema):
+      for field in schema.get("required", []):
+          if field not in args:
+              return {"ok": False, "error": f"missing required field: {field}"}
+      return {"ok": True, "args": args}
+
+  TOOLS = {"search": lambda q: f"results for {q}"}
+  SCHEMAS = {"search": {"required": ["q"]}}
+
+  def dispatch(tool_name, args):
+      verdict = validate(args, SCHEMAS[tool_name])
+      if not verdict["ok"]:
+          # bug: raising kills the loop instead of feeding back to the model.
+          raise ValueError(verdict["error"])
+      return TOOLS[tool_name](**args)
+
+  try:
+      result = dispatch("search", {"query": "ramen"})
+  except ValueError as e:
+      result = "the loop crashed"
+  print(result)
+bugLines:
+  - 12
+grader:
+  kind: stdout-equality
+  expected: "VALIDATION_ERROR: missing required field: q"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Replace the `raise ValueError(...)` with a `return f"VALIDATION_ERROR: {verdict[\"error\"]}"`. The string flows back as the tool_result content; the loop survives.'
+  - level: 2
+    body: |
+      Change line 12 to:
+
+      ```python
+      return f"VALIDATION_ERROR: {verdict['error']}"
+      ```
+revealAfter: 5

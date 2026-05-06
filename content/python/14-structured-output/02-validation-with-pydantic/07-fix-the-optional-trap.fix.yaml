@@ -1,0 +1,55 @@
+xp: 4
+estSeconds: 100
+concept: required-field-not-optional
+prompt: |
+  Cursor wrote this schema with `total: float | None = None` because
+  "the model might not always return it." That's the Optional Trap:
+  marking a required field as optional silently passes invalid data.
+  The model returns `{"id": "ORD-7"}` (no total!), validation
+  succeeds, the downstream code reads `order.total = None`, multiplies
+  it, gets a `TypeError`, and the agent crashes.
+
+  Fix the schema so `total` is REQUIRED — drop the `| None` and the
+  default. Then the model's missing-field response triggers a clean
+  ValidationError instead of a downstream crash.
+
+  Expected output:
+  ```
+  validation failed: total is required
+  ```
+brokenCode: |
+  from pydantic import BaseModel, ValidationError
+
+  class Order(BaseModel):
+      id: str
+      # bug: marking total as optional with None default — the model
+      # is allowed to skip it, and downstream code blows up later.
+      total: float | None = None
+
+  raw = {"id": "ORD-7"}  # model forgot total
+
+  try:
+      order = Order.model_validate(raw)
+      print(f"validated: total={order.total}")
+  except ValidationError as e:
+      missing = [err for err in e.errors() if err["type"] == "missing"]
+      if missing:
+          field = missing[0]["loc"][0]
+          print(f"validation failed: {field} is required")
+bugLines:
+  - 7
+grader:
+  kind: stdout-equality
+  expected: "validation failed: total is required"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Change `total: float | None = None` to `total: float`. The default and the optional union both make the field skippable.'
+  - level: 2
+    body: |
+      Change line 7 to:
+
+      ```python
+      total: float
+      ```
+revealAfter: 4

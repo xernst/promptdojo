@@ -1,0 +1,179 @@
+xp: 8
+estSeconds: 230
+concept: agent-with-mcp-tools
+prompt: |
+  Final drill of the capstone. Build the agent loop running with
+  MCP-sourced tools. Write `run_mcp_agent(question, tools_list_response, mcp_call, fake_model, max_iters)` that:
+
+  - Bridges `tools_list_response` via `bridge_mcp_tools(...)`
+    (provided) into `tools, schemas`.
+  - Loops up to `max_iters` times calling `fake_model(messages,
+    list(tools.keys()))`.
+  - The model returns a dict like `{"stop_reason": "...",
+    "content": [...]}` where each content block is either
+    `{"type": "text", "text": "..."}` or `{"type": "tool_use", "id":
+    "...", "name": "...", "input": {...}}`.
+  - On `end_turn`: collect text blocks, return
+    `{"ok": True, "answer": <joined text>, "iters": <iter num>, "tool_calls": <count of tool_use blocks across all turns>, "tool_errors": <count of TOOL_ERROR results>}`.
+  - On `tool_use`: dispatch each tool_use block through
+    `tools[block["name"]](**block["input"])`. Count any result that
+    starts with `"TOOL_ERROR:"` as a tool error. Append assistant
+    + user turns the standard way.
+  - On cap: return `{"ok": False, "error": "capped", "iters": max_iters}`.
+
+  Two cases run for you. Expected output:
+  ```
+  ok=True iters=2 tool_calls=1 tool_errors=0 answer=Found Tokyo's best ramen.
+  ok=True iters=2 tool_calls=1 tool_errors=1 answer=I couldn't search; tool was down.
+  ```
+starter: |
+  def bridge_mcp_tools(tools_list_response, mcp_call):
+      tools = {}
+      schemas = {}
+      for tool_def in tools_list_response["result"]["tools"]:
+          name = tool_def["name"]
+          schemas[name] = tool_def["inputSchema"]
+          def make_closure(tool_name):
+              def call(**args):
+                  response = mcp_call(tool_name, args)
+                  text = response["result"]["content"][0]["text"]
+                  if response["result"]["isError"]:
+                      text = f"TOOL_ERROR: {text}"
+                  return text
+              return call
+          tools[name] = make_closure(name)
+      return tools, schemas
+
+  tools_list_response = {
+      "jsonrpc": "2.0", "id": 1,
+      "result": {"tools": [{"name": "search", "description": "Web search.", "inputSchema": {"required": ["q"]}}]},
+  }
+
+  # mcp_call success on case 1, failure on case 2
+  case_state = {"mode": "ok"}
+  def mcp_call(tool_name, args):
+      if case_state["mode"] == "ok":
+          return {"jsonrpc": "2.0", "id": 99,
+                  "result": {"content": [{"type": "text", "text": f"hits for {args.get('q', '?')}"}], "isError": False}}
+      return {"jsonrpc": "2.0", "id": 99,
+              "result": {"content": [{"type": "text", "text": "search down"}], "isError": True}}
+
+  ok_responses = iter([
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "t1", "name": "search", "input": {"q": "ramen"}}]},
+      {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Found Tokyo's best ramen."}]},
+  ])
+  fail_responses = iter([
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "f1", "name": "search", "input": {"q": "ramen"}}]},
+      {"stop_reason": "end_turn", "content": [{"type": "text", "text": "I couldn't search; tool was down."}]},
+  ])
+
+  current = {"iter": ok_responses}
+  def fake_model(messages, available_tool_names):
+      return next(current["iter"])
+
+  # define run_mcp_agent(question, tools_list_response, mcp_call, fake_model, max_iters) below
+
+  case_state["mode"] = "ok"
+  current["iter"] = ok_responses
+  r = run_mcp_agent("find ramen", tools_list_response, mcp_call, fake_model, 5)
+  print(f"ok={r['ok']} iters={r['iters']} tool_calls={r['tool_calls']} tool_errors={r['tool_errors']} answer={r['answer']}")
+
+  case_state["mode"] = "fail"
+  current["iter"] = fail_responses
+  r = run_mcp_agent("find ramen", tools_list_response, mcp_call, fake_model, 5)
+  print(f"ok={r['ok']} iters={r['iters']} tool_calls={r['tool_calls']} tool_errors={r['tool_errors']} answer={r['answer']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    ok=True iters=2 tool_calls=1 tool_errors=0 answer=Found Tokyo's best ramen.
+    ok=True iters=2 tool_calls=1 tool_errors=1 answer=I couldn't search; tool was down.
+  normalize: collapse-trailing-newline
+solution: |
+  def bridge_mcp_tools(tools_list_response, mcp_call):
+      tools = {}
+      schemas = {}
+      for tool_def in tools_list_response["result"]["tools"]:
+          name = tool_def["name"]
+          schemas[name] = tool_def["inputSchema"]
+          def make_closure(tool_name):
+              def call(**args):
+                  response = mcp_call(tool_name, args)
+                  text = response["result"]["content"][0]["text"]
+                  if response["result"]["isError"]:
+                      text = f"TOOL_ERROR: {text}"
+                  return text
+              return call
+          tools[name] = make_closure(name)
+      return tools, schemas
+
+  tools_list_response = {
+      "jsonrpc": "2.0", "id": 1,
+      "result": {"tools": [{"name": "search", "description": "Web search.", "inputSchema": {"required": ["q"]}}]},
+  }
+
+  case_state = {"mode": "ok"}
+  def mcp_call(tool_name, args):
+      if case_state["mode"] == "ok":
+          return {"jsonrpc": "2.0", "id": 99,
+                  "result": {"content": [{"type": "text", "text": f"hits for {args.get('q', '?')}"}], "isError": False}}
+      return {"jsonrpc": "2.0", "id": 99,
+              "result": {"content": [{"type": "text", "text": "search down"}], "isError": True}}
+
+  ok_responses = iter([
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "t1", "name": "search", "input": {"q": "ramen"}}]},
+      {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Found Tokyo's best ramen."}]},
+  ])
+  fail_responses = iter([
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "f1", "name": "search", "input": {"q": "ramen"}}]},
+      {"stop_reason": "end_turn", "content": [{"type": "text", "text": "I couldn't search; tool was down."}]},
+  ])
+
+  current = {"iter": ok_responses}
+  def fake_model(messages, available_tool_names):
+      return next(current["iter"])
+
+  def run_mcp_agent(question, tools_list_response, mcp_call, fake_model, max_iters):
+      tools, schemas = bridge_mcp_tools(tools_list_response, mcp_call)
+      messages = [{"role": "user", "content": question}]
+      tool_calls = 0
+      tool_errors = 0
+
+      for i in range(1, max_iters + 1):
+          response = fake_model(messages, list(tools.keys()))
+          if response["stop_reason"] == "end_turn":
+              text_parts = [b["text"] for b in response["content"] if b["type"] == "text"]
+              return {
+                  "ok": True,
+                  "answer": " ".join(text_parts),
+                  "iters": i,
+                  "tool_calls": tool_calls,
+                  "tool_errors": tool_errors,
+              }
+
+          tool_results = []
+          for block in response["content"]:
+              if block["type"] == "tool_use":
+                  tool_calls += 1
+                  output = tools[block["name"]](**block["input"])
+                  if output.startswith("TOOL_ERROR:"):
+                      tool_errors += 1
+                  tool_results.append({
+                      "type": "tool_result",
+                      "tool_use_id": block["id"],
+                      "content": output,
+                  })
+          messages.append({"role": "assistant", "content": response["content"]})
+          messages.append({"role": "user", "content": tool_results})
+
+      return {"ok": False, "error": "capped", "iters": max_iters}
+
+  case_state["mode"] = "ok"
+  current["iter"] = ok_responses
+  r = run_mcp_agent("find ramen", tools_list_response, mcp_call, fake_model, 5)
+  print(f"ok={r['ok']} iters={r['iters']} tool_calls={r['tool_calls']} tool_errors={r['tool_errors']} answer={r['answer']}")
+
+  case_state["mode"] = "fail"
+  current["iter"] = fail_responses
+  r = run_mcp_agent("find ramen", tools_list_response, mcp_call, fake_model, 5)
+  print(f"ok={r['ok']} iters={r['iters']} tool_calls={r['tool_calls']} tool_errors={r['tool_errors']} answer={r['answer']}")
+passThreshold: 0.66

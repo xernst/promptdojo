@@ -1,0 +1,115 @@
+xp: 5
+estSeconds: 200
+concept: response-parser
+prompt: |
+  Write `parse_response(response)` that takes a response dict (from
+  Anthropic's messages.create) and returns a structured dict:
+
+  - `text` — string, joined text from all `text`-type blocks (joined
+    with one space; empty string if none).
+  - `tool_uses` — list of `{"id": ..., "name": ..., "input": ...}`
+    dicts, one per `tool_use`-type block.
+  - `stop_reason` — copy `response["stop_reason"]` through.
+  - `tokens` — int, sum of `usage.input_tokens + usage.output_tokens`.
+
+  Skip any block whose type is neither `text` nor `tool_use` (e.g.,
+  `thinking` blocks).
+
+  Three responses run for you. Expected output:
+  ```
+  text='Paris.' tool_uses=[] stop=end_turn tokens=37
+  text='Let me search.' tool_uses=[{'id': 't1', 'name': 'search', 'input': {'q': 'ramen'}}] stop=tool_use tokens=58
+  text='' tool_uses=[] stop=max_tokens tokens=1024
+  ```
+starter: |
+  responses = [
+      {
+          "stop_reason": "end_turn",
+          "content": [{"type": "text", "text": "Paris."}],
+          "usage": {"input_tokens": 28, "output_tokens": 9},
+      },
+      {
+          "stop_reason": "tool_use",
+          "content": [
+              {"type": "thinking", "thinking": "internal"},
+              {"type": "text", "text": "Let me search."},
+              {"type": "tool_use", "id": "t1", "name": "search", "input": {"q": "ramen"}},
+          ],
+          "usage": {"input_tokens": 41, "output_tokens": 17},
+      },
+      {
+          "stop_reason": "max_tokens",
+          "content": [],
+          "usage": {"input_tokens": 1024, "output_tokens": 0},
+      },
+  ]
+
+  # define parse_response(response) below
+
+  for r in responses:
+      p = parse_response(r)
+      print(f"text={p['text']!r} tool_uses={p['tool_uses']} stop={p['stop_reason']} tokens={p['tokens']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    text='Paris.' tool_uses=[] stop=end_turn tokens=37
+    text='Let me search.' tool_uses=[{'id': 't1', 'name': 'search', 'input': {'q': 'ramen'}}] stop=tool_use tokens=58
+    text='' tool_uses=[] stop=max_tokens tokens=1024
+  normalize: collapse-trailing-newline
+solution: |
+  responses = [
+      {
+          "stop_reason": "end_turn",
+          "content": [{"type": "text", "text": "Paris."}],
+          "usage": {"input_tokens": 28, "output_tokens": 9},
+      },
+      {
+          "stop_reason": "tool_use",
+          "content": [
+              {"type": "thinking", "thinking": "internal"},
+              {"type": "text", "text": "Let me search."},
+              {"type": "tool_use", "id": "t1", "name": "search", "input": {"q": "ramen"}},
+          ],
+          "usage": {"input_tokens": 41, "output_tokens": 17},
+      },
+      {
+          "stop_reason": "max_tokens",
+          "content": [],
+          "usage": {"input_tokens": 1024, "output_tokens": 0},
+      },
+  ]
+
+  def parse_response(response):
+      text_parts = [b["text"] for b in response["content"] if b["type"] == "text"]
+      tool_uses = [
+          {"id": b["id"], "name": b["name"], "input": b["input"]}
+          for b in response["content"] if b["type"] == "tool_use"
+      ]
+      tokens = response["usage"]["input_tokens"] + response["usage"]["output_tokens"]
+      return {
+          "text": " ".join(text_parts),
+          "tool_uses": tool_uses,
+          "stop_reason": response["stop_reason"],
+          "tokens": tokens,
+      }
+
+  for r in responses:
+      p = parse_response(r)
+      print(f"text={p['text']!r} tool_uses={p['tool_uses']} stop={p['stop_reason']} tokens={p['tokens']}")
+hint:
+  - level: 1
+    body: 'Two list comprehensions over `response["content"]`: one filters for text blocks and pulls `.text`; one filters for tool_use blocks and builds the tuple dict. Sum input + output tokens for the total.'
+  - level: 2
+    body: |
+      ```python
+      def parse_response(response):
+          text_parts = [b["text"] for b in response["content"] if b["type"] == "text"]
+          tool_uses = [{"id": b["id"], "name": b["name"], "input": b["input"]}
+                       for b in response["content"] if b["type"] == "tool_use"]
+          return {
+              "text": " ".join(text_parts),
+              "tool_uses": tool_uses,
+              "stop_reason": response["stop_reason"],
+              "tokens": response["usage"]["input_tokens"] + response["usage"]["output_tokens"],
+          }
+      ```

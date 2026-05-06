@@ -1,0 +1,46 @@
+xp: 4
+estSeconds: 95
+concept: result-content-unwrap
+prompt: |
+  The code is reading `response["content"]` directly, expecting the
+  content list. But MCP wraps that list inside `response["result"]`.
+  As written, this raises `KeyError: 'content'`.
+
+  Fix the access path to read from `response["result"]["content"][0]["text"]`.
+
+  Expected output:
+  ```
+  3 results for ramen tokyo
+  ```
+brokenCode: |
+  response = {
+      "jsonrpc": "2.0",
+      "id": 42,
+      "result": {
+          "content": [
+              {"type": "text", "text": "3 results for ramen tokyo"},
+          ],
+          "isError": False,
+      },
+  }
+
+  # bug: missing the result wrap. raises KeyError.
+  text = response["content"][0]["text"]
+  print(text)
+bugLines:
+  - 12
+grader:
+  kind: stdout-equality
+  expected: "3 results for ramen tokyo"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The content list lives inside `response["result"]`, not at the top level. Add `"result"` to the access chain.'
+  - level: 2
+    body: |
+      Change line 12 to:
+
+      ```python
+      text = response["result"]["content"][0]["text"]
+      ```
+revealAfter: 4

@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 55
+concept: when-routing-helps
+code: |
+  # four hypothetical features. only some of them benefit from a router.
+  features = {
+      "A": "A status-check page that says either 'all systems normal' or 'incident: <text>'.",
+      "B": "A support inbox that handles billing, technical, and account questions, each with its own tools.",
+      "C": "A search box where the user picks 'docs', 'people', or 'orders' from a dropdown before searching.",
+      "D": "A chatbot that answers ANY product question by reading the same docs corpus.",
+  }
+  for k, v in features.items():
+      print(f"{k}: {v}")
+prompt: |
+  Four features above. Which one is the strongest fit for a routing
+  pattern (LLM classifier → dispatch table)?
+options:
+  - id: a
+    label: "A — single fixed message templates"
+    explain: "Two outcomes hardcoded by status. A classifier here adds latency and cost for no decision the model makes."
+  - id: b
+    label: "B — support inbox with different categories and tool sets"
+  - id: c
+    label: "C — search with a user-selected category dropdown"
+    explain: "The user already classified for you. Adding a model classifier on top is pure waste."
+  - id: d
+    label: "D — one chatbot, one corpus, every question"
+    explain: "All paths read the same docs. There's no specialist to dispatch to."
+answerIds:
+  - b
+hint:
+  - level: 1
+    body: 'Routing earns its keep when categories have *different tools, prompts, or costs*. Same tools + same prompt = no route needed.'

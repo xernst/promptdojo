@@ -1,0 +1,52 @@
+xp: 4
+estSeconds: 100
+concept: iserror-tool-failure-detection
+prompt: |
+  The MCP server returned a successful JSON-RPC response — but
+  `result.isError` is `True`, meaning the tool itself reported
+  failure. The current code ignores `isError` and treats the error
+  message as a successful tool result, which the agent will then
+  confidently relay to the user.
+
+  Fix the code to check `isError` and prefix the text with
+  `"TOOL_ERROR: "` when the flag is `True`, so the agent sees the
+  failure and can recover.
+
+  Expected output:
+  ```
+  TOOL_ERROR: search service unavailable
+  ```
+brokenCode: |
+  response = {
+      "jsonrpc": "2.0",
+      "id": 42,
+      "result": {
+          "content": [
+              {"type": "text", "text": "search service unavailable"},
+          ],
+          "isError": True,
+      },
+  }
+
+  # bug: ignores isError. error message looks like a successful result.
+  text = response["result"]["content"][0]["text"]
+  print(text)
+bugLines:
+  - 13
+grader:
+  kind: stdout-equality
+  expected: "TOOL_ERROR: search service unavailable"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'After reading the text, branch on `response["result"]["isError"]`. If True, prefix the text with `"TOOL_ERROR: "` before printing.'
+  - level: 2
+    body: |
+      Replace line 13 with:
+
+      ```python
+      text = response["result"]["content"][0]["text"]
+      if response["result"]["isError"]:
+          text = f"TOOL_ERROR: {text}"
+      ```
+revealAfter: 5

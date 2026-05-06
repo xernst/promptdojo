@@ -1,0 +1,45 @@
+xp: 4
+estSeconds: 100
+concept: example-format-must-match-query
+prompt: |
+  The few-shot examples format inputs as `"Input: <text>"` and
+  outputs as `"Output: <label>"`. But the actual query is appended
+  as `"Question: <text>"`. The model sees a format SHIFT and may
+  emit unpredictable output — sometimes following the example
+  format, sometimes following the query format, sometimes mixing.
+
+  Fix the query template to use the same `"Input:"` / `"Output:"`
+  pattern as the examples.
+
+  Expected output:
+  ```
+  Input: late but quality was fine
+  Output:
+  ```
+brokenCode: |
+  examples_block = "Input: great product\nOutput: positive\n\nInput: broke quickly\nOutput: negative\n\n"
+  query = "late but quality was fine"
+
+  # bug: query uses "Question:" instead of "Input:" — format mismatch.
+  query_template = f"Question: {query}\nAnswer:"
+
+  print(query_template)
+bugLines:
+  - 5
+grader:
+  kind: stdout-equality
+  expected: |
+    Input: late but quality was fine
+    Output:
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Match the example format. The examples use `Input:` and `Output:`; the query template should use the same words.'
+  - level: 2
+    body: |
+      Change line 5 to:
+
+      ```python
+      query_template = f"Input: {query}\nOutput:"
+      ```
+revealAfter: 4

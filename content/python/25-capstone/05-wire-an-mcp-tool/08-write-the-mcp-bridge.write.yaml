@@ -1,0 +1,108 @@
+xp: 5
+estSeconds: 200
+concept: mcp-to-registry-bridge
+prompt: |
+  Write `bridge_mcp_tools(tools_list_response, mcp_call)` that:
+
+  - Takes a `tools/list` response (a dict with
+    `response["result"]["tools"]`) and a `mcp_call(tool_name, args)`
+    function (which simulates calling the server's `tools/call` and
+    returns a `tools/call` response dict).
+  - Returns a tuple `(tools, schemas)`:
+    - `tools` is a dict mapping each tool's `name` to a closure that
+      calls `mcp_call(name, args)`, unwraps `response["result"]["content"][0]["text"]`,
+      and returns it (prefixed with `"TOOL_ERROR: "` if `isError` is True).
+    - `schemas` is a dict mapping each tool's `name` to its
+      `inputSchema`.
+
+  Three tools come back. After bridging, dispatch one of them to
+  prove it works. Expected output:
+  ```
+  tool_names: ['search', 'read_url', 'summarize']
+  search_result: 3 results for ramen
+  ```
+starter: |
+  tools_list_response = {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+          "tools": [
+              {"name": "search",   "description": "Web search.",   "inputSchema": {"required": ["q"]}},
+              {"name": "read_url", "description": "Fetch a page.", "inputSchema": {"required": ["url"]}},
+              {"name": "summarize","description": "Compress text.","inputSchema": {"required": ["text"]}},
+          ],
+      },
+  }
+
+  def mcp_call(tool_name, args):
+      # simulate the server's tools/call response
+      return {
+          "jsonrpc": "2.0",
+          "id": 99,
+          "result": {
+              "content": [{"type": "text", "text": f"3 results for {args.get('q', '?')}"}],
+              "isError": False,
+          },
+      }
+
+  # define bridge_mcp_tools(tools_list_response, mcp_call) below
+
+  tools, schemas = bridge_mcp_tools(tools_list_response, mcp_call)
+  print(f"tool_names: {list(tools.keys())}")
+  print(f"search_result: {tools['search'](q='ramen')}")
+grader:
+  kind: stdout-equality
+  expected: |
+    tool_names: ['search', 'read_url', 'summarize']
+    search_result: 3 results for ramen
+  normalize: collapse-trailing-newline
+solution: |
+  tools_list_response = {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+          "tools": [
+              {"name": "search",   "description": "Web search.",   "inputSchema": {"required": ["q"]}},
+              {"name": "read_url", "description": "Fetch a page.", "inputSchema": {"required": ["url"]}},
+              {"name": "summarize","description": "Compress text.","inputSchema": {"required": ["text"]}},
+          ],
+      },
+  }
+
+  def mcp_call(tool_name, args):
+      return {
+          "jsonrpc": "2.0",
+          "id": 99,
+          "result": {
+              "content": [{"type": "text", "text": f"3 results for {args.get('q', '?')}"}],
+              "isError": False,
+          },
+      }
+
+  def bridge_mcp_tools(tools_list_response, mcp_call):
+      tools = {}
+      schemas = {}
+      for tool_def in tools_list_response["result"]["tools"]:
+          name = tool_def["name"]
+          schemas[name] = tool_def["inputSchema"]
+
+          def make_closure(tool_name):
+              def call(**args):
+                  response = mcp_call(tool_name, args)
+                  text = response["result"]["content"][0]["text"]
+                  if response["result"]["isError"]:
+                      text = f"TOOL_ERROR: {text}"
+                  return text
+              return call
+
+          tools[name] = make_closure(name)
+      return tools, schemas
+
+  tools, schemas = bridge_mcp_tools(tools_list_response, mcp_call)
+  print(f"tool_names: {list(tools.keys())}")
+  print(f"search_result: {tools['search'](q='ramen')}")
+hint:
+  - level: 1
+    body: 'Iterate `tools_list_response["result"]["tools"]`. For each tool, store its `inputSchema` in `schemas[name]` and a closure in `tools[name]`. The closure calls `mcp_call(name, args)`, unwraps the result text, and prefixes `TOOL_ERROR:` on isError.'
+  - level: 2
+    body: 'Use a `make_closure(tool_name)` helper to capture the name correctly — Python closures-over-loop-variable bug otherwise (every tool ends up calling with the LAST loop name).'

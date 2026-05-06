@@ -1,0 +1,41 @@
+xp: 3
+estSeconds: 75
+concept: route-dispatch-execution
+code: |
+  # a tiny router. the fake classifier returns a fixed category for each input.
+  def fake_classify(question):
+      mapping = {
+          "I want a refund":     "billing",
+          "Site is down":        "technical",
+          "What's your name?":   "general",
+      }
+      return mapping.get(question, "general")
+
+  ROUTES = {
+      "billing":   lambda q: f"BILLING -> {q}",
+      "technical": lambda q: f"TECH    -> {q}",
+      "general":   lambda q: f"GEN     -> {q}",
+  }
+
+  def route(question):
+      category = fake_classify(question)
+      return ROUTES[category](question)
+
+  for q in ["I want a refund", "Site is down", "What's your name?"]:
+      print(route(q))
+prompt: |
+  Read the editor. The fake classifier maps each input to a fixed
+  category, and the router dispatches through `ROUTES`. What three
+  lines does the loop print, in order?
+grader:
+  kind: stdout-equality
+  expected: |
+    BILLING -> I want a refund
+    TECH    -> Site is down
+    GEN     -> What's your name?
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: '`fake_classify` returns the mapped category, then `ROUTES[category](question)` runs the matching specialist. Each input prints its category prefix + the question.'
+  - level: 2
+    body: 'Output the three formatted strings in the order the questions appear.'

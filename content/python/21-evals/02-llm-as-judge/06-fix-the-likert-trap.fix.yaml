@@ -1,0 +1,53 @@
+xp: 4
+estSeconds: 100
+concept: binary-not-likert
+prompt: |
+  The judge returns both a 1-5 numeric score AND a binary `passed`
+  flag (some teams emit both during transition). The code is using
+  the score with a hardcoded threshold — `score >= 4` — but the
+  rubric was designed for binary pass/fail and the 1-5 axis is
+  uncalibrated. As Hamel Husain puts it: averaging Likert scores
+  produces false precision.
+
+  Two cases come in: one where the model judged 4/5 with `passed: False`
+  (the answer is technically wrong but well-written — style bias),
+  and one where the model judged 3/5 with `passed: True` (the answer
+  is correct but plain).
+
+  Fix the gate so it reads the binary verdict instead of the numeric
+  score.
+
+  Expected output:
+  ```
+  case 1: ship=False
+  case 2: ship=True
+  ```
+brokenCode: |
+  verdicts = [
+      {"score": 4, "passed": False, "critique": "Well-written but factually wrong."},
+      {"score": 3, "passed": True,  "critique": "Correct, plain prose."},
+  ]
+
+  for i, v in enumerate(verdicts, start=1):
+      # bug: numeric threshold ignores the binary verdict the rubric was designed for.
+      ship = v["score"] >= 4
+      print(f"case {i}: ship={ship}")
+bugLines:
+  - 8
+grader:
+  kind: stdout-equality
+  expected: |
+    case 1: ship=False
+    case 2: ship=True
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Read `v["passed"]` instead of computing a threshold over `v["score"]`. The binary field is what the rubric is calibrated against; the score is incidental.'
+  - level: 2
+    body: |
+      Change line 8 to:
+
+      ```python
+      ship = v["passed"]
+      ```
+revealAfter: 4

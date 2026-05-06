@@ -1,0 +1,31 @@
+xp: 3
+estSeconds: 75
+concept: scan-trace-for-anomaly
+code: |
+  trace = [
+      {"turn": 1, "stop_reason": "tool_use", "tools_called": ["search"],    "tokens": 412, "validation_errors": 0},
+      {"turn": 2, "stop_reason": "tool_use", "tools_called": ["read_page"], "tokens": 880, "validation_errors": 0},
+      {"turn": 3, "stop_reason": "tool_use", "tools_called": ["search"],    "tokens": 920, "validation_errors": 1},
+      {"turn": 4, "stop_reason": "end_turn", "tools_called": [],            "tokens": 145, "validation_errors": 0},
+  ]
+
+  # find the FIRST turn with a non-zero validation_errors count.
+  suspect = None
+  for t in trace:
+      if t["validation_errors"] > 0:
+          suspect = t["turn"]
+          break
+
+  print(f"suspect turn: {suspect}")
+prompt: |
+  Read the trace in the editor. Four turns. The third turn has
+  `validation_errors: 1` — the rest are zero. The script scans
+  for the first turn with non-zero validation_errors and prints
+  its turn number. What's the output?
+grader:
+  kind: stdout-equality
+  expected: "suspect turn: 3"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The loop iterates turns 1, 2, 3, 4. The break fires when `validation_errors > 0` — first true on turn 3. `suspect` is set to 3 and the loop exits.'

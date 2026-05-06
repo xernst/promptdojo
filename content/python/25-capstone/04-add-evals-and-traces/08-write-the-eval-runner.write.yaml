@@ -1,0 +1,89 @@
+xp: 5
+estSeconds: 200
+concept: agent-eval-runner
+prompt: |
+  Write `run_eval_suite(cases)` that:
+
+  - Takes a list of dicts, each shaped
+    `{"question": str, "expected": str, "max_turns": int}`.
+  - For each case:
+    - Calls `run_agent(question)` (provided) which returns
+      `{"answer": str, "trace": list}`.
+    - Asserts THREE things, AND combines into a single boolean:
+      a) `expected` substring is in `answer`,
+      b) `len(trace)` is `<= max_turns`,
+      c) `trace[-1]["stop_reason"] == "end_turn"`.
+  - Counts passes (all three asserts true) and fails.
+  - Returns `{"total": <count>, "passed": <count>, "failed": <count>, "pass_rate": <0.0-1.0 rounded to 2 places>}`.
+
+  Three cases provided. Expected output:
+  ```
+  total=3 passed=2 failed=1 pass_rate=0.67
+  ```
+starter: |
+  AGENT_BEHAVIOR = {
+      "capital of France?":  {"answer": "Paris is the capital.",       "trace": [{"stop_reason": "end_turn"}]},
+      "capital of Germany?": {"answer": "Berlin is the capital.",      "trace": [{"stop_reason": "end_turn"}, {"stop_reason": "end_turn"}, {"stop_reason": "end_turn"}, {"stop_reason": "end_turn"}]},  # too many turns
+      "capital of Japan?":   {"answer": "Tokyo is the capital.",       "trace": [{"stop_reason": "end_turn"}]},
+  }
+
+  def run_agent(question):
+      return AGENT_BEHAVIOR[question]
+
+  cases = [
+      {"question": "capital of France?",  "expected": "Paris",  "max_turns": 3},
+      {"question": "capital of Germany?", "expected": "Berlin", "max_turns": 3},
+      {"question": "capital of Japan?",   "expected": "Tokyo",  "max_turns": 3},
+  ]
+
+  # define run_eval_suite(cases) below
+
+  result = run_eval_suite(cases)
+  print(f"total={result['total']} passed={result['passed']} failed={result['failed']} pass_rate={result['pass_rate']}")
+grader:
+  kind: stdout-equality
+  expected: "total=3 passed=2 failed=1 pass_rate=0.67"
+  normalize: collapse-trailing-newline
+solution: |
+  AGENT_BEHAVIOR = {
+      "capital of France?":  {"answer": "Paris is the capital.",       "trace": [{"stop_reason": "end_turn"}]},
+      "capital of Germany?": {"answer": "Berlin is the capital.",      "trace": [{"stop_reason": "end_turn"}, {"stop_reason": "end_turn"}, {"stop_reason": "end_turn"}, {"stop_reason": "end_turn"}]},
+      "capital of Japan?":   {"answer": "Tokyo is the capital.",       "trace": [{"stop_reason": "end_turn"}]},
+  }
+
+  def run_agent(question):
+      return AGENT_BEHAVIOR[question]
+
+  cases = [
+      {"question": "capital of France?",  "expected": "Paris",  "max_turns": 3},
+      {"question": "capital of Germany?", "expected": "Berlin", "max_turns": 3},
+      {"question": "capital of Japan?",   "expected": "Tokyo",  "max_turns": 3},
+  ]
+
+  def run_eval_suite(cases):
+      passed_count = 0
+      for c in cases:
+          result = run_agent(c["question"])
+          ok_answer = c["expected"] in result["answer"]
+          ok_turns  = len(result["trace"]) <= c["max_turns"]
+          ok_exit   = result["trace"][-1]["stop_reason"] == "end_turn"
+          if ok_answer and ok_turns and ok_exit:
+              passed_count += 1
+      total = len(cases)
+      failed_count = total - passed_count
+      pass_rate = round(passed_count / total, 2) if total else 0.0
+      return {
+          "total": total,
+          "passed": passed_count,
+          "failed": failed_count,
+          "pass_rate": pass_rate,
+      }
+
+  result = run_eval_suite(cases)
+  print(f"total={result['total']} passed={result['passed']} failed={result['failed']} pass_rate={result['pass_rate']}")
+hint:
+  - level: 1
+    body: 'Loop over cases. For each: run agent, compute three booleans (answer substring, turn cap, end_turn exit), AND them, increment counter on True. Return totals + rate.'
+  - level: 2
+    body: |
+      Three asserts AND-ed together: `c["expected"] in result["answer"]`, `len(result["trace"]) <= c["max_turns"]`, `result["trace"][-1]["stop_reason"] == "end_turn"`. Increment if all three are True.

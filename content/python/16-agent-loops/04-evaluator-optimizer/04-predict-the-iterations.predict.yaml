@@ -1,0 +1,47 @@
+xp: 3
+estSeconds: 80
+concept: evaluator-optimizer-iteration-trace
+code: |
+  # the judge rejects the first two drafts, then accepts the third.
+
+  drafts = iter([
+      "Cats are animals.",
+      "Cats are small mammals.",
+      "Cats are small carnivorous mammals kept as pets worldwide.",
+  ])
+  verdicts = iter([
+      {"status": "REJECT", "feedback": "Too short."},
+      {"status": "REJECT", "feedback": "Add detail about diet."},
+      {"status": "PASS",   "feedback": "Detailed and accurate."},
+  ])
+
+  def gen(task, feedback=None):
+      return next(drafts)
+
+  def judge(draft):
+      return next(verdicts)
+
+  def write_with_judge(task, max_iters=5):
+      draft = gen(task)
+      for i in range(max_iters):
+          verdict = judge(draft)
+          if verdict["status"] == "PASS":
+              return i + 1
+          draft = gen(task, feedback=verdict["feedback"])
+      return max_iters
+
+  iterations = write_with_judge("Describe cats")
+  print(f"iterations: {iterations}")
+prompt: |
+  Read the editor. The fake judge rejects drafts 1 and 2, then accepts
+  draft 3. The function returns the iteration count when the judge
+  PASSES. How many iterations does it take?
+grader:
+  kind: stdout-equality
+  expected: "iterations: 3"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Trace it: gen → judge (REJECT, iter 1) → gen → judge (REJECT, iter 2) → gen → judge (PASS, iter 3). The PASS branch returns `i + 1`.'
+  - level: 2
+    body: 'Three iterations: two rejections plus the accepting one.'

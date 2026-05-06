@@ -1,0 +1,47 @@
+xp: 3
+estSeconds: 75
+concept: block-type-discrimination
+code: |
+  # an assistant turn with a text block AND a tool_use block.
+  # the loop has to print one line per block, branching on .type.
+
+  class MockTextBlock:
+      def __init__(self, text):
+          self.type = "text"
+          self.text = text
+
+  class MockToolUseBlock:
+      def __init__(self, name):
+          self.type = "tool_use"
+          self.name = name
+
+  blocks = [
+      MockTextBlock("Let me look that up."),
+      MockToolUseBlock("search"),
+      MockTextBlock("Here's what I found."),
+  ]
+
+  for block in blocks:
+      if block.type == "text":
+          print(f"TEXT: {block.text}")
+      elif block.type == "tool_use":
+          print(f"TOOL: {block.name}")
+prompt: |
+  Read the editor. Three blocks in order: text, tool_use, text. The
+  loop branches on `.type` and prints one line per block. What does
+  the script print?
+grader:
+  kind: stdout-equality
+  expected: |
+    TEXT: Let me look that up.
+    TOOL: search
+    TEXT: Here's what I found.
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Three blocks, three iterations. Each iteration the if/elif picks one branch and prints. Trace each block by .type.'
+  - level: 2
+    body: |
+      Block 1 is text → `TEXT: Let me look that up.`
+      Block 2 is tool_use → `TOOL: search`
+      Block 3 is text → `TEXT: Here's what I found.`

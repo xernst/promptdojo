@@ -1,0 +1,47 @@
+xp: 4
+estSeconds: 95
+concept: stop-reason-correct-string
+prompt: |
+  Cursor wrote this loop with `if response["stop_reason"] == "stop":`.
+  But Anthropic's actual stop reason is `"end_turn"`, not `"stop"`.
+  The condition never fires; the loop runs to its iteration cap and
+  returns `"capped"` even though the model finished cleanly on turn 1.
+
+  Fix the comparison to use the correct stop_reason string.
+
+  Expected output:
+  ```
+  result: done in 1 turns
+  ```
+brokenCode: |
+  responses = [{"stop_reason": "end_turn", "content": [{"type": "text", "text": "Paris"}]}]
+
+  def fake_call(messages, turn):
+      return responses[turn]
+
+  def loop(messages):
+      for turn in range(5):
+          response = fake_call(messages, turn)
+          # bug: wrong string. Anthropic uses "end_turn", not "stop".
+          if response["stop_reason"] == "stop":
+              return f"done in {turn + 1} turns"
+      return "capped"
+
+  print(f"result: {loop([{'role': 'user', 'content': 'capital of France?'}])}")
+bugLines:
+  - 10
+grader:
+  kind: stdout-equality
+  expected: "result: done in 1 turns"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The actual stop_reason value from Anthropic is `"end_turn"` (two words, underscored). Many people misremember it as just `"stop"`.'
+  - level: 2
+    body: |
+      Change line 10 to:
+
+      ```python
+      if response["stop_reason"] == "end_turn":
+      ```
+revealAfter: 4

@@ -1,0 +1,29 @@
+xp: 3
+estSeconds: 60
+concept: separator-priority-list
+prompt: |
+  The recursive splitter takes a list of separators in PRIORITY
+  order — try the most semantic one first, fall back through less
+  semantic ones, end with a hard char cut. Fill in the list for
+  general English text: paragraph break, then sentence end, then
+  word, then character.
+
+  Expected output:
+  ```
+  ['\n\n', '. ', ' ', '']
+  ```
+code: |
+  # the standard English separator priority.
+  separators = ___
+  print(separators)
+blanks:
+  - id: separator_list
+    accept:
+      - '["\n\n", ". ", " ", ""]'
+      - "['\\n\\n', '. ', ' ', '']"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Four entries, in priority order: paragraph (`"\n\n"`), sentence (`". "`), word (`" "`), char (`""`). The empty string at the end is the safety net.'
+  - level: 2
+    body: '`["\n\n", ". ", " ", ""]` — paragraph, sentence, word, char. Most-semantic first, hard-cut last.'

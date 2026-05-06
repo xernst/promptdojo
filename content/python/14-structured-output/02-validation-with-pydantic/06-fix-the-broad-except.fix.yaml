@@ -1,0 +1,49 @@
+xp: 4
+estSeconds: 95
+concept: catch-validation-error-not-valueerror
+prompt: |
+  The `try/except` is catching `ValueError`. In Pydantic v1,
+  `ValidationError` was a subclass of `ValueError`. In **Pydantic
+  v2**, it's NOT — it inherits directly from `Exception`. So this
+  `except` clause never fires; the validation error propagates and
+  crashes the script.
+
+  Fix the `except` to catch `ValidationError` directly so the
+  error is handled cleanly.
+
+  Expected output:
+  ```
+  caught 1 validation error(s)
+  ```
+brokenCode: |
+  from pydantic import BaseModel, ValidationError
+
+  class User(BaseModel):
+      name: str
+      age: int
+
+  # the model returned a dict missing the `age` field.
+  raw = {"name": "Ada"}
+
+  try:
+      User.model_validate(raw)
+  # bug: ValidationError is NOT a ValueError in Pydantic v2.
+  except ValueError as e:
+      print(f"caught {len(e.errors())} validation error(s)")
+bugLines:
+  - 13
+grader:
+  kind: stdout-equality
+  expected: "caught 1 validation error(s)"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Replace `except ValueError as e:` with `except ValidationError as e:`. Pydantic v2 changed the inheritance — `ValidationError` is no longer a `ValueError` subclass.'
+  - level: 2
+    body: |
+      Change line 13 to:
+
+      ```python
+      except ValidationError as e:
+      ```
+revealAfter: 4

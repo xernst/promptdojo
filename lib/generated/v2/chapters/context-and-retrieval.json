@@ -26,7 +26,266 @@
         }
       ],
       "xpTotal": 1
+    },
+    {
+      "slug": "chunking-that-respects-structure",
+      "title": "Chunking that respects structure — don't shred your own documents",
+      "estMinutes": 12,
+      "prerequisites": [
+        "orientation"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "context-and-retrieval/chunking-that-respects-structure/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 120,
+          "concept": "structure-aware-chunking",
+          "body": "# Chunking is the boring part that makes or breaks RAG\n\nMost \"RAG tutorials\" you'll read open with FAISS, embeddings, and a\n30-line script that retrieves the top-3 nearest neighbors. Then they\ndeclare victory.\n\nThe companies that ship RAG into production spend most of their RAG\nwork on the boring step that comes before all that: **how do you\ncut the document into pieces in the first place?**\n\nA document gets chunked once. The chunks get embedded once. The\nembeddings sit in a vector store. Every user query retrieves chunks\nthat *exist* — meaning whatever bug you bake in at chunk time, you\ninherit forever, on every query, until you rebuild the index.\n\nRun the editor. The naive `chunk_by_chars` splits a markdown doc\nevery 80 characters. Look at where the cuts land. The code block is\ntorn apart mid-line. The sentence \"Then read the response\" gets\nsliced. When the user later asks \"show me the request example,\"\nretrieval may pull the chunk with `import requests` but miss the\nchunk with `response = requests.get(url)` — because they're now in\n*different chunks*. The model gets half the example.\n\nThat's the bug. The fix is structure-aware chunking.\n\n## The hierarchy real splitters use\n\nProduction chunkers don't cut by character count. They cut by\n**document structure first**, falling back to character count only\nas the last resort. The canonical pattern (LangChain calls it the\n`RecursiveCharacterTextSplitter`):\n\n1. Try to split on **paragraph breaks** (`\\n\\n`). Stop if all\n   resulting chunks fit your size budget.\n2. If a chunk is still too big, split it on **sentence breaks**\n   (`. ` or `\\n`).\n3. If a chunk is *still* too big, split on **word boundaries**\n   (` `).\n4. As a last resort, cut at the character boundary.\n\nThe win: most chunks land at natural boundaries (paragraph,\nsentence). Only pathologically long sentences get cut mid-word, and\neven those get an *intentional* word boundary instead of a random\ncharacter.\n\n## What everyone calls it\n\n| Framework | Primitive |\n|---|---|\n| **LangChain** | `RecursiveCharacterTextSplitter`, `MarkdownTextSplitter`, `PythonCodeTextSplitter` |\n| **LlamaIndex** | `SentenceSplitter`, `MarkdownNodeParser`, `CodeSplitter` |\n| **Chunking-as-a-service** | Reducto (`reducto.ai`), Unstructured (`unstructured.io`) — paid APIs that do *much* better on PDFs and tables |\n| **Anthropic** | \"Contextual Retrieval\" (anthropic.com/news/contextual-retrieval, 2024) — adds chunk-level context with a model call before embedding |\n\nThe free OSS chunkers cover 80% of cases. The paid services cover\nthe cases the OSS chunkers shred — PDFs with tables, scanned\ndocuments, mixed-language text.\n\n## The second concept: chunk overlap\n\nEven with structure-aware splitting, a fact often sits *across* a\nchunk boundary. \"Acme was founded in 1958. The company makes\nrunning shoes.\" If those two sentences end up in adjacent chunks,\na query about \"what does Acme make\" might retrieve only the first\nchunk and miss the second.\n\nProduction splitters fix this with **chunk overlap**: the last N\ncharacters of chunk K become the first N characters of chunk K+1.\nSome redundancy in storage, much higher recall on queries that\nstraddle boundaries. Default overlap: 10–20% of chunk size.\n\n## What you'll build\n\nA `recursive_split(text, max_chars, overlap)` that splits on\nparagraph → sentence → word → char (in that priority order), with\nchunk overlap baked in. Then a fix for the mid-sentence cut bug.\nThen a fix for the missing-overlap bug. Then the full version that\ntakes a separator priority list and applies them recursively.",
+          "cta": "Got it",
+          "code": "# naive: cut every N characters. fast, simple, destroys structure.\ndef chunk_by_chars(text, size=80):\n    return [text[i:i + size] for i in range(0, len(text), size)]\n\ndoc = \"\"\"# Setup\n\nInstall the package with pip.\n\n```python\nimport requests\nresponse = requests.get(url)\n```\n\nThen read the response.\"\"\"\n\nfor i, chunk in enumerate(chunk_by_chars(doc, 80), start=1):\n    print(f\"--- chunk {i} ---\")\n    print(chunk)\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "context-and-retrieval/chunking-that-respects-structure/s02-02-which-content-shape-breaks",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Structured content (markdown code blocks, JSON braces) loses meaning when sliced mid-structure. Free-form prose tolerates random cuts much better — every word boundary is roughly equivalent.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 55,
+          "concept": "chunk-shapes-most-vulnerable",
+          "prompt": "Naive char-count chunking cuts every N characters regardless of\nstructure. Which TWO shapes ABOVE are most likely to be SHREDDED —\nmeaning a single chunk loses semantic integrity (a code block torn\nin half, a JSON object's brace orphaned)?\n",
+          "options": [
+            {
+              "id": "a_and_c",
+              "label": "A (markdown with code blocks) and C (JSON-like config)"
+            },
+            {
+              "id": "b_and_d",
+              "label": "B (plain prose) and D (short FAQ)",
+              "explain": "Plain prose recovers gracefully — adjacent chunks hold the same surrounding sentences. Short FAQs fit in one chunk so chunking barely runs."
+            },
+            {
+              "id": "a_and_d",
+              "label": "A and D",
+              "explain": "D rarely exceeds chunk size. The FAQ either fits whole or fits per-Q&A."
+            },
+            {
+              "id": "b_and_c",
+              "label": "B and C",
+              "explain": "B's prose handles char-cuts surprisingly well. C is the bigger problem, but the prose isn't."
+            }
+          ],
+          "answerIds": [
+            "a_and_c"
+          ],
+          "shuffle": false,
+          "code": "# four content shapes. which break worst under naive char-count chunking?\nshapes = {\n    \"A\": \"A markdown doc with code blocks, headings, and bullet lists.\",\n    \"B\": \"Plain prose articles with no special syntax (e.g., a novel).\",\n    \"C\": \"JSON-like config dumps with nested braces and indentation.\",\n    \"D\": \"A 5-line FAQ where each question and answer fit in one paragraph.\",\n}\nfor k, v in shapes.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "context-and-retrieval/chunking-that-respects-structure/s03-03-the-recursive-splitter",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "recursive-separator-fallback",
+          "body": "# Recursive split, in priority order\n\nThe recursive splitter is the algorithm every framework's default\nchunker uses. It looks complex; it isn't. Three rules:\n\n## 1. The separators are an ordered list\n\n```python\nSEPARATORS = [\"\\n\\n\", \"\\n\", \". \", \" \", \"\"]\n```\n\nIn English: try paragraph break first, then line break, then\nsentence-end, then word, then character. Order = priority. Earlier\nseparators preserve more semantic meaning.\n\nFor code, the list changes:\n\n```python\nPYTHON_SEPARATORS = [\"\\nclass \", \"\\ndef \", \"\\n\\n\", \"\\n\", \" \", \"\"]\n```\n\n`class` and `def` boundaries beat paragraph breaks for Python files.\nLangChain ships these per-language out of the box; LlamaIndex's\n`CodeSplitter` does the same with tree-sitter parsing.\n\n## 2. Try separators top-to-bottom; recurse on big chunks\n\nThe function:\n\n1. Picks the highest-priority separator that exists in the text.\n2. Splits and reassembles parts back into chunks ≤ `max_chars`.\n3. Any chunk still too big after assembly → recurse on it with the\n   *next* separator.\n\nThis means a long paragraph gets split into sentences. A long\nsentence gets split into words. A pathologically long word (rare)\ngets cut at character. Each cut is at the highest-priority\nboundary that fits.\n\n## 3. The empty-string separator is your safety net\n\n```python\nif sep == \"\":\n    return [text[i:i + max_chars] for i in range(0, len(text), max_chars)]\n```\n\nIf the text has no separators at all (one giant URL, a base64\nblob, a runaway `ImportError` traceback), the function still\nreturns chunks of bounded size. Without the empty-string fallback,\na malformed document could produce one infinitely-long chunk that\noverflows your token budget.\n\n## What gets cut, and why it's better than naive\n\nTake a markdown doc with a code block:\n\n```\n# Setup\n\nInstall with pip.\n\n```python\nimport requests\nresponse = requests.get(url)\n```\n\nThen read the response.\n```\n\n- **Naive char-count chunking** cuts every 80 chars regardless. The\n  code block gets sliced mid-line. `import requests` ends up in\n  one chunk; `response = requests.get(url)` ends up in another.\n- **Recursive split** finds `\\n\\n` first and splits into 4 logical\n  blocks: heading, install instruction, code block, follow-up. If\n  any block is still too big, it falls to `\\n`, then `. `. The\n  code block stays whole.\n\nThe query *\"show me the request example\"* now retrieves the *whole*\ncode block. The model sees both lines. The answer is correct.\n\n## What this lesson does NOT cover\n\nTwo things real production chunkers do that we're skipping for\nbrevity:\n\n1. **Token-aware budgets.** Real chunkers count tokens (via\n   `tiktoken` for OpenAI, Anthropic's `count_tokens` API for\n   Claude), not characters. Embedding models charge per token, so\n   \"max 500 tokens per chunk\" is the right unit. We use chars\n   because Pyodide doesn't have these libraries.\n2. **Markdown/HTML/code AST parsing.** LangChain's\n   `MarkdownTextSplitter` parses headings into a tree and chunks\n   *within* sections. Reducto and Unstructured do the same for\n   PDFs. The recursive char splitter is the floor; AST-aware\n   chunking is the ceiling.\n\nWhat you'll build is the floor. Once you have it, replacing the\ncharacter count with token count is a one-line change, and\nswapping in an AST parser is the next step.",
+          "cta": "Got it",
+          "code": "# the recursive splitter in 20 lines. exact pattern LangChain uses.\n\nSEPARATORS = [\"\\n\\n\", \"\\n\", \". \", \" \", \"\"]\n\ndef recursive_split(text, max_chars, separators=SEPARATORS):\n    # base case: text fits, return it as one chunk.\n    if len(text) <= max_chars:\n        return [text]\n\n    # try each separator in priority order.\n    for sep in separators:\n        if sep == \"\":\n            # last resort: hard cut every max_chars characters.\n            return [text[i:i + max_chars] for i in range(0, len(text), max_chars)]\n\n        if sep in text:\n            parts = text.split(sep)\n            # try to combine parts back into chunks <= max_chars.\n            chunks = []\n            current = \"\"\n            for part in parts:\n                candidate = current + (sep if current else \"\") + part\n                if len(candidate) <= max_chars:\n                    current = candidate\n                else:\n                    if current:\n                        chunks.append(current)\n                    current = part\n            if current:\n                chunks.append(current)\n            # any chunk still too big? recurse with the next separator.\n            result = []\n            next_seps = separators[separators.index(sep) + 1:]\n            for chunk in chunks:\n                if len(chunk) > max_chars:\n                    result.extend(recursive_split(chunk, max_chars, next_seps))\n                else:\n                    result.append(chunk)\n            return result\n    return [text]\n\ndoc = \"First paragraph here.\\n\\nSecond paragraph is longer and has more text in it.\"\nfor c in recursive_split(doc, 40):\n    print(repr(c))\n",
+          "runnable": true
+        },
+        {
+          "type": "predict",
+          "id": "context-and-retrieval/chunking-that-respects-structure/s04-04-predict-the-shred",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The doc is 57 chars. Cut every 20 chars → 3 chunks. The first chunk is the first 20 chars (`\"# Title\\n\\nFirst parag\"`) — the cut lands mid-word because the splitter ignores structure.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Three chunks. Each cuts mid-word at a hard 20-character boundary. This is exactly the bug structure-aware chunking fixes.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 80,
+          "concept": "naive-vs-structured-chunk-count",
+          "code": "# naive char-count chunking on a small markdown doc.\ndoc = \"# Title\\n\\nFirst paragraph.\\n\\nSecond paragraph here.\\n\\nThird.\"\n\ndef chunk_by_chars(text, size):\n    return [text[i:i + size] for i in range(0, len(text), size)]\n\nchunks = chunk_by_chars(doc, 20)\nprint(f\"chunk count: {len(chunks)}\")\nfor c in chunks:\n    print(repr(c))\n",
+          "prompt": "Read the editor. The doc is 60 characters total. Splitting by 20\ncharacters produces how many chunks, and what does the first\nchunk look like?\n\nWhat's the chunk count printed on line 1?\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "chunk count: 3\n'# Title\\n\\nFirst parag'\n'raph.\\n\\nSecond paragr'\n'aph here.\\n\\nThird.'\n",
+            "normalize": "collapse-trailing-newline"
+          }
+        },
+        {
+          "type": "fill",
+          "id": "context-and-retrieval/chunking-that-respects-structure/s05-05-fill-the-separator-list",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Four entries, in priority order: paragraph (`\"\\n\\n\"`), sentence (`\". \"`), word (`\" \"`), char (`\"\"`). The empty string at the end is the safety net.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`[\"\\n\\n\", \". \", \" \", \"\"]` — paragraph, sentence, word, char. Most-semantic first, hard-cut last.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 60,
+          "concept": "separator-priority-list",
+          "prompt": "The recursive splitter takes a list of separators in PRIORITY\norder — try the most semantic one first, fall back through less\nsemantic ones, end with a hard char cut. Fill in the list for\ngeneral English text: paragraph break, then sentence end, then\nword, then character.\n\nExpected output:\n```\n['\\n\\n', '. ', ' ', '']\n```\n",
+          "code": "# the standard English separator priority.\nseparators = ___\nprint(separators)\n",
+          "blanks": [
+            {
+              "id": "separator_list",
+              "accept": [
+                "[\"\\n\\n\", \". \", \" \", \"\"]",
+                "['\\n\\n', '. ', ' ', '']"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "id": "context-and-retrieval/chunking-that-respects-structure/s06-06-fix-the-mid-sentence-cut",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Replace the hard cut with `text.split(\". \")` — but that drops the period from each piece. Re-attach the period to all parts except the last with a list comprehension.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\nparts = text.split(\". \")\nchunks = [p + \".\" for p in parts[:-1]] + [parts[-1]]\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 95,
+          "concept": "split-on-sentence-not-char",
+          "brokenCode": "text = \"Acme was founded in 1958. The company makes running shoes.\"\n\n# bug: hard character cut at position 30 — lands mid-sentence.\ncut_at = 30\nchunks = [text[:cut_at].strip(), text[cut_at:].strip()]\n\nprint(chunks)\n",
+          "prompt": "The naive splitter is cutting mid-sentence. Two sentences fit in\none budget but the cut lands in the middle of the second. The user\nlater asks \"what does the second sentence say?\" — retrieval gets\nhalf of it.\n\nFix the split to break on `\". \"` (sentence boundary) instead of a\nhard character cut. The two resulting chunks should each contain\nexactly one complete sentence.\n\nExpected output:\n```\n['Acme was founded in 1958.', 'The company makes running shoes.']\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "['Acme was founded in 1958.', 'The company makes running shoes.']",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            4,
+            5
+          ],
+          "revealAfter": 5
+        },
+        {
+          "type": "fix",
+          "id": "context-and-retrieval/chunking-that-respects-structure/s07-07-fix-the-missing-overlap",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Take the last `overlap` characters of `chunks[0]` and prepend them to `chunks[1]`. Leave `chunks[0]` itself unchanged.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\nresult = [chunks[0], chunks[0][-overlap:] + \" \" + chunks[1]]\n```\n\nNote the space between the overlap and chunk[1] body — a literal space joins the carry-over to the new content.\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 105,
+          "concept": "chunk-overlap-recall",
+          "brokenCode": "chunks = [\n    \"Acme was founded in 1958.\",\n    \"The company makes running shoes.\",\n]\n\noverlap = 10\n# bug: no overlap. each chunk is isolated; cross-chunk facts get lost.\nresult = chunks\n\nprint(result)\n",
+          "prompt": "Sentences are split cleanly into chunks, but the chunks have NO\noverlap. The user asks \"Acme makes WHAT — and when was it\nfounded?\" — that fact spans both chunks. Retrieval might pull\nonly chunk 0 (\"founded in 1958\") OR only chunk 1 (\"makes running\nshoes\"), missing half the answer.\n\nFix the chunks to add 10 characters of overlap from the END of\nchunk 0 INTO chunk 1, so retrievers that match either chunk see\nboth facts.\n\nExpected output:\n```\n['Acme was founded in 1958.', 'd in 1958. The company makes running shoes.']\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "['Acme was founded in 1958.', 'd in 1958. The company makes running shoes.']",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            7
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "write",
+          "id": "context-and-retrieval/chunking-that-respects-structure/s08-08-write-the-recursive-splitter",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Two halves: (1) base case + separator-loop with greedy accumulation, (2) recursion on chunks that are still too big with the next separator. Use `enumerate(separators)` to track which one you're on.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Key trick: greedy accumulation. Start with `current = \"\"`. For each part, build `candidate = current + sep + part`. If candidate fits, current = candidate. If not, push current to chunks and start a new current = part.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "recursive-text-splitter",
+          "prompt": "Write `recursive_split(text, max_chars, separators)` that returns\na list of chunks, each ≤ `max_chars`. Logic:\n\n- **Base case**: if `len(text) <= max_chars`, return `[text]`.\n- Otherwise iterate `separators` in order. For the first separator\n  that exists in `text`:\n  - Split `text` on that separator into `parts`.\n  - Reassemble parts greedily: accumulate parts into `current`\n    (joined with the separator); when adding the next part would\n    exceed `max_chars`, push `current` into `chunks` and start a\n    new accumulator.\n  - For any chunk still bigger than `max_chars`, recurse with\n    `separators` advanced past the current one.\n  - Return the result.\n- If no separator fits, fall through and hard-cut every\n  `max_chars` characters.\n\nThe separators are `[\"\\n\\n\", \". \", \" \", \"\"]`. Use them in order.\n\nTwo cases run for you. Expected output:\n```\nparagraph case: 3 chunks\nlong-sentence case: 3 chunks\n```\n",
+          "starter": "# define recursive_split(text, max_chars, separators) below\n\ndoc1 = \"Para one short.\\n\\nPara two also short.\\n\\nPara three is here.\"\nresult1 = recursive_split(doc1, 25, [\"\\n\\n\", \". \", \" \", \"\"])\nprint(f\"paragraph case: {len(result1)} chunks\")\n\ndoc2 = \"Sentence one. Sentence two is much longer than the others.\"\nresult2 = recursive_split(doc2, 30, [\"\\n\\n\", \". \", \" \", \"\"])\nprint(f\"long-sentence case: {len(result2)} chunks\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "paragraph case: 3 chunks\nlong-sentence case: 3 chunks\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "def recursive_split(text, max_chars, separators):\n    if len(text) <= max_chars:\n        return [text]\n\n    for i, sep in enumerate(separators):\n        if sep == \"\":\n            return [text[j:j + max_chars] for j in range(0, len(text), max_chars)]\n\n        if sep in text:\n            parts = text.split(sep)\n            chunks = []\n            current = \"\"\n            for part in parts:\n                candidate = current + (sep if current else \"\") + part\n                if len(candidate) <= max_chars:\n                    current = candidate\n                else:\n                    if current:\n                        chunks.append(current)\n                    current = part\n            if current:\n                chunks.append(current)\n\n            result = []\n            next_seps = separators[i + 1:]\n            for chunk in chunks:\n                if len(chunk) > max_chars:\n                    result.extend(recursive_split(chunk, max_chars, next_seps))\n                else:\n                    result.append(chunk)\n            return result\n\n    return [text]\n\ndoc1 = \"Para one short.\\n\\nPara two also short.\\n\\nPara three is here.\"\nresult1 = recursive_split(doc1, 25, [\"\\n\\n\", \". \", \" \", \"\"])\nprint(f\"paragraph case: {len(result1)} chunks\")\n\ndoc2 = \"Sentence one. Sentence two is much longer than the others.\"\nresult2 = recursive_split(doc2, 30, [\"\\n\\n\", \". \", \" \", \"\"])\nprint(f\"long-sentence case: {len(result2)} chunks\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "context-and-retrieval/chunking-that-respects-structure/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 220,
+          "concept": "chunker-with-overlap",
+          "prompt": "Final drill. Build a structure-aware chunker WITH overlap. Write\n`chunk_document(text, max_chars, overlap, separators)` that:\n\n- First runs the recursive split (algorithm from step 8) to get\n  chunks ≤ `max_chars`.\n- Then adds overlap: for each chunk after the first, prepend the\n  LAST `overlap` characters of the previous chunk.\n- Returns the overlap-augmented chunk list.\n\nThree cases run for you. Expected output:\n```\n3 chunks, lengths: [22, 30, 27]\nfirst chunk: 'First short paragraph.'\nsecond chunk starts with: 'ragraph.Second paragrap'\n```\n",
+          "starter": "def recursive_split(text, max_chars, separators):\n    if len(text) <= max_chars:\n        return [text]\n    for i, sep in enumerate(separators):\n        if sep == \"\":\n            return [text[j:j + max_chars] for j in range(0, len(text), max_chars)]\n        if sep in text:\n            parts = text.split(sep)\n            chunks = []\n            current = \"\"\n            for part in parts:\n                candidate = current + (sep if current else \"\") + part\n                if len(candidate) <= max_chars:\n                    current = candidate\n                else:\n                    if current:\n                        chunks.append(current)\n                    current = part\n            if current:\n                chunks.append(current)\n            result = []\n            next_seps = separators[i + 1:]\n            for chunk in chunks:\n                if len(chunk) > max_chars:\n                    result.extend(recursive_split(chunk, max_chars, next_seps))\n                else:\n                    result.append(chunk)\n            return result\n    return [text]\n\n# define chunk_document(text, max_chars, overlap, separators) below\n\ndoc = \"First short paragraph.\\n\\nSecond paragraph here.\\n\\nAnd third one ends.\"\nchunks = chunk_document(doc, 22, 8, [\"\\n\\n\", \". \", \" \", \"\"])\nprint(f\"{len(chunks)} chunks, lengths: {[len(c) for c in chunks]}\")\nprint(f\"first chunk: {chunks[0]!r}\")\nprint(f\"second chunk starts with: {chunks[1][:23]!r}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "3 chunks, lengths: [22, 30, 27]\nfirst chunk: 'First short paragraph.'\nsecond chunk starts with: 'ragraph.Second paragrap'\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "def recursive_split(text, max_chars, separators):\n    if len(text) <= max_chars:\n        return [text]\n    for i, sep in enumerate(separators):\n        if sep == \"\":\n            return [text[j:j + max_chars] for j in range(0, len(text), max_chars)]\n        if sep in text:\n            parts = text.split(sep)\n            chunks = []\n            current = \"\"\n            for part in parts:\n                candidate = current + (sep if current else \"\") + part\n                if len(candidate) <= max_chars:\n                    current = candidate\n                else:\n                    if current:\n                        chunks.append(current)\n                    current = part\n            if current:\n                chunks.append(current)\n            result = []\n            next_seps = separators[i + 1:]\n            for chunk in chunks:\n                if len(chunk) > max_chars:\n                    result.extend(recursive_split(chunk, max_chars, next_seps))\n                else:\n                    result.append(chunk)\n            return result\n    return [text]\n\ndef chunk_document(text, max_chars, overlap, separators):\n    raw_chunks = recursive_split(text, max_chars, separators)\n    if overlap <= 0 or len(raw_chunks) <= 1:\n        return raw_chunks\n    result = [raw_chunks[0]]\n    for prev, current in zip(raw_chunks, raw_chunks[1:]):\n        carry = prev[-overlap:]\n        result.append(carry + current)\n    return result\n\ndoc = \"First short paragraph.\\n\\nSecond paragraph here.\\n\\nAnd third one ends.\"\nchunks = chunk_document(doc, 22, 8, [\"\\n\\n\", \". \", \" \", \"\"])\nprint(f\"{len(chunks)} chunks, lengths: {[len(c) for c in chunks]}\")\nprint(f\"first chunk: {chunks[0]!r}\")\nprint(f\"second chunk starts with: {chunks[1][:23]!r}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 32
     }
   ],
-  "xpTotal": 1
+  "xpTotal": 33
 }

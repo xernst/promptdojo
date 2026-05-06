@@ -1,0 +1,32 @@
+xp: 3
+estSeconds: 75
+concept: tools-list-parsing
+code: |
+  # a real tools/list response from an MCP server.
+  response = {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+          "tools": [
+              {"name": "search",   "description": "Web search.",   "inputSchema": {"required": ["q"]}},
+              {"name": "read_url", "description": "Fetch a page.", "inputSchema": {"required": ["url"]}},
+              {"name": "summarize","description": "Compress text.","inputSchema": {"required": ["text"]}},
+          ],
+      },
+  }
+
+  # extract just the tool names.
+  tool_names = [t["name"] for t in response["result"]["tools"]]
+  print(tool_names)
+prompt: |
+  Read the editor. The MCP server's `tools/list` response is parsed
+  to extract just the tool names. What does the script print?
+grader:
+  kind: stdout-equality
+  expected: "['search', 'read_url', 'summarize']"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'List comprehension over `response["result"]["tools"]`, picking each tool''s `name` field. The result is a Python list of strings.'
+  - level: 2
+    body: '`["search", "read_url", "summarize"]` — three strings, in the order they appeared in the response.'

@@ -1,0 +1,73 @@
+xp: 8
+estSeconds: 220
+concept: cache-strategy-decision
+prompt: |
+  Final drill. Build a cache strategy decision helper. Write
+  `recommend_strategy(stable_tokens, variable_tokens, calls, session_minutes, input_rate)` that:
+
+  - Computes uncached cost, 5m-cached cost, and 1h-cached cost.
+    - 5m-cached writes 1.25× input rate; 1h-cached writes 2× input rate.
+    - Both read at 0.1× input rate.
+    - 5m cache: if `session_minutes > 5`, the cache expires
+      mid-session — the second half of calls re-write the cache.
+      Approximation: half the calls write, half read.
+    - 1h cache: write once, read for all subsequent calls.
+  - Returns a dict
+    `{"uncached": <cost>, "cached_5m": <cost>, "cached_1h": <cost>, "winner": <strategy with lowest cost>}`.
+  - All costs rounded to 2 places.
+
+  Two scenarios run for you. Expected output:
+  ```
+  short session (1 min): cached_5m=0.33 cached_1h=0.35 winner=cached_5m
+  long session (30 min): cached_5m=0.36 cached_1h=0.35 winner=cached_1h
+  ```
+starter: |
+  # define recommend_strategy(stable_tokens, variable_tokens, calls, session_minutes, input_rate) below
+
+  short = recommend_strategy(8000, 200, 100, session_minutes=1,  input_rate=3.0)
+  long_ = recommend_strategy(8000, 200, 100, session_minutes=30, input_rate=3.0)
+
+  print(f"short session (1 min): cached_5m={short['cached_5m']} cached_1h={short['cached_1h']} winner={short['winner']}")
+  print(f"long session (30 min): cached_5m={long_['cached_5m']} cached_1h={long_['cached_1h']} winner={long_['winner']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    short session (1 min): cached_5m=0.33 cached_1h=0.35 winner=cached_5m
+    long session (30 min): cached_5m=0.36 cached_1h=0.35 winner=cached_1h
+  normalize: collapse-trailing-newline
+solution: |
+  def recommend_strategy(stable_tokens, variable_tokens, calls, session_minutes, input_rate):
+      uncached = input_rate * (stable_tokens + variable_tokens) * calls / 1_000_000
+
+      var_cost = input_rate * variable_tokens * calls / 1_000_000
+
+      # 5m cache strategy
+      if session_minutes <= 5:
+          write_5m = input_rate * 1.25 * stable_tokens / 1_000_000
+          read_5m  = input_rate * 0.1  * stable_tokens * (calls - 1) / 1_000_000
+      else:
+          # cache expires mid-session: assume half the calls write, half read.
+          half = calls // 2
+          write_5m = input_rate * 1.25 * stable_tokens * 2 / 1_000_000  # write twice
+          read_5m  = input_rate * 0.1  * stable_tokens * (calls - 2) / 1_000_000
+      cached_5m = write_5m + read_5m + var_cost
+
+      # 1h cache strategy
+      write_1h = input_rate * 2.0 * stable_tokens / 1_000_000
+      read_1h  = input_rate * 0.1 * stable_tokens * (calls - 1) / 1_000_000
+      cached_1h = write_1h + read_1h + var_cost
+
+      strategies = {
+          "uncached": round(uncached, 2),
+          "cached_5m": round(cached_5m, 2),
+          "cached_1h": round(cached_1h, 2),
+      }
+      winner = min(strategies, key=lambda k: strategies[k])
+      return {**strategies, "winner": winner}
+
+  short = recommend_strategy(8000, 200, 100, session_minutes=1,  input_rate=3.0)
+  long_ = recommend_strategy(8000, 200, 100, session_minutes=30, input_rate=3.0)
+
+  print(f"short session (1 min): cached_5m={short['cached_5m']} cached_1h={short['cached_1h']} winner={short['winner']}")
+  print(f"long session (30 min): cached_5m={long_['cached_5m']} cached_1h={long_['cached_1h']} winner={long_['winner']}")
+passThreshold: 0.66

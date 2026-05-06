@@ -1,0 +1,16 @@
+slug: routing
+title: "Routing — pick the path before doing the work"
+estMinutes: 11
+prerequisites:
+  - the-loop
+  - multi-step-tools
+order:
+  - 01-intro.read.md
+  - 02-when-to-route.mc.yaml
+  - 03-classifier-output.read.md
+  - 04-predict-the-route.predict.yaml
+  - 05-fill-the-dispatch.fill.yaml
+  - 06-fix-the-fallback.fix.yaml
+  - 07-fix-the-loose-classifier.fix.yaml
+  - 08-write-the-router.write.yaml
+  - 09-checkpoint.checkpoint.yaml

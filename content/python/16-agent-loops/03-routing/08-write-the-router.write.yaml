@@ -1,0 +1,91 @@
+xp: 5
+estSeconds: 180
+concept: full-router-implementation
+prompt: |
+  Build a full router. Write `route(question)` that:
+
+  - Calls `fake_classifier(question)` to get a raw category string.
+  - Normalizes it: `.strip().lower()`.
+  - If the normalized category is in `ROUTES`, run that handler with
+    the question.
+  - Otherwise run `ROUTES["general"]` as the fallback.
+  - Returns the handler's output.
+
+  The classifier may return messy strings (`"Billing"`, `"  general
+  "`, `"unknown_category"`). Your router should handle all three.
+
+  Then the script will run four cases. Expected output:
+  ```
+  BILL -> I want a refund
+  TECH -> 500 error on checkout
+  GEN  -> what time do you open
+  GEN  -> something completely off-topic
+  ```
+starter: |
+  ROUTES = {
+      "billing":   lambda q: f"BILL -> {q}",
+      "technical": lambda q: f"TECH -> {q}",
+      "general":   lambda q: f"GEN  -> {q}",
+  }
+
+  classifier_outputs = iter(["Billing", "technical", "  general  ", "unknown_category"])
+
+  def fake_classifier(question):
+      return next(classifier_outputs)
+
+  # define route(question) below
+
+  questions = [
+      "I want a refund",
+      "500 error on checkout",
+      "what time do you open",
+      "something completely off-topic",
+  ]
+  for q in questions:
+      print(route(q))
+grader:
+  kind: stdout-equality
+  expected: |
+    BILL -> I want a refund
+    TECH -> 500 error on checkout
+    GEN  -> what time do you open
+    GEN  -> something completely off-topic
+  normalize: collapse-trailing-newline
+solution: |
+  ROUTES = {
+      "billing":   lambda q: f"BILL -> {q}",
+      "technical": lambda q: f"TECH -> {q}",
+      "general":   lambda q: f"GEN  -> {q}",
+  }
+
+  classifier_outputs = iter(["Billing", "technical", "  general  ", "unknown_category"])
+
+  def fake_classifier(question):
+      return next(classifier_outputs)
+
+  def route(question):
+      raw = fake_classifier(question)
+      category = raw.strip().lower()
+      handler = ROUTES.get(category, ROUTES["general"])
+      return handler(question)
+
+  questions = [
+      "I want a refund",
+      "500 error on checkout",
+      "what time do you open",
+      "something completely off-topic",
+  ]
+  for q in questions:
+      print(route(q))
+hint:
+  - level: 1
+    body: 'Three lines: classify, normalize, dispatch. Use `.strip().lower()` on the classifier output and `ROUTES.get(category, ROUTES["general"])` for the dispatch.'
+  - level: 2
+    body: |
+      ```python
+      def route(question):
+          raw = fake_classifier(question)
+          category = raw.strip().lower()
+          handler = ROUTES.get(category, ROUTES["general"])
+          return handler(question)
+      ```

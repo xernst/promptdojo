@@ -1,0 +1,52 @@
+xp: 4
+estSeconds: 110
+concept: both-orders-mitigation
+prompt: |
+  The pairwise judge is calling itself only ONCE per pair — order
+  `(a, b)`. Position bias means whichever output sits in slot `A`
+  gets ~35% more votes than it deserves on close pairs.
+
+  Fix the code to run BOTH orders and only declare a winner when the
+  judge is *consistent* (same physical output wins regardless of
+  position). On disagreement, return `"tie"`.
+
+  Expected output:
+  ```
+  result: tie
+  ```
+brokenCode: |
+  # the judge is biased toward whichever option sits in slot A.
+  def biased_judge(question, a, b):
+      return "A"  # always picks A, regardless of content
+
+  question = "Which output is better?"
+  output_x = "Output X"
+  output_y = "Output Y"
+
+  # bug: only one order tested, so we ship whatever sits in slot A.
+  winner = biased_judge(question, output_x, output_y)
+  result = "X" if winner == "A" else "Y"
+  print(f"result: {result}")
+bugLines:
+  - 11
+grader:
+  kind: stdout-equality
+  expected: "result: tie"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Run the judge twice: once as `(question, output_x, output_y)`, once as `(question, output_y, output_x)`. If both rounds pick the same physical output, that''s a real winner. If they disagree, return `"tie"`.'
+  - level: 2
+    body: |
+      Replace line 11 with the both-orders mitigation:
+
+      ```python
+      v1 = biased_judge(question, output_x, output_y)  # X in A, Y in B
+      v2 = biased_judge(question, output_y, output_x)  # Y in A, X in B
+      x_won_both = (v1 == "A" and v2 == "B")
+      y_won_both = (v1 == "B" and v2 == "A")
+      if x_won_both:   result = "X"
+      elif y_won_both: result = "Y"
+      else:            result = "tie"
+      ```
+revealAfter: 5

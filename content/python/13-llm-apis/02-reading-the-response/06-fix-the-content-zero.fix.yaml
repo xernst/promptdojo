@@ -1,0 +1,44 @@
+xp: 4
+estSeconds: 95
+concept: never-hardcode-content-zero
+prompt: |
+  The code reads `response["content"][0]["text"]`. The model returned
+  a `tool_use` block FIRST, then a `text` block. So `content[0]` is
+  the tool_use — which has no `text` key. The code raises `KeyError`.
+
+  Fix the code to FILTER for text blocks first, then read the text.
+  Use the comprehension pattern from step 5.
+
+  Expected output:
+  ```
+  found.
+  ```
+brokenCode: |
+  response = {
+      "stop_reason": "end_turn",
+      "content": [
+          {"type": "tool_use", "id": "t1", "name": "search", "input": {}},
+          {"type": "text",     "text":     "found."},
+      ],
+  }
+
+  # bug: assumes content[0] is always a text block. it isn't.
+  print(response["content"][0]["text"])
+bugLines:
+  - 9
+grader:
+  kind: stdout-equality
+  expected: "found."
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Filter for text blocks with a comprehension, then take the first one (or join all). `[b for b in content if b["type"] == "text"]` gives you only text blocks.'
+  - level: 2
+    body: |
+      Replace line 9 with:
+
+      ```python
+      text_blocks = [b for b in response["content"] if b["type"] == "text"]
+      print(text_blocks[0]["text"])
+      ```
+revealAfter: 4

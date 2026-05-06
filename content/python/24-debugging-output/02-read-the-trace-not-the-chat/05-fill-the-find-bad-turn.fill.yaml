@@ -1,0 +1,40 @@
+xp: 3
+estSeconds: 65
+concept: predicate-based-trace-search
+prompt: |
+  The function `find_first(trace, predicate)` should return the
+  first turn where `predicate(turn)` returns `True`, or `None` if
+  no turn matches. Fill in the call so the example finds the first
+  turn with `tokens > 500`.
+
+  Expected output:
+  ```
+  bad turn: 2
+  ```
+code: |
+  trace = [
+      {"turn": 1, "tokens": 412},
+      {"turn": 2, "tokens": 880},
+      {"turn": 3, "tokens": 920},
+      {"turn": 4, "tokens": 145},
+  ]
+
+  def find_first(trace, predicate):
+      for t in trace:
+          if predicate(t):
+              return t
+      return None
+
+  bad = ___
+  print(f"bad turn: {bad['turn']}")
+blanks:
+  - id: find_first_call
+    accept:
+      - "find_first(trace, lambda t: t['tokens'] > 500)"
+      - 'find_first(trace, lambda t: t["tokens"] > 500)'
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Pass two arguments: the trace, and a lambda that returns True when `t["tokens"] > 500`.'
+  - level: 2
+    body: '`find_first(trace, lambda t: t["tokens"] > 500)` — predicate as a single-line lambda. Lambdas are how production code parameterizes "find the bad turn" without writing a new function for each criterion.'

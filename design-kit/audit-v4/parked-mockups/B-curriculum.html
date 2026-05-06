@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>parked mockup B — curriculum accordion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink-950: #14140f; --ink-900: #1a1a14; --ink-800: #25241f; --ink-700: #36352f;
+    --ink-500: #6b6a62; --ink-400: #9c9c93; --ink-300: #d4d3cd; --ink-100: #fafaf7;
+    --green-400: #34d399; --green-500: #2aa06a; --green-700: #186b46;
+    --display: 'Fraunces', serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ink-950); color: var(--ink-100); font-family: var(--display); }
+  body { padding: 32px; }
+
+  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 2200px; margin: 0 auto; }
+  .panel {
+    background: var(--ink-950); border: 1px solid var(--ink-800);
+    overflow: hidden; position: relative; min-height: 1200px;
+  }
+  .panel .badge {
+    position: absolute; top: 12px; left: 12px; z-index: 10;
+    font-family: var(--mono); font-size: 10px; font-weight: 800;
+    letter-spacing: 0.4em; text-transform: uppercase;
+    padding: 4px 10px;
+  }
+  .panel .badge.before { background: var(--ink-800); color: var(--ink-300); }
+  .panel .badge.after  { background: var(--green-500); color: var(--ink-950); }
+  .panel .body { padding: 56px 48px 40px; }
+
+  .eyebrow {
+    font-family: var(--mono); color: var(--green-500); font-weight: 800;
+    font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .h1 {
+    font-family: var(--display); font-weight: 900;
+    font-variation-settings: 'opsz' 144;
+    font-size: 56px; line-height: 0.95; letter-spacing: -0.04em;
+    margin: 0 0 32px;
+  }
+
+  /* === BEFORE: current — phase-banded card grid === */
+  .phase-band {
+    border-left: 2px solid var(--green-700); padding-left: 16px; margin-bottom: 24px;
+  }
+  .phase-band .label { font-family: var(--mono); font-size: 11px; color: var(--green-500); font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase; }
+  .phase-band .name { font-family: var(--display); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; }
+  .phase-band .meta { font-family: var(--mono); font-size: 10px; color: var(--ink-500); margin-top: 6px; }
+
+  .ch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .ch-card {
+    border: 1px solid var(--ink-800); padding: 14px 16px;
+    background: var(--ink-900);
+  }
+  .ch-card .num { font-family: var(--mono); font-size: 9px; color: var(--ink-500); letter-spacing: 0.3em; text-transform: uppercase; }
+  .ch-card .name { font-family: var(--display); font-size: 16px; font-weight: 800; letter-spacing: -0.015em; margin-top: 4px; line-height: 1.15; }
+  .ch-card .meta { font-family: var(--mono); font-size: 9px; color: var(--ink-500); letter-spacing: 0.04em; margin-top: 6px; }
+  .ch-card .pbar { height: 1px; background: var(--ink-800); margin-top: 6px; position: relative; overflow: hidden; }
+  .ch-card .pbar::after { content: ""; position: absolute; left: 0; top: 0; height: 1px; background: var(--green-500); width: 0%; }
+
+  /* === AFTER: hairline accordion (cartesian style) === */
+  .acc-row {
+    border-top: 1px solid var(--ink-800);
+    padding: 12px 0; cursor: default;
+  }
+  .acc-row:last-of-type { border-bottom: 1px solid var(--ink-800); }
+  .acc-row .head {
+    display: grid; grid-template-columns: 32px 1fr auto auto auto; gap: 24px; align-items: baseline;
+  }
+  .acc-row .num { font-family: var(--mono); font-size: 10px; color: var(--ink-500); letter-spacing: 0.2em; }
+  .acc-row .name { font-family: var(--display); font-weight: 800; font-size: 22px; letter-spacing: -0.02em; line-height: 1.15; color: var(--ink-100); }
+  .acc-row .name em { font-style: normal; color: var(--green-500); }
+  .acc-row .time { font-family: var(--mono); font-size: 11px; color: var(--ink-500); letter-spacing: 0.04em; }
+  .acc-row .steps { font-family: var(--mono); font-size: 11px; color: var(--ink-400); letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+  .acc-row .chev { font-family: var(--mono); color: var(--ink-500); font-size: 14px; }
+  .acc-row.expanded .chev { transform: rotate(90deg); display: inline-block; }
+  .acc-row.expanded .body {
+    margin-top: 14px; padding-left: 56px;
+    font-family: var(--display); font-size: 14px; line-height: 1.55; color: var(--ink-300); max-width: 64ch;
+  }
+  .acc-row.expanded .lessons {
+    margin-top: 12px; padding-left: 56px;
+    font-family: var(--mono); font-size: 11px; color: var(--ink-500); letter-spacing: 0.05em; line-height: 1.9;
+  }
+  .acc-row.expanded .lessons .l { color: var(--ink-300); }
+  .acc-row.expanded .lessons .l::before { content: "─ "; color: var(--ink-700); }
+
+  /* phase eyebrow above accordion groups */
+  .phase-section {
+    padding: 32px 0 12px;
+    font-family: var(--mono); font-size: 11px; color: var(--green-500);
+    letter-spacing: 0.4em; text-transform: uppercase; font-weight: 800;
+  }
+  .phase-section .name { color: var(--ink-300); margin-left: 16px; letter-spacing: 0.06em; text-transform: none; }
+  .phase-section .meta { color: var(--ink-500); margin-left: 16px; }
+
+  .panel-title {
+    text-align: center; font-family: var(--mono); font-size: 12px;
+    letter-spacing: 0.4em; text-transform: uppercase; color: var(--ink-400);
+    padding: 24px 0 16px; font-weight: 800;
+  }
+</style>
+</head>
+<body>
+
+<div style="text-align:center; padding-bottom:24px;">
+  <div style="font-family: var(--mono); font-size: 11px; color: var(--green-500); letter-spacing: 0.4em; text-transform: uppercase; font-weight: 800;">parked mockup · panel B</div>
+  <div style="font-family: var(--display); font-weight: 900; font-size: 36px; letter-spacing: -0.03em; margin-top: 8px;">curriculum view — current cards vs parked accordion</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ═══════════════════ BEFORE ═══════════════════ -->
+  <div class="panel">
+    <div class="badge before">current · live now</div>
+    <div class="body">
+      <div class="eyebrow">the curriculum</div>
+      <h1 class="h1">25 chapters. 5 phases.</h1>
+
+      <div class="phase-band">
+        <div class="label">phase 01 · foundations</div>
+        <div class="name">phase 01 · foundations</div>
+        <div class="meta">ch 01–07 · ~1h 4m</div>
+      </div>
+      <div class="ch-grid">
+        <div class="ch-card"><div class="num">ch 01</div><div class="name">variables</div><div class="meta">26 steps · ~22m · 0/26</div><div class="pbar"></div></div>
+        <div class="ch-card"><div class="num">ch 02</div><div class="name">functions</div><div class="meta">27 steps · ~23m · 0/27</div><div class="pbar"></div></div>
+        <div class="ch-card"><div class="num">ch 03</div><div class="name">lists and dicts</div><div class="meta">27 steps · ~23m · 0/27</div><div class="pbar"></div></div>
+        <div class="ch-card"><div class="num">ch 04</div><div class="name">loops</div><div class="meta">28 steps · ~24m · 0/28</div><div class="pbar"></div></div>
+        <div class="ch-card"><div class="num">ch 05</div><div class="name">conditionals</div><div class="meta">17 steps · ~14m · 0/17</div><div class="pbar"></div></div>
+        <div class="ch-card"><div class="num">ch 06</div><div class="name">tracebacks</div><div class="meta">26 steps · ~22m · 0/26</div><div class="pbar"></div></div>
+        <div class="ch-card"><div class="num">ch 07</div><div class="name">mutation and state</div><div class="meta">17 steps · ~14m · 0/17</div><div class="pbar"></div></div>
+      </div>
+
+      <div class="phase-band" style="margin-top: 32px;">
+        <div class="label">phase 02 · real python</div>
+        <div class="name">phase 02 · real python</div>
+        <div class="meta">ch 08–12 · ~1h 56m</div>
+      </div>
+      <div class="ch-grid">
+        <div class="ch-card"><div class="num">ch 08</div><div class="name">modules and imports</div><div class="meta">17 steps · ~14m · 0/17</div><div class="pbar"></div></div>
+        <div class="ch-card"><div class="num">ch 09</div><div class="name">error handling</div><div class="meta">27 steps · ~23m · 0/27</div><div class="pbar"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ AFTER (PARKED) ═══════════════════ -->
+  <div class="panel">
+    <div class="badge after">parked · proposed</div>
+    <div class="body">
+      <div class="eyebrow">the curriculum</div>
+      <h1 class="h1">25 chapters. 5 phases.</h1>
+
+      <div class="phase-section">phase 01 <span class="name">foundations</span><span class="meta">· 7 chapters · 1h 4m</span></div>
+
+      <div class="acc-row">
+        <div class="head">
+          <div class="num">01</div>
+          <div class="name">variables</div>
+          <div class="time">22m</div>
+          <div class="steps">26 steps</div>
+          <div class="chev">›</div>
+        </div>
+      </div>
+      <div class="acc-row expanded">
+        <div class="head">
+          <div class="num">02</div>
+          <div class="name">functions</div>
+          <div class="time">23m</div>
+          <div class="steps">27 steps</div>
+          <div class="chev">›</div>
+        </div>
+        <div class="body">the python that sits between you and the model. parameters, return values, scope — the four shapes ai gets wrong most often.</div>
+        <div class="lessons">
+          <span class="l">l1 · the function header</span><br>
+          <span class="l">l2 · scope and the LEGB rule</span><br>
+          <span class="l">l3 · returning vs printing</span>
+        </div>
+      </div>
+      <div class="acc-row">
+        <div class="head"><div class="num">03</div><div class="name">lists and dicts</div><div class="time">23m</div><div class="steps">27 steps</div><div class="chev">›</div></div>
+      </div>
+      <div class="acc-row">
+        <div class="head"><div class="num">04</div><div class="name">loops</div><div class="time">24m</div><div class="steps">28 steps</div><div class="chev">›</div></div>
+      </div>
+      <div class="acc-row">
+        <div class="head"><div class="num">05</div><div class="name">conditionals</div><div class="time">14m</div><div class="steps">17 steps</div><div class="chev">›</div></div>
+      </div>
+      <div class="acc-row">
+        <div class="head"><div class="num">06</div><div class="name">tracebacks</div><div class="time">22m</div><div class="steps">26 steps</div><div class="chev">›</div></div>
+      </div>
+      <div class="acc-row">
+        <div class="head"><div class="num">07</div><div class="name">mutation <em>and state</em></div><div class="time">14m</div><div class="steps">17 steps</div><div class="chev">›</div></div>
+      </div>
+
+      <div class="phase-section">phase 02 <span class="name">real python</span><span class="meta">· 5 chapters · 1h 56m</span></div>
+      <div class="acc-row">
+        <div class="head"><div class="num">08</div><div class="name">modules and imports</div><div class="time">14m</div><div class="steps">17 steps</div><div class="chev">›</div></div>
+      </div>
+      <div class="acc-row">
+        <div class="head"><div class="num">09</div><div class="name">error handling</div><div class="time">23m</div><div class="steps">27 steps</div><div class="chev">›</div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="panel-title">what changed</div>
+
+<div class="wrap" style="grid-template-columns: 1fr; max-width: 980px;">
+  <div style="background: var(--ink-900); border: 1px solid var(--ink-800); padding: 28px 36px; font-family: var(--mono); font-size: 13px; line-height: 1.7; color: var(--ink-300);">
+    <div style="display: grid; grid-template-columns: auto 1fr; gap: 18px 24px;">
+      <span style="color: var(--green-400); font-weight: 800;">density 4×</span><span>card grid (2-col, 14 boxes per phase) becomes hairline list (1-col, 7 rows). same 25 chapters fit in less than half the vertical scroll.</span>
+      <span style="color: var(--green-400); font-weight: 800;">expandable</span><span>click chapter row → expands to show blurb + lesson titles inline. cartesian's pattern. mid-page TOC navigation.</span>
+      <span style="color: var(--green-400); font-weight: 800;">phase eyebrow</span><span>tiny mono `phase 01 — foundations · 7 chapters · 1h 4m` replaces the phase-banded card. less chrome.</span>
+      <span style="color: var(--green-400); font-weight: 800;">visual rhythm</span><span>just hairlines, time, step count. no progress bars (moves to per-chapter page where they matter).</span>
+      <span style="color: var(--coral); font-weight: 800;">cost</span><span>~5h dev. parked because it deletes the existing `<PhaseBandedRail>` component and reshapes /curriculum entirely.</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

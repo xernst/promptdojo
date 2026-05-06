@@ -1,0 +1,85 @@
+xp: 8
+estSeconds: 220
+concept: position-bias-aware-pairwise
+prompt: |
+  Final drill. Build a pairwise judge that detects its OWN position
+  bias and returns `tie` when it disagrees with itself across orders.
+
+  Write `pairwise(question, output_a, output_b)` that:
+
+  - Calls `fake_judge(question, first, second)` twice:
+    - Once with `first=output_a, second=output_b` — read result as
+      "the output named output_a sits in slot A this round."
+    - Once with `first=output_b, second=output_a` — output_b is now
+      in slot A.
+  - Each call returns `"A"` or `"B"` (the *slot* that won).
+  - Translate slot wins back to which physical output won that round.
+  - If the SAME physical output won both rounds, return that output's
+    label (`"a"` or `"b"`).
+  - If the rounds disagreed, return `"tie"`.
+
+  Then run a multi-case suite. Expected output:
+  ```
+  case 1: a wins  (consistent)
+  case 2: tie     (position-biased — judge disagrees with itself)
+  case 3: b wins  (consistent)
+  ```
+starter: |
+  # the fake judge has a known length bias: always picks slot with the longer string.
+  def fake_judge(question, first, second):
+      return "A" if len(first) > len(second) else "B"
+
+  # define pairwise(question, output_a, output_b) below
+
+  cases = [
+      # case 1: output_a is genuinely longer → wins both orders → "a wins"
+      ("Pick the better answer.", "A long detailed correct answer here.", "Short."),
+      # case 2: equal length → judge fluctuates → "tie"
+      ("Pick the better answer.", "Same exact length here", "Same exact length here"),
+      # case 3: output_b is genuinely longer → wins both orders → "b wins"
+      ("Pick the better answer.", "Brief.", "A long detailed correct answer here."),
+  ]
+
+  for i, (q, a, b) in enumerate(cases, start=1):
+      result = pairwise(q, a, b)
+      label = "a wins  (consistent)" if result == "a" else \
+              "b wins  (consistent)" if result == "b" else \
+              "tie     (position-biased — judge disagrees with itself)"
+      print(f"case {i}: {label}")
+grader:
+  kind: stdout-equality
+  expected: |
+    case 1: a wins  (consistent)
+    case 2: tie     (position-biased — judge disagrees with itself)
+    case 3: b wins  (consistent)
+  normalize: collapse-trailing-newline
+solution: |
+  def fake_judge(question, first, second):
+      return "A" if len(first) > len(second) else "B"
+
+  def pairwise(question, output_a, output_b):
+      # round 1: output_a in slot A, output_b in slot B.
+      slot_winner_1 = fake_judge(question, output_a, output_b)
+      round_1_winner = "a" if slot_winner_1 == "A" else "b"
+
+      # round 2: output_b in slot A, output_a in slot B.
+      slot_winner_2 = fake_judge(question, output_b, output_a)
+      round_2_winner = "b" if slot_winner_2 == "A" else "a"
+
+      if round_1_winner == round_2_winner:
+          return round_1_winner
+      return "tie"
+
+  cases = [
+      ("Pick the better answer.", "A long detailed correct answer here.", "Short."),
+      ("Pick the better answer.", "Same exact length here", "Same exact length here"),
+      ("Pick the better answer.", "Brief.", "A long detailed correct answer here."),
+  ]
+
+  for i, (q, a, b) in enumerate(cases, start=1):
+      result = pairwise(q, a, b)
+      label = "a wins  (consistent)" if result == "a" else \
+              "b wins  (consistent)" if result == "b" else \
+              "tie     (position-biased — judge disagrees with itself)"
+      print(f"case {i}: {label}")
+passThreshold: 0.66

@@ -1,0 +1,40 @@
+xp: 3
+estSeconds: 65
+concept: validate-before-dispatch
+prompt: |
+  The dispatcher is about to call the tool. Fill in the call to
+  `validate(args, schema)` and check the `ok` field before running.
+  On failure, the dispatcher returns the error string so it can
+  flow back to the model as a `tool_result`.
+
+  Expected output:
+  ```
+  ERROR: missing required field: q
+  ```
+code: |
+  def validate(args, schema):
+      for field in schema.get("required", []):
+          if field not in args:
+              return {"ok": False, "error": f"missing required field: {field}"}
+      return {"ok": True, "args": args}
+
+  TOOLS = {"search": lambda q: f"results for {q}"}
+  SCHEMAS = {"search": {"required": ["q"]}}
+
+  def dispatch(tool_name, args):
+      verdict = ___
+      if verdict["ok"]:
+          return TOOLS[tool_name](**verdict["args"])
+      return f"ERROR: {verdict['error']}"
+
+  print(dispatch("search", {"query": "ramen"}))
+blanks:
+  - id: validate_call
+    accept:
+      - "validate(args, SCHEMAS[tool_name])"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Call `validate` with two arguments: `args` (the dict the model sent) and `SCHEMAS[tool_name]` (the schema for that tool).'
+  - level: 2
+    body: '`validate(args, SCHEMAS[tool_name])` — pass the args dict and the per-tool schema lookup.'

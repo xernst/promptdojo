@@ -1,0 +1,33 @@
+xp: 3
+estSeconds: 80
+concept: naive-vs-structured-chunk-count
+code: |
+  # naive char-count chunking on a small markdown doc.
+  doc = "# Title\n\nFirst paragraph.\n\nSecond paragraph here.\n\nThird."
+
+  def chunk_by_chars(text, size):
+      return [text[i:i + size] for i in range(0, len(text), size)]
+
+  chunks = chunk_by_chars(doc, 20)
+  print(f"chunk count: {len(chunks)}")
+  for c in chunks:
+      print(repr(c))
+prompt: |
+  Read the editor. The doc is 60 characters total. Splitting by 20
+  characters produces how many chunks, and what does the first
+  chunk look like?
+
+  What's the chunk count printed on line 1?
+grader:
+  kind: stdout-equality
+  expected: |
+    chunk count: 3
+    '# Title\n\nFirst parag'
+    'raph.\n\nSecond paragr'
+    'aph here.\n\nThird.'
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The doc is 57 chars. Cut every 20 chars → 3 chunks. The first chunk is the first 20 chars (`"# Title\n\nFirst parag"`) — the cut lands mid-word because the splitter ignores structure.'
+  - level: 2
+    body: 'Three chunks. Each cuts mid-word at a hard 20-character boundary. This is exactly the bug structure-aware chunking fixes.'

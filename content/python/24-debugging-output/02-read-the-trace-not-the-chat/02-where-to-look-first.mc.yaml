@@ -1,0 +1,32 @@
+xp: 2
+estSeconds: 55
+concept: triage-first-look
+code: |
+  # a complaint comes in. four places you could look first.
+  places = {
+      "A": "Re-read the user's complaint and the agent's answer.",
+      "B": "Open the trace and scan for non-zero validation_errors / non-end_turn stop_reason.",
+      "C": "Re-run the agent on the same input and see what happens.",
+      "D": "Add a try/except around the call site to catch errors.",
+  }
+  for k, v in places.items():
+      print(f"{k}: {v}")
+prompt: |
+  A user reports a bad agent response. Where do you look FIRST?
+options:
+  - id: b_trace_first
+    label: "B — open the trace and scan for the broken turn"
+  - id: a_chat_first
+    label: "A — re-read the chat to spot the issue"
+    explain: "The chat shows the symptom; the trace shows the cause. Reading the chat first is how you waste 30 minutes before finding the actual broken turn."
+  - id: c_rerun
+    label: "C — re-run the agent and see if it reproduces"
+    explain: "Re-running BEFORE understanding the trace is debugging by superstition. You want to know what happened *that* time, not what happens *this* time."
+  - id: d_trycatch
+    label: "D — add a try/except to catch errors next time"
+    explain: "This silences future symptoms without finding the cause. You'll catch the error 100 more times and still not know why it fires."
+answerIds:
+  - b_trace_first
+hint:
+  - level: 1
+    body: 'The trace is the structured record. The chat is the surface. Always read the structured record first — it''s sorted and indexable; the chat is unstructured prose.'

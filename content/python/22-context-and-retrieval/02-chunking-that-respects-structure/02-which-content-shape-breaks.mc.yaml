@@ -1,0 +1,35 @@
+xp: 2
+estSeconds: 55
+concept: chunk-shapes-most-vulnerable
+code: |
+  # four content shapes. which break worst under naive char-count chunking?
+  shapes = {
+      "A": "A markdown doc with code blocks, headings, and bullet lists.",
+      "B": "Plain prose articles with no special syntax (e.g., a novel).",
+      "C": "JSON-like config dumps with nested braces and indentation.",
+      "D": "A 5-line FAQ where each question and answer fit in one paragraph.",
+  }
+  for k, v in shapes.items():
+      print(f"{k}: {v}")
+prompt: |
+  Naive char-count chunking cuts every N characters regardless of
+  structure. Which TWO shapes ABOVE are most likely to be SHREDDED —
+  meaning a single chunk loses semantic integrity (a code block torn
+  in half, a JSON object's brace orphaned)?
+options:
+  - id: a_and_c
+    label: "A (markdown with code blocks) and C (JSON-like config)"
+  - id: b_and_d
+    label: "B (plain prose) and D (short FAQ)"
+    explain: "Plain prose recovers gracefully — adjacent chunks hold the same surrounding sentences. Short FAQs fit in one chunk so chunking barely runs."
+  - id: a_and_d
+    label: "A and D"
+    explain: "D rarely exceeds chunk size. The FAQ either fits whole or fits per-Q&A."
+  - id: b_and_c
+    label: "B and C"
+    explain: "B's prose handles char-cuts surprisingly well. C is the bigger problem, but the prose isn't."
+answerIds:
+  - a_and_c
+hint:
+  - level: 1
+    body: 'Structured content (markdown code blocks, JSON braces) loses meaning when sliced mid-structure. Free-form prose tolerates random cuts much better — every word boundary is roughly equivalent.'

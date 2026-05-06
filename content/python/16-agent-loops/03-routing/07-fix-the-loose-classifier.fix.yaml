@@ -1,0 +1,42 @@
+xp: 4
+estSeconds: 105
+concept: classifier-output-normalization
+prompt: |
+  The classifier model returned `"  Billing  "` — capitalized, with
+  whitespace. The dispatch table only knows `"billing"` (lowercase,
+  trimmed). Without normalization, this falls through to the
+  fallback even though the classifier got it right.
+
+  Fix the normalization so the category is lowercased AND stripped
+  before the dispatch lookup.
+
+  Expected output:
+  ```
+  BILL -> refund please
+  ```
+brokenCode: |
+  ROUTES = {
+      "billing":   lambda q: f"BILL -> {q}",
+      "technical": lambda q: f"TECH -> {q}",
+      "general":   lambda q: f"GEN  -> {q}",
+  }
+
+  raw_category = "  Billing  "  # what the model returned
+  question = "refund please"
+
+  # normalize raw_category here so the lookup works.
+  category = raw_category
+  handler = ROUTES.get(category, ROUTES["general"])
+  print(handler(question))
+bugLines:
+  - 11
+grader:
+  kind: stdout-equality
+  expected: "BILL -> refund please"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Two steps: `.strip()` to remove whitespace, `.lower()` to normalize case. Both are string methods on `raw_category`.'
+  - level: 2
+    body: 'Change line 11 to `category = raw_category.strip().lower()`.'
+revealAfter: 4

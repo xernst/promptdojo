@@ -1,0 +1,45 @@
+xp: 3
+estSeconds: 80
+concept: position-bias-detection
+code: |
+  # a position-biased mock judge: always picks whatever sits in slot A,
+  # regardless of which physical output is in there.
+
+  def fake_judge_pairwise(input_text, a, b):
+      return "A"  # bias: always picks slot A, ignores content
+
+  X = "Output X (correct, concise)"
+  Y = "Output Y (verbose, partially wrong)"
+
+  # round 1: X in slot A, Y in slot B
+  v1 = fake_judge_pairwise("Which is better?", X, Y)
+  # round 2: Y in slot A, X in slot B
+  v2 = fake_judge_pairwise("Which is better?", Y, X)
+
+  # consistent? if the SAME physical output won both rounds, yes.
+  # round 1 winner=A means X won. round 2 winner=A means Y won.
+  # different physical outputs won → not consistent → bias detected.
+  consistent = (v1 == "A" and v2 == "B") or (v1 == "B" and v2 == "A")
+
+  print(f"order 1: winner={v1}")
+  print(f"order 2: winner={v2}")
+  print(f"consistent? {consistent}")
+prompt: |
+  Read the editor. The fake judge has pure position bias — it always
+  picks slot A, no matter what content sits there. We run the same
+  pair in both orders, then check whether the same physical output
+  won both times.
+
+  What does the script print on the third line?
+grader:
+  kind: stdout-equality
+  expected: |
+    order 1: winner=A
+    order 2: winner=A
+    consistent? False
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The judge always returns "A". So v1=="A" AND v2=="A". The `consistent` check requires `(v1=="A" AND v2=="B")` OR `(v1=="B" AND v2=="A")` — i.e., one slot wins round 1 and the OTHER slot wins round 2. Both being "A" means neither branch matches.'
+  - level: 2
+    body: '`consistent? False` — bias detected. The both-orders mitigation just caught a judge that ignores content entirely.'

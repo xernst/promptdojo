@@ -1,0 +1,35 @@
+xp: 2
+estSeconds: 55
+concept: evaluator-optimizer-fit
+code: |
+  # four hypothetical features. only some benefit from this pattern.
+  features = {
+      "A": "A translator that should preserve nuance and tone across attempts.",
+      "B": "An arithmetic helper that returns the answer to '17 * 23'.",
+      "C": "A code reviewer that emits a refactored version of a function.",
+      "D": "A weather lookup that returns the current temp for a city.",
+  }
+  for k, v in features.items():
+      print(f"{k}: {v}")
+prompt: |
+  Anthropic's two signals: (1) human-articulated feedback would
+  demonstrably improve the response, and (2) the LLM can produce that
+  kind of feedback. Which TWO features above are the strongest fit for
+  the evaluator-optimizer pattern?
+options:
+  - id: a_and_c
+    label: "A (translator) and C (code reviewer)"
+  - id: a_and_b
+    label: "A (translator) and B (arithmetic)"
+    explain: "Arithmetic has a single correct answer. A judge can't 'critique' a wrong number into a right one — you need a calculator, not a critic."
+  - id: c_and_d
+    label: "C (code reviewer) and D (weather)"
+    explain: "Weather is a lookup with a ground-truth value. There's nothing to refine — either you have the right number from the API or you don't."
+  - id: b_and_d
+    label: "B (arithmetic) and D (weather)"
+    explain: "Both are exact-answer tasks. Iterative refinement adds latency and cost without changing correctness."
+answerIds:
+  - a_and_c
+hint:
+  - level: 1
+    body: 'Which tasks have qualitative judgment built in (style, completeness, tone) versus a single numerical right answer?'

@@ -1,0 +1,120 @@
+xp: 5
+estSeconds: 180
+concept: full-evaluator-optimizer
+prompt: |
+  Build the full evaluator-optimizer. Write `write_with_judge(task, max_iters)` that:
+
+  - Maintains `feedback = None` (initial draft has no prior feedback).
+  - Loops up to `max_iters` times. Each iteration:
+    - Calls `gen(task, feedback=feedback)` to produce a draft.
+    - Calls `judge(draft)` to get a verdict dict.
+    - If `verdict["status"] == "PASS"`: return a dict
+      `{"draft": <draft>, "iters": <iteration count, 1-based>, "passed": True}`.
+    - Otherwise update `feedback = verdict["feedback"]` and continue.
+  - If `max_iters` is exhausted without a PASS, return
+    `{"draft": <last draft>, "iters": max_iters, "passed": False}`.
+
+  The script will run two cases (one that PASSes on iter 2, one that
+  exhausts the cap). Expected output:
+  ```
+  passed=True iters=2 draft=Cats are small carnivorous mammals.
+  passed=False iters=2 draft=v2
+  ```
+starter: |
+  good_drafts = iter([
+      "Cats are animals.",
+      "Cats are small carnivorous mammals.",
+  ])
+  good_verdicts = iter([
+      {"status": "REJECT", "feedback": "Too short."},
+      {"status": "PASS",   "feedback": "Detailed."},
+  ])
+
+  bad_drafts = iter(["v1", "v2"])
+  bad_verdicts = iter([
+      {"status": "REJECT", "feedback": "no"},
+      {"status": "REJECT", "feedback": "still no"},
+  ])
+
+  current = {"drafts": good_drafts, "verdicts": good_verdicts}
+
+  def gen(task, feedback=None):
+      return next(current["drafts"])
+
+  def judge(draft):
+      return next(current["verdicts"])
+
+  # define write_with_judge(task, max_iters) below
+
+  current["drafts"], current["verdicts"] = good_drafts, good_verdicts
+  r = write_with_judge("describe cats", 3)
+  print(f"passed={r['passed']} iters={r['iters']} draft={r['draft']}")
+
+  current["drafts"], current["verdicts"] = bad_drafts, bad_verdicts
+  r = write_with_judge("describe cats", 2)
+  print(f"passed={r['passed']} iters={r['iters']} draft={r['draft']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    passed=True iters=2 draft=Cats are small carnivorous mammals.
+    passed=False iters=2 draft=v2
+  normalize: collapse-trailing-newline
+solution: |
+  good_drafts = iter([
+      "Cats are animals.",
+      "Cats are small carnivorous mammals.",
+  ])
+  good_verdicts = iter([
+      {"status": "REJECT", "feedback": "Too short."},
+      {"status": "PASS",   "feedback": "Detailed."},
+  ])
+
+  bad_drafts = iter(["v1", "v2"])
+  bad_verdicts = iter([
+      {"status": "REJECT", "feedback": "no"},
+      {"status": "REJECT", "feedback": "still no"},
+  ])
+
+  current = {"drafts": good_drafts, "verdicts": good_verdicts}
+
+  def gen(task, feedback=None):
+      return next(current["drafts"])
+
+  def judge(draft):
+      return next(current["verdicts"])
+
+  def write_with_judge(task, max_iters):
+      feedback = None
+      draft = None
+      for i in range(max_iters):
+          draft = gen(task, feedback=feedback)
+          verdict = judge(draft)
+          if verdict["status"] == "PASS":
+              return {"draft": draft, "iters": i + 1, "passed": True}
+          feedback = verdict["feedback"]
+      return {"draft": draft, "iters": max_iters, "passed": False}
+
+  current["drafts"], current["verdicts"] = good_drafts, good_verdicts
+  r = write_with_judge("describe cats", 3)
+  print(f"passed={r['passed']} iters={r['iters']} draft={r['draft']}")
+
+  current["drafts"], current["verdicts"] = bad_drafts, bad_verdicts
+  r = write_with_judge("describe cats", 2)
+  print(f"passed={r['passed']} iters={r['iters']} draft={r['draft']}")
+hint:
+  - level: 1
+    body: 'Track `feedback` as a local variable starting at `None`. Inside the loop: call `gen(task, feedback=feedback)`, judge the result, branch on PASS, otherwise update `feedback = verdict["feedback"]`. After the loop: return the last draft with `passed=False`.'
+  - level: 2
+    body: |
+      ```python
+      def write_with_judge(task, max_iters):
+          feedback = None
+          draft = None
+          for i in range(max_iters):
+              draft = gen(task, feedback=feedback)
+              verdict = judge(draft)
+              if verdict["status"] == "PASS":
+                  return {"draft": draft, "iters": i + 1, "passed": True}
+              feedback = verdict["feedback"]
+          return {"draft": draft, "iters": max_iters, "passed": False}
+      ```

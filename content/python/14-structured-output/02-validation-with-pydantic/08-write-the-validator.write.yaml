@@ -1,0 +1,86 @@
+xp: 5
+estSeconds: 200
+concept: validate-or-reject-pattern
+prompt: |
+  Write `validate_or_reject(raw, schema_class)` that:
+
+  - Calls `schema_class.model_validate(raw)`.
+  - On success: returns `{"ok": True, "value": <the validated instance>}`.
+  - On `ValidationError`: returns `{"ok": False, "errors": <list of (field, type) tuples>}`.
+    Each tuple is `(loc[0] if loc else "(root)", err["type"])`.
+
+  Three cases run for you. Expected output:
+  ```
+  ok=True total=199.99
+  ok=False errors=[('total', 'missing')]
+  ok=False errors=[('total', 'float_parsing')]
+  ```
+starter: |
+  from pydantic import BaseModel, ValidationError
+
+  class Invoice(BaseModel):
+      number: str
+      total: float
+
+  # define validate_or_reject(raw, schema_class) below
+
+  cases = [
+      {"number": "INV-1", "total": 199.99},          # valid
+      {"number": "INV-2"},                           # missing total
+      {"number": "INV-3", "total": "not a number"},  # bad type
+  ]
+
+  for raw in cases:
+      result = validate_or_reject(raw, Invoice)
+      if result["ok"]:
+          print(f"ok=True total={result['value'].total}")
+      else:
+          print(f"ok=False errors={result['errors']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    ok=True total=199.99
+    ok=False errors=[('total', 'missing')]
+    ok=False errors=[('total', 'float_parsing')]
+  normalize: collapse-trailing-newline
+solution: |
+  from pydantic import BaseModel, ValidationError
+
+  class Invoice(BaseModel):
+      number: str
+      total: float
+
+  def validate_or_reject(raw, schema_class):
+      try:
+          value = schema_class.model_validate(raw)
+          return {"ok": True, "value": value}
+      except ValidationError as e:
+          errors = [(err["loc"][0] if err["loc"] else "(root)", err["type"]) for err in e.errors()]
+          return {"ok": False, "errors": errors}
+
+  cases = [
+      {"number": "INV-1", "total": 199.99},
+      {"number": "INV-2"},
+      {"number": "INV-3", "total": "not a number"},
+  ]
+
+  for raw in cases:
+      result = validate_or_reject(raw, Invoice)
+      if result["ok"]:
+          print(f"ok=True total={result['value'].total}")
+      else:
+          print(f"ok=False errors={result['errors']}")
+hint:
+  - level: 1
+    body: 'Wrap `model_validate` in a try/except. On success return the typed instance under `"value"`. On ValidationError, build a list of `(field, type)` tuples by iterating `e.errors()`.'
+  - level: 2
+    body: |
+      ```python
+      def validate_or_reject(raw, schema_class):
+          try:
+              value = schema_class.model_validate(raw)
+              return {"ok": True, "value": value}
+          except ValidationError as e:
+              errors = [(err["loc"][0] if err["loc"] else "(root)", err["type"]) for err in e.errors()]
+              return {"ok": False, "errors": errors}
+      ```

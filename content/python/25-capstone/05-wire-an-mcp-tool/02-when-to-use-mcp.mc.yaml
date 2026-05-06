@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 55
+concept: mcp-vs-local
+code: |
+  scenarios = {
+      "A": "Tool that runs a 5ms in-memory dict lookup, called 1000x per agent run.",
+      "B": "Tool that integrates with the user's Slack workspace via OAuth.",
+      "C": "Tool published by a third party (e.g., a Notion-MCP, a Postgres-MCP).",
+      "D": "Tool that wraps a 50ms local SQLite query, used in 90% of agent calls.",
+  }
+  for k, v in scenarios.items():
+      print(f"{k}: {v}")
+prompt: |
+  Four tools. MCP adds latency (network/IPC hop) but enables plugins,
+  cross-language, and sandboxing. Which TWO are the strongest fit
+  for MCP (rather than a local registry function)?
+options:
+  - id: b_and_c
+    label: "B (Slack OAuth) and C (third-party plugin)"
+  - id: a_and_d
+    label: "A (5ms hot path) and D (50ms local SQL)"
+    explain: "Both are high-frequency local calls — adding a network hop per call multiplies latency for no plugin benefit."
+  - id: a_and_b
+    label: "A and B"
+    explain: "A is a hot path. The 5ms work doesn't justify a 10ms IPC hop."
+  - id: c_and_d
+    label: "C and D"
+    explain: "D's a local SQLite call you already wrote. MCP-ifying it adds latency without adding capability."
+answerIds:
+  - b_and_c
+hint:
+  - level: 1
+    body: 'MCP earns its keep when (a) the tool is *user-installed* / *third-party*, (b) the tool already lives in another process anyway (Slack, Notion, a DB), or (c) sandboxing matters. Hot-path / local-fast-path tools stay in the registry.'

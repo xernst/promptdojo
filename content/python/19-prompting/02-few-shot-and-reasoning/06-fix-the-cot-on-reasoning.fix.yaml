@@ -1,0 +1,49 @@
+xp: 4
+estSeconds: 95
+concept: skip-cot-on-reasoning-models
+prompt: |
+  This `build_prompt` function unconditionally appends "Think step
+  by step." to every prompt — even when the model is a reasoning
+  model (o3, Claude with thinking, etc.). On reasoning models, this
+  is at best wasted tokens and at worst hurts answer quality.
+
+  Fix the function to ONLY append the CoT prefix when the model is
+  NOT in `REASONING_MODELS`.
+
+  Expected output:
+  ```
+  o3            cot? False
+  claude-haiku  cot? True
+  ```
+brokenCode: |
+  REASONING_MODELS = {"o3", "o1", "claude-sonnet-4-6-thinking"}
+
+  def build_prompt(model, task):
+      # bug: always adds CoT, even on reasoning models that don't benefit.
+      return f"{task}\n\nThink step by step."
+
+  for model in ["o3", "claude-haiku"]:
+      prompt = build_prompt(model, "Is 17 prime?")
+      cot = "step by step" in prompt
+      print(f"{model:14}cot? {cot}")
+bugLines:
+  - 5
+grader:
+  kind: stdout-equality
+  expected: |
+    o3            cot? False
+    claude-haiku  cot? True
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Branch on `model in REASONING_MODELS`. If yes, return just the task. If no, append the CoT prefix.'
+  - level: 2
+    body: |
+      Replace line 5 with:
+
+      ```python
+      if model in REASONING_MODELS:
+          return task
+      return f"{task}\n\nThink step by step."
+      ```
+revealAfter: 5

@@ -1,0 +1,63 @@
+xp: 4
+estSeconds: 100
+concept: variable-input-must-be-last
+prompt: |
+  This message has the user's question (variable) BEFORE the
+  few-shot examples (stable). The cache prefix tries to match
+  starting from the user's question — which differs every call —
+  so the cache *never fires*. Hit rate: 0%.
+
+  Fix the message so the stable few-shot examples come FIRST (with
+  `cache_control`), then the user's question comes last with no
+  cache_control. Now the prefix is stable and cache fires on every
+  call after the first.
+
+  Expected output:
+  ```
+  first block: text? True, cached? True
+  second block: text? True, cached? False
+  ```
+brokenCode: |
+  user_question = "What's the capital of France?"
+  EXAMPLES = "Q: capital of Germany? A: Berlin\nQ: capital of Japan? A: Tokyo"
+
+  # bug: variable input first; cache prefix never matches across calls.
+  message = {
+      "role": "user",
+      "content": [
+          {"type": "text", "text": user_question},
+          {"type": "text", "text": EXAMPLES,
+           "cache_control": {"type": "ephemeral", "ttl": "5m"}},
+      ],
+  }
+
+  for block in message["content"]:
+      print(f"first block: text? {block['type'] == 'text'}, cached? {'cache_control' in block}")
+      break
+  print(f"second block: text? {message['content'][1]['type'] == 'text'}, cached? {'cache_control' in message['content'][1]}")
+bugLines:
+  - 7
+  - 8
+  - 9
+  - 10
+grader:
+  kind: stdout-equality
+  expected: |
+    first block: text? True, cached? True
+    second block: text? True, cached? False
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Swap the order: stable EXAMPLES (with cache_control) goes first; variable user_question goes last (no cache_control).'
+  - level: 2
+    body: |
+      Reorder the content list so EXAMPLES (cached) is at index 0 and user_question is at index 1:
+
+      ```python
+      "content": [
+          {"type": "text", "text": EXAMPLES,
+           "cache_control": {"type": "ephemeral", "ttl": "5m"}},
+          {"type": "text", "text": user_question},
+      ],
+      ```
+revealAfter: 5

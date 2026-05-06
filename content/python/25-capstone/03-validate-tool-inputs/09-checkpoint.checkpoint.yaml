@@ -1,0 +1,159 @@
+xp: 8
+estSeconds: 220
+concept: validated-agent-loop
+prompt: |
+  Final drill. Build the agent loop with full validation. Write
+  `run_validated_agent(question, max_iters)` that:
+
+  - Maintains `messages = [{"role": "user", "content": question}]`.
+  - Loops up to `max_iters` times calling `fake_create(messages)` →
+    a `MockMessage` with `.stop_reason` and `.content` (a list of
+    `MockTextBlock` and/or `MockToolUseBlock`).
+  - On `end_turn`: collect text from text blocks, return
+    `{"ok": True, "answer": <text joined with " ">, "validation_errors": <count>, "iters": <iter num>}`.
+  - On `tool_use`: for each tool_use block, call
+    `dispatch_with_validation(block.name, block.input)`. Track how
+    many results came back as `VALIDATION_ERROR:` or `UNKNOWN_TOOL:`
+    — increment a `validation_errors` counter per such result.
+    Append the assistant turn + a user turn with `tool_result`
+    blocks (each with the right `tool_use_id`).
+  - On cap: return `{"ok": False, "error": "capped", "iters": max_iters}`.
+
+  Expected output:
+  ```
+  ok=True iters=3 validation_errors=1 answer=Found a 2026 ramen guide.
+  ```
+starter: |
+  def validate(args, schema):
+      for field in schema.get("required", []):
+          if field not in args:
+              return {"ok": False, "error": f"missing required field: {field}"}
+      for field, expected_type in schema.get("types", {}).items():
+          if field in args and not isinstance(args[field], expected_type):
+              actual = type(args[field]).__name__
+              return {"ok": False, "error": f"{field} should be {expected_type.__name__}, got {actual}"}
+      return {"ok": True, "args": args}
+
+  TOOLS = {"search": lambda q: f"results for {q}"}
+  SCHEMAS = {"search": {"required": ["q"], "types": {"q": str}}}
+
+  def dispatch_with_validation(tool_name, args):
+      schema = SCHEMAS.get(tool_name)
+      if schema is None:
+          return f"UNKNOWN_TOOL: {tool_name}"
+      verdict = validate(args, schema)
+      if not verdict["ok"]:
+          return f"VALIDATION_ERROR: {verdict['error']}"
+      return TOOLS[tool_name](**verdict["args"])
+
+  class MockTextBlock:
+      def __init__(self, text): self.type = "text"; self.text = text
+
+  class MockToolUseBlock:
+      def __init__(self, id, name, input):
+          self.type = "tool_use"; self.id = id; self.name = name; self.input = input
+
+  class MockMessage:
+      def __init__(self, stop_reason, content):
+          self.stop_reason = stop_reason; self.content = content
+
+  responses = iter([
+      # turn 1: model calls search with the WRONG field name (validation error)
+      MockMessage("tool_use", [MockToolUseBlock(id="t1", name="search", input={"query": "ramen"})]),
+      # turn 2: model corrects itself based on the error message
+      MockMessage("tool_use", [MockToolUseBlock(id="t2", name="search", input={"q": "ramen"})]),
+      # turn 3: model wraps up
+      MockMessage("end_turn", [MockTextBlock("Found a 2026 ramen guide.")]),
+  ])
+
+  def fake_create(messages):
+      return next(responses)
+
+  # define run_validated_agent(question, max_iters) below
+
+  result = run_validated_agent("find ramen", 5)
+  if result.get("ok"):
+      print(f"ok={result['ok']} iters={result['iters']} validation_errors={result['validation_errors']} answer={result['answer']}")
+  else:
+      print(f"ok={result['ok']} error={result['error']}")
+grader:
+  kind: stdout-equality
+  expected: "ok=True iters=3 validation_errors=1 answer=Found a 2026 ramen guide."
+  normalize: collapse-trailing-newline
+solution: |
+  def validate(args, schema):
+      for field in schema.get("required", []):
+          if field not in args:
+              return {"ok": False, "error": f"missing required field: {field}"}
+      for field, expected_type in schema.get("types", {}).items():
+          if field in args and not isinstance(args[field], expected_type):
+              actual = type(args[field]).__name__
+              return {"ok": False, "error": f"{field} should be {expected_type.__name__}, got {actual}"}
+      return {"ok": True, "args": args}
+
+  TOOLS = {"search": lambda q: f"results for {q}"}
+  SCHEMAS = {"search": {"required": ["q"], "types": {"q": str}}}
+
+  def dispatch_with_validation(tool_name, args):
+      schema = SCHEMAS.get(tool_name)
+      if schema is None:
+          return f"UNKNOWN_TOOL: {tool_name}"
+      verdict = validate(args, schema)
+      if not verdict["ok"]:
+          return f"VALIDATION_ERROR: {verdict['error']}"
+      return TOOLS[tool_name](**verdict["args"])
+
+  class MockTextBlock:
+      def __init__(self, text): self.type = "text"; self.text = text
+
+  class MockToolUseBlock:
+      def __init__(self, id, name, input):
+          self.type = "tool_use"; self.id = id; self.name = name; self.input = input
+
+  class MockMessage:
+      def __init__(self, stop_reason, content):
+          self.stop_reason = stop_reason; self.content = content
+
+  responses = iter([
+      MockMessage("tool_use", [MockToolUseBlock(id="t1", name="search", input={"query": "ramen"})]),
+      MockMessage("tool_use", [MockToolUseBlock(id="t2", name="search", input={"q": "ramen"})]),
+      MockMessage("end_turn", [MockTextBlock("Found a 2026 ramen guide.")]),
+  ])
+
+  def fake_create(messages):
+      return next(responses)
+
+  def run_validated_agent(question, max_iters):
+      messages = [{"role": "user", "content": question}]
+      validation_errors = 0
+      for i in range(1, max_iters + 1):
+          response = fake_create(messages)
+          if response.stop_reason == "end_turn":
+              text_parts = [b.text for b in response.content if b.type == "text"]
+              return {
+                  "ok": True,
+                  "answer": " ".join(text_parts),
+                  "validation_errors": validation_errors,
+                  "iters": i,
+              }
+          tool_results = []
+          for block in response.content:
+              if block.type == "tool_use":
+                  output = dispatch_with_validation(block.name, block.input)
+                  if output.startswith("VALIDATION_ERROR:") or output.startswith("UNKNOWN_TOOL:"):
+                      validation_errors += 1
+                  tool_results.append({
+                      "type": "tool_result",
+                      "tool_use_id": block.id,
+                      "content": output,
+                  })
+          messages.append({"role": "assistant", "content": response.content})
+          messages.append({"role": "user", "content": tool_results})
+      return {"ok": False, "error": "capped", "iters": max_iters}
+
+  result = run_validated_agent("find ramen", 5)
+  if result.get("ok"):
+      print(f"ok={result['ok']} iters={result['iters']} validation_errors={result['validation_errors']} answer={result['answer']}")
+  else:
+      print(f"ok={result['ok']} error={result['error']}")
+passThreshold: 0.66

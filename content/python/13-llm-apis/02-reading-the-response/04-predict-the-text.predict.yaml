@@ -1,0 +1,28 @@
+xp: 3
+estSeconds: 80
+concept: text-extract-from-mixed-blocks
+code: |
+  # an assistant turn with mixed blocks.
+  response = {
+      "stop_reason": "end_turn",
+      "content": [
+          {"type": "thinking", "thinking": "internal reasoning..."},
+          {"type": "text",     "text":     "Found it."},
+          {"type": "text",     "text":     "Here are the results."},
+      ],
+  }
+
+  # extract just text, joined with a single space.
+  text_parts = [b["text"] for b in response["content"] if b["type"] == "text"]
+  print(" ".join(text_parts))
+prompt: |
+  Read the editor. Three blocks: one thinking, two text. The script
+  filters to just text blocks and joins them with a single space.
+  What does it print?
+grader:
+  kind: stdout-equality
+  expected: "Found it. Here are the results."
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Filter drops the thinking block. Two text blocks remain: "Found it." and "Here are the results.". `" ".join(...)` puts a single space between them.'

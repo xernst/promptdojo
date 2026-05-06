@@ -264,7 +264,282 @@
         }
       ],
       "xpTotal": 31
+    },
+    {
+      "slug": "llm-as-judge",
+      "title": "LLM-as-judge — when the judge is another model",
+      "estMinutes": 12,
+      "prerequisites": [
+        "writing-evals"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "evals/llm-as-judge/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 120,
+          "concept": "llm-as-judge-pattern",
+          "body": "# When `assert` runs out of road, send in another model\n\nLesson 01 ranked four eval patterns by strictness: exact match,\ncontains, shape, judge. The first three are mechanical — string\ncompare, regex, schema validate. The fourth is *another model*\nreading your model's output and grading it. That's LLM-as-judge.\n\nYou reach for it when the answer is correct in many forms (\"explain\nphotosynthesis to a 5-year-old,\" \"translate this email,\" \"draft a\nsupport reply\") and string equality is useless. The 2023 paper that\nmade this respectable, *Judging LLM-as-a-Judge with MT-Bench and\nChatbot Arena* (Zheng et al., NeurIPS 2023, arxiv.org/abs/2306.05685),\nshowed that GPT-4-as-judge agreed with human raters on **over 80%**\nof comparisons — the same level humans agree with each other. That's\nthe green light the field needed.\n\nIt's also the pattern that ships the most subtle bugs.\n\n## Two shapes you'll see in the wild\n\n| Shape | Question asked | Output |\n|---|---|---|\n| **Pairwise** | \"Given outputs A and B, which is better?\" | `A` / `B` / `tie` |\n| **Rubric** | \"Score this output against this rubric.\" | `pass` / `fail` (+ critique) |\n\nPairwise is what Chatbot Arena uses. Cheap relatively (you're not\ngenerating a number, just a vote), more consistent than absolute\nratings — humans are better at \"this one over that one\" than \"is\nthis a 7 or an 8.\" Cost: O(n²) comparisons, no absolute quality\nfloor.\n\nRubric is what you want for CI and regression evals. One number per\ncase, plug into pytest, fail the build if the rate drops. Hamel\nHusain's blunt rule from his eval methodology guide: **use binary\npass/fail, not 1–5 Likert**. Likert scores drift, the difference\nbetween a 3 and a 4 is undefined, and averaging them produces false\nprecision. Binary forces you to write the rubric until it's\nunambiguous. (hamel.dev/blog/posts/llm-judge/)\n\n## What everyone calls it\n\n| Framework | Primitive |\n|---|---|\n| **LangSmith** | `evaluators` — `LLMEvaluator`, custom rubric configs |\n| **OpenAI Evals** | `graders` — `score_model` / `label_model` |\n| **Inspect AI** (UK AISI) | `scorers` — `model_graded_qa()`, `model_graded_fact()` |\n| **Promptfoo** | `assert: llm-rubric`, `assert: factuality` |\n| **DeepEval** | `GEval` (Liu et al. *G-Eval* paper, arxiv.org/abs/2303.16634) |\n| **Anthropic SDK** | No native primitive — use `tools=[...]` to force structured verdict (the \"tool-use trick\") |\n\nSame primitive everywhere: send the input + output + rubric, get a\nstructured verdict back. You'll write the framework-free version in\nstep 8.\n\n## The trap that defines this lesson\n\nLLM-as-judge has four documented biases — position, length,\nself-preference, style. They're not edge cases; they're the default.\nA judge will pick the *first* output you show it more often than\nchance. It will pick the *longer* output regardless of whether\nlength matters. It will rate outputs from its own model family\nhigher. Step 3 names them with citations and step 7 fixes the\nbiggest one in code.\n\n## What you'll build\n\nA `judge_rubric(question, answer, rubric)` that returns a binary\nverdict + critique. Then a fix for the Likert-score trap. Then a\nfix for position bias (the \"run both orders, count consistent wins\"\nmitigation from Zheng et al.). Then a real pairwise judge that\ndetects its own bias and votes `tie` when it disagrees with itself.",
+          "cta": "Got it",
+          "code": "# the judge is just a model with a critique prompt and a binary verdict.\n\ndef judge(question, answer, rubric):\n    # in real code: a model call constrained to {\"passed\": bool, \"critique\": str}.\n    # here: a deterministic mock that returns canned verdicts.\n    if \"Paris\" in answer and len(answer) < 50:\n        return {\"passed\": True,  \"critique\": \"Concise and correct.\"}\n    if \"Paris\" in answer:\n        return {\"passed\": True,  \"critique\": \"Correct but verbose.\"}\n    return {\"passed\": False, \"critique\": \"Did not name Paris.\"}\n\ncases = [\n    (\"What's the capital of France?\", \"Paris.\"),\n    (\"What's the capital of France?\", \"Paris is the capital, located in northern France.\"),\n    (\"What's the capital of France?\", \"I think maybe Lyon?\"),\n]\nfor q, a in cases:\n    v = judge(q, a, \"Reward correct, concise answers.\")\n    print(f\"{a!r}: pass={v['passed']} — {v['critique']}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "evals/llm-as-judge/s02-02-pairwise-or-rubric",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Pairwise needs *two outputs to compare* and returns a relative winner. Which scenarios actually have two outputs to compare?",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Only C has two prompt drafts to compare. A, B, D all need absolute pass/fail or scores.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 60,
+          "concept": "pairwise-vs-rubric-fit",
+          "prompt": "Pairwise asks \"A or B better?\" → returns A/B/tie. Rubric asks\n\"does this output pass?\" → returns pass/fail. Which TWO scenarios\nabove are the strongest fit for **pairwise**?\n",
+          "options": [
+            {
+              "id": "a_and_d",
+              "label": "A (regression) and D (production gate)",
+              "explain": "Both need an absolute quality floor — 'pass or fail per case' — and run on every input. Pairwise gives you a relative winner, not a floor."
+            },
+            {
+              "id": "b_and_c",
+              "label": "B (daily dashboard) and C (A/B prompt test)",
+              "explain": "B needs an absolute number for a trend line. Pairwise gives you 'A vs B,' not 'how good is today.'"
+            },
+            {
+              "id": "a_and_c",
+              "label": "A (regression) and C (A/B prompt test)",
+              "explain": "A needs a per-case pass/fail to gate CI. Pairwise can't say 'this case got worse' — only 'this output beat that output.'"
+            },
+            {
+              "id": "c_and_d",
+              "label": "C (A/B prompt test) and D (production gate)",
+              "explain": "D needs an absolute floor per output. Pairwise compares two outputs, doesn't grade one."
+            },
+            {
+              "id": "c_only_paired_correctly",
+              "label": "C only — the others all fit rubric"
+            },
+            {
+              "id": "pairwise_for_c_and_b_dashboard",
+              "label": "Both A/B testing scenarios — C is the only A/B test here",
+              "explain": "B is a dashboard, not an A/B test."
+            }
+          ],
+          "answerIds": [
+            "c_only_paired_correctly"
+          ],
+          "shuffle": false,
+          "code": "# four eval scenarios. picking the wrong shape costs you reliability.\nscenarios = {\n    \"A\": \"Regression eval: same prompt v1 vs v2, run on 50 fixed cases, fail CI on regression.\",\n    \"B\": \"Daily quality dashboard: one number per day showing 'how well is the model doing'.\",\n    \"C\": \"A/B prompt test: which of two prompt drafts produces better support replies on a 30-case set?\",\n    \"D\": \"Production gate: every output must meet a minimum quality bar before being shown to users.\",\n}\nfor k, v in scenarios.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "evals/llm-as-judge/s03-03-the-four-biases",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 110,
+          "concept": "judge-bias-taxonomy",
+          "body": "# The four biases that make this pattern hard\n\nLLM judges are not neutral graders. They have measurable, named\nbiases that show up in production every time. The first three were\nidentified in the 2023 MT-Bench paper that legitimized the pattern.\nThe fourth has emerged more recently and is, surprisingly, the\nbiggest.\n\n## Position bias\n\nThe judge prefers whichever response is shown first. Zheng et al.\n(2023, arxiv.org/abs/2306.05685) measured this directly:\n\n> \"GPT-4 consistency on position-swapped pairs jumps from 65.0% to\n> 77.5% with few-shot prompting.\"\n\nThat means **35% of close pairs flipped** when you swapped which\noutput came first. With prompting tricks you can get it down to\n~20%. You never get it to zero.\n\n**Mitigation: run both orders.** Run `judge(A, B)` *and* `judge(B,\nA)`. Only count cases where the verdict was *consistent* in both\norders. Cases where the judge flipped get scored as `tie` —\nbecause effectively the judge is guessing.\n\n## Length / verbosity bias\n\nThe judge prefers longer answers even when shorter would be correct.\nThe MT-Bench paper demonstrates this with a \"repetitive list attack\"\n— pad a response with redundant bullet points and watch the judge\nprefer it. This is why Hamel Husain ranks judges by their resistance\nto verbosity attacks: a good judge reads the rubric and cares about\ncorrectness, not word count.\n\n**Mitigation: write the rubric to forbid verbosity.** \"Reward\ncorrect, concise answers — penalize redundancy.\" Judges follow\nexplicit rubrics surprisingly well; they invent the wrong rubric\nwhen you don't supply one.\n\n## Self-preference bias\n\nThe judge favors outputs from its own model family. GPT-4 rates\nGPT-4 outputs higher than they deserve; Claude rates Claude outputs\nsimilarly. The G-Eval paper (Liu et al. 2023, arxiv.org/abs/2303.16634)\nflagged the same pattern:\n\n> \"LLM-based evaluators having a bias towards the LLM-generated\n> texts.\"\n\nRecent work (arxiv.org/abs/2410.21819) confirmed self-preference is\nreal even when models can't see the source. The bug pattern in\nproduction: you train a system, the same model judges itself, pass\nrate looks great. Then you swap to a different judge, pass rate\ndrops 30+ points.\n\n**Mitigation: use a held-out judge model.** When the system uses\nGPT-4o for generation, use Claude or Gemini for the judge. Different\nweights, different biases — the *combination* is more honest than\neither alone.\n\n## Style bias (the one nobody warned you about)\n\nJudges over-weight confident, well-formatted prose. Park et al.\n(2024) measured **effect sizes of 0.76–0.92 for style bias**, vs\n≤0.04 for position bias. That's 20× larger. A polished but wrong\nanswer beats a correct but plain one.\n\n**Mitigation: rubric explicitness, again.** \"Score on factual\ncorrectness; ignore tone and formatting.\" It helps. It doesn't fix\nthe problem. Style bias is the open research problem in this\npattern, and the production move is to *combine* LLM-as-judge with\nmechanical checks (string match, schema validate, citation check)\nrather than rely on the judge alone.\n\n## What this means for your code\n\nThe biases aren't optional considerations. They're the default\nbehavior. Steps 4–7 will surface them in code: predict that a judge\npicks the long output regardless of order, then build the\nboth-orders mitigation that catches its own bias and reports `tie`.\n\nRule of thumb that makes this whole pattern usable: **never trust\na single judge call on a single ordering**. Two calls minimum,\nboth orders, count only consistent wins.",
+          "cta": "Got it",
+          "code": "# the bias hall of fame, named with their measured effect sizes.\n\nBIASES = {\n    \"position\":         \"Judge prefers whichever response appears first.\",\n    \"length\":           \"Judge prefers longer outputs even when shorter is correct.\",\n    \"self_preference\":  \"Judge favors outputs from its own model family.\",\n    \"style\":            \"Judge over-weights confident, well-formatted prose.\",\n}\n\n# source-tagged effect sizes from the literature:\nEFFECT_SIZES = {\n    \"position\":  \"GPT-4 flips ~35% of pairs on order swap (Zheng et al. 2023)\",\n    \"length\":    \"Documented in MT-Bench paper; 'repetitive list attack' wins.\",\n    \"self_pref\": \"GPT-4 favors GPT-4 outputs; Claude favors Claude (Zheng).\",\n    \"style\":     \"Effect 0.76-0.92 — bigger than position bias (Park et al. 2024).\",\n}\n\nfor name, desc in BIASES.items():\n    print(f\"{name}: {desc}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "predict",
+          "id": "evals/llm-as-judge/s04-04-predict-the-bias",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The judge always returns \"A\". So v1==\"A\" AND v2==\"A\". The `consistent` check requires `(v1==\"A\" AND v2==\"B\")` OR `(v1==\"B\" AND v2==\"A\")` — i.e., one slot wins round 1 and the OTHER slot wins round 2. Both being \"A\" means neither branch matches.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`consistent? False` — bias detected. The both-orders mitigation just caught a judge that ignores content entirely.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 80,
+          "concept": "position-bias-detection",
+          "code": "# a position-biased mock judge: always picks whatever sits in slot A,\n# regardless of which physical output is in there.\n\ndef fake_judge_pairwise(input_text, a, b):\n    return \"A\"  # bias: always picks slot A, ignores content\n\nX = \"Output X (correct, concise)\"\nY = \"Output Y (verbose, partially wrong)\"\n\n# round 1: X in slot A, Y in slot B\nv1 = fake_judge_pairwise(\"Which is better?\", X, Y)\n# round 2: Y in slot A, X in slot B\nv2 = fake_judge_pairwise(\"Which is better?\", Y, X)\n\n# consistent? if the SAME physical output won both rounds, yes.\n# round 1 winner=A means X won. round 2 winner=A means Y won.\n# different physical outputs won → not consistent → bias detected.\nconsistent = (v1 == \"A\" and v2 == \"B\") or (v1 == \"B\" and v2 == \"A\")\n\nprint(f\"order 1: winner={v1}\")\nprint(f\"order 2: winner={v2}\")\nprint(f\"consistent? {consistent}\")\n",
+          "prompt": "Read the editor. The fake judge has pure position bias — it always\npicks slot A, no matter what content sits there. We run the same\npair in both orders, then check whether the same physical output\nwon both times.\n\nWhat does the script print on the third line?\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "order 1: winner=A\norder 2: winner=A\nconsistent? False\n",
+            "normalize": "collapse-trailing-newline"
+          }
+        },
+        {
+          "type": "fill",
+          "id": "evals/llm-as-judge/s05-05-fill-the-rubric-call",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The verdict dict has a `\"passed\"` key whose value is `True` or `False`. Read that field directly — no comparison against a number.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`verdict[\"passed\"]` — the boolean is the whole answer. No `>= 4` threshold, no `== \"PASS\"` string compare.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 65,
+          "concept": "rubric-judge-binary-verdict",
+          "prompt": "The judge is a function `judge_rubric(question, answer, rubric)`\nthat returns a dict like `{\"passed\": True, \"critique\": \"...\"}`.\nYour code needs to read the verdict and branch on the binary\n`passed` field — never on a numeric score.\n\nFill in the missing condition so the loop prints `pass` for\npassing cases and `fail` for failing ones.\n\nExpected output:\n```\npass\nfail\n```\n",
+          "code": "def judge_rubric(question, answer, rubric):\n    if \"Paris\" in answer:\n        return {\"passed\": True,  \"critique\": \"Names Paris.\"}\n    return {\"passed\": False, \"critique\": \"Does not name Paris.\"}\n\ncases = [\n    (\"Paris.\"),\n    (\"Lyon, I think.\"),\n]\nrubric = \"Reward correct city name.\"\nfor answer in cases:\n    verdict = judge_rubric(\"capital of France?\", answer, rubric)\n    if ___:\n        print(\"pass\")\n    else:\n        print(\"fail\")\n",
+          "blanks": [
+            {
+              "id": "pass_check",
+              "accept": [
+                "verdict[\"passed\"]",
+                "verdict['passed']",
+                "verdict.get(\"passed\")",
+                "verdict.get('passed')"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "id": "evals/llm-as-judge/s06-06-fix-the-likert-trap",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Read `v[\"passed\"]` instead of computing a threshold over `v[\"score\"]`. The binary field is what the rubric is calibrated against; the score is incidental.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Change line 8 to:\n\n```python\nship = v[\"passed\"]\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "binary-not-likert",
+          "brokenCode": "verdicts = [\n    {\"score\": 4, \"passed\": False, \"critique\": \"Well-written but factually wrong.\"},\n    {\"score\": 3, \"passed\": True,  \"critique\": \"Correct, plain prose.\"},\n]\n\nfor i, v in enumerate(verdicts, start=1):\n    # bug: numeric threshold ignores the binary verdict the rubric was designed for.\n    ship = v[\"score\"] >= 4\n    print(f\"case {i}: ship={ship}\")\n",
+          "prompt": "The judge returns both a 1-5 numeric score AND a binary `passed`\nflag (some teams emit both during transition). The code is using\nthe score with a hardcoded threshold — `score >= 4` — but the\nrubric was designed for binary pass/fail and the 1-5 axis is\nuncalibrated. As Hamel Husain puts it: averaging Likert scores\nproduces false precision.\n\nTwo cases come in: one where the model judged 4/5 with `passed: False`\n(the answer is technically wrong but well-written — style bias),\nand one where the model judged 3/5 with `passed: True` (the answer\nis correct but plain).\n\nFix the gate so it reads the binary verdict instead of the numeric\nscore.\n\nExpected output:\n```\ncase 1: ship=False\ncase 2: ship=True\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "case 1: ship=False\ncase 2: ship=True\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            8
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "fix",
+          "id": "evals/llm-as-judge/s07-07-fix-the-position-bias",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Run the judge twice: once as `(question, output_x, output_y)`, once as `(question, output_y, output_x)`. If both rounds pick the same physical output, that's a real winner. If they disagree, return `\"tie\"`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Replace line 11 with the both-orders mitigation:\n\n```python\nv1 = biased_judge(question, output_x, output_y)  # X in A, Y in B\nv2 = biased_judge(question, output_y, output_x)  # Y in A, X in B\nx_won_both = (v1 == \"A\" and v2 == \"B\")\ny_won_both = (v1 == \"B\" and v2 == \"A\")\nif x_won_both:   result = \"X\"\nelif y_won_both: result = \"Y\"\nelse:            result = \"tie\"\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 110,
+          "concept": "both-orders-mitigation",
+          "brokenCode": "# the judge is biased toward whichever option sits in slot A.\ndef biased_judge(question, a, b):\n    return \"A\"  # always picks A, regardless of content\n\nquestion = \"Which output is better?\"\noutput_x = \"Output X\"\noutput_y = \"Output Y\"\n\n# bug: only one order tested, so we ship whatever sits in slot A.\nwinner = biased_judge(question, output_x, output_y)\nresult = \"X\" if winner == \"A\" else \"Y\"\nprint(f\"result: {result}\")\n",
+          "prompt": "The pairwise judge is calling itself only ONCE per pair — order\n`(a, b)`. Position bias means whichever output sits in slot `A`\ngets ~35% more votes than it deserves on close pairs.\n\nFix the code to run BOTH orders and only declare a winner when the\njudge is *consistent* (same physical output wins regardless of\nposition). On disagreement, return `\"tie\"`.\n\nExpected output:\n```\nresult: tie\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "result: tie",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            11
+          ],
+          "revealAfter": 5
+        },
+        {
+          "type": "write",
+          "id": "evals/llm-as-judge/s08-08-write-the-rubric-judge",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Loop over cases, call the judge, increment a counter on `v[\"passed\"]`. After the loop compute `total - passed` for failures and `passed / total` for the rate.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\ndef run_judge_suite(cases):\n    passed_count = 0\n    for c in cases:\n        v = judge_rubric(c[\"question\"], c[\"answer\"], c[\"rubric\"])\n        if v[\"passed\"]:\n            passed_count += 1\n    total = len(cases)\n    return {\n        \"total\": total,\n        \"passed\": passed_count,\n        \"failed\": total - passed_count,\n        \"pass_rate\": round(passed_count / total, 2),\n    }\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 180,
+          "concept": "rubric-judge-suite",
+          "prompt": "Build a rubric-style eval suite. Write `run_judge_suite(cases)` that:\n\n- Takes a list of dicts, each shaped\n  `{\"question\": str, \"answer\": str, \"rubric\": str}`.\n- For each case, calls `judge_rubric(question, answer, rubric)`.\n  The judge returns `{\"passed\": bool, \"critique\": str}`.\n- Counts how many cases pass.\n- Returns a dict `{\"total\": <count>, \"passed\": <count of passes>, \"failed\": <count of fails>, \"pass_rate\": <0.0-1.0 rounded to 2 places>}`.\n\nThe script will run a 4-case suite. Expected output:\n```\ntotal=4 passed=2 failed=2 pass_rate=0.5\n```\n",
+          "starter": "def judge_rubric(question, answer, rubric):\n    # mock judge: passes if \"Paris\" appears in answer.\n    if \"Paris\" in answer:\n        return {\"passed\": True,  \"critique\": \"Names Paris.\"}\n    return {\"passed\": False, \"critique\": \"Does not name Paris.\"}\n\ncases = [\n    {\"question\": \"capital of France?\", \"answer\": \"Paris.\",                          \"rubric\": \"Reward correct answer.\"},\n    {\"question\": \"capital of France?\", \"answer\": \"Lyon, I think.\",                  \"rubric\": \"Reward correct answer.\"},\n    {\"question\": \"capital of France?\", \"answer\": \"Paris, in northern France.\",      \"rubric\": \"Reward correct, concise answer.\"},\n    {\"question\": \"capital of France?\", \"answer\": \"Some city in the south, maybe.\",  \"rubric\": \"Reward correct answer.\"},\n]\n\n# define run_judge_suite(cases) below\n\nresult = run_judge_suite(cases)\nprint(f\"total={result['total']} passed={result['passed']} failed={result['failed']} pass_rate={result['pass_rate']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "total=4 passed=2 failed=2 pass_rate=0.5",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "def judge_rubric(question, answer, rubric):\n    if \"Paris\" in answer:\n        return {\"passed\": True,  \"critique\": \"Names Paris.\"}\n    return {\"passed\": False, \"critique\": \"Does not name Paris.\"}\n\ncases = [\n    {\"question\": \"capital of France?\", \"answer\": \"Paris.\",                          \"rubric\": \"Reward correct answer.\"},\n    {\"question\": \"capital of France?\", \"answer\": \"Lyon, I think.\",                  \"rubric\": \"Reward correct answer.\"},\n    {\"question\": \"capital of France?\", \"answer\": \"Paris, in northern France.\",      \"rubric\": \"Reward correct, concise answer.\"},\n    {\"question\": \"capital of France?\", \"answer\": \"Some city in the south, maybe.\",  \"rubric\": \"Reward correct answer.\"},\n]\n\ndef run_judge_suite(cases):\n    passed_count = 0\n    for c in cases:\n        v = judge_rubric(c[\"question\"], c[\"answer\"], c[\"rubric\"])\n        if v[\"passed\"]:\n            passed_count += 1\n    total = len(cases)\n    failed_count = total - passed_count\n    pass_rate = round(passed_count / total, 2) if total else 0.0\n    return {\n        \"total\": total,\n        \"passed\": passed_count,\n        \"failed\": failed_count,\n        \"pass_rate\": pass_rate,\n    }\n\nresult = run_judge_suite(cases)\nprint(f\"total={result['total']} passed={result['passed']} failed={result['failed']} pass_rate={result['pass_rate']}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "evals/llm-as-judge/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 220,
+          "concept": "position-bias-aware-pairwise",
+          "prompt": "Final drill. Build a pairwise judge that detects its OWN position\nbias and returns `tie` when it disagrees with itself across orders.\n\nWrite `pairwise(question, output_a, output_b)` that:\n\n- Calls `fake_judge(question, first, second)` twice:\n  - Once with `first=output_a, second=output_b` — read result as\n    \"the output named output_a sits in slot A this round.\"\n  - Once with `first=output_b, second=output_a` — output_b is now\n    in slot A.\n- Each call returns `\"A\"` or `\"B\"` (the *slot* that won).\n- Translate slot wins back to which physical output won that round.\n- If the SAME physical output won both rounds, return that output's\n  label (`\"a\"` or `\"b\"`).\n- If the rounds disagreed, return `\"tie\"`.\n\nThen run a multi-case suite. Expected output:\n```\ncase 1: a wins  (consistent)\ncase 2: tie     (position-biased — judge disagrees with itself)\ncase 3: b wins  (consistent)\n```\n",
+          "starter": "# the fake judge has a known length bias: always picks slot with the longer string.\ndef fake_judge(question, first, second):\n    return \"A\" if len(first) > len(second) else \"B\"\n\n# define pairwise(question, output_a, output_b) below\n\ncases = [\n    # case 1: output_a is genuinely longer → wins both orders → \"a wins\"\n    (\"Pick the better answer.\", \"A long detailed correct answer here.\", \"Short.\"),\n    # case 2: equal length → judge fluctuates → \"tie\"\n    (\"Pick the better answer.\", \"Same exact length here\", \"Same exact length here\"),\n    # case 3: output_b is genuinely longer → wins both orders → \"b wins\"\n    (\"Pick the better answer.\", \"Brief.\", \"A long detailed correct answer here.\"),\n]\n\nfor i, (q, a, b) in enumerate(cases, start=1):\n    result = pairwise(q, a, b)\n    label = \"a wins  (consistent)\" if result == \"a\" else \\\n            \"b wins  (consistent)\" if result == \"b\" else \\\n            \"tie     (position-biased — judge disagrees with itself)\"\n    print(f\"case {i}: {label}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "case 1: a wins  (consistent)\ncase 2: tie     (position-biased — judge disagrees with itself)\ncase 3: b wins  (consistent)\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "def fake_judge(question, first, second):\n    return \"A\" if len(first) > len(second) else \"B\"\n\ndef pairwise(question, output_a, output_b):\n    # round 1: output_a in slot A, output_b in slot B.\n    slot_winner_1 = fake_judge(question, output_a, output_b)\n    round_1_winner = \"a\" if slot_winner_1 == \"A\" else \"b\"\n\n    # round 2: output_b in slot A, output_a in slot B.\n    slot_winner_2 = fake_judge(question, output_b, output_a)\n    round_2_winner = \"b\" if slot_winner_2 == \"A\" else \"a\"\n\n    if round_1_winner == round_2_winner:\n        return round_1_winner\n    return \"tie\"\n\ncases = [\n    (\"Pick the better answer.\", \"A long detailed correct answer here.\", \"Short.\"),\n    (\"Pick the better answer.\", \"Same exact length here\", \"Same exact length here\"),\n    (\"Pick the better answer.\", \"Brief.\", \"A long detailed correct answer here.\"),\n]\n\nfor i, (q, a, b) in enumerate(cases, start=1):\n    result = pairwise(q, a, b)\n    label = \"a wins  (consistent)\" if result == \"a\" else \\\n            \"b wins  (consistent)\" if result == \"b\" else \\\n            \"tie     (position-biased — judge disagrees with itself)\"\n    print(f\"case {i}: {label}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 32
     }
   ],
-  "xpTotal": 31
+  "xpTotal": 63
 }

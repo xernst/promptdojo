@@ -1,0 +1,44 @@
+xp: 4
+estSeconds: 90
+concept: router-fallback-default
+prompt: |
+  The classifier just returned `"unknown"` — a category not in the
+  dispatch table. The current code raises `KeyError` and the user
+  gets a 500. Fix the dispatch so an unknown category falls back to
+  the `"general"` route instead.
+
+  Expected output:
+  ```
+  GEN -> what time do you open
+  ```
+brokenCode: |
+  ROUTES = {
+      "billing":   lambda q: f"BILL -> {q}",
+      "technical": lambda q: f"TECH -> {q}",
+      "general":   lambda q: f"GEN  -> {q}",
+  }
+
+  category = "unknown"  # the classifier drifted
+  question = "what time do you open"
+
+  # this raises KeyError on unknown categories.
+  result = ROUTES[category](question)
+  print(result)
+bugLines:
+  - 11
+grader:
+  kind: stdout-equality
+  expected: "GEN  -> what time do you open"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Use `ROUTES.get(category, ROUTES["general"])` — `dict.get` with a default returns the general handler when the key is missing.'
+  - level: 2
+    body: |
+      Replace line 11 with:
+
+      ```python
+      handler = ROUTES.get(category, ROUTES["general"])
+      result = handler(question)
+      ```
+revealAfter: 4

@@ -1,0 +1,120 @@
+xp: 8
+estSeconds: 200
+concept: evaluator-optimizer-checkpoint
+prompt: |
+  Final drill. Build a production-grade evaluator-optimizer that
+  tracks the full revision history. Write
+  `optimize(task, max_iters)` that:
+
+  - Maintains `feedback = None` and `history = []`.
+  - Loops up to `max_iters` times. Each iteration:
+    - Calls `gen(task, feedback=feedback)` to produce a draft.
+    - Calls `judge(draft)` to get a verdict dict.
+    - Appends one entry to `history`:
+      `{"iter": <1-based>, "draft": <draft>, "status": <verdict status>, "feedback": <verdict feedback>}`.
+    - On PASS: return
+      `{"final_draft": draft, "iters": <iteration that passed>, "passed": True, "history": history}`.
+    - On REJECT: update `feedback = verdict["feedback"]` and continue.
+  - On cap exhaustion without a PASS: return
+    `{"final_draft": <last draft>, "iters": max_iters, "passed": False, "history": history}`.
+
+  The script will run two cases. Expected output:
+  ```
+  passed=True iters=3 history_len=3 final=v3-good
+  passed=False iters=2 history_len=2 final=stub2
+  ```
+starter: |
+  good_drafts = iter(["v1-rough", "v2-better", "v3-good"])
+  good_verdicts = iter([
+      {"status": "REJECT", "feedback": "rough"},
+      {"status": "REJECT", "feedback": "better but not enough"},
+      {"status": "PASS",   "feedback": "great"},
+  ])
+
+  bad_drafts = iter(["stub1", "stub2"])
+  bad_verdicts = iter([
+      {"status": "REJECT", "feedback": "still no"},
+      {"status": "REJECT", "feedback": "really no"},
+  ])
+
+  current = {"drafts": good_drafts, "verdicts": good_verdicts}
+
+  def gen(task, feedback=None):
+      return next(current["drafts"])
+
+  def judge(draft):
+      return next(current["verdicts"])
+
+  # define optimize(task, max_iters) below
+
+  current["drafts"], current["verdicts"] = good_drafts, good_verdicts
+  r = optimize("write a tagline", 5)
+  print(f"passed={r['passed']} iters={r['iters']} history_len={len(r['history'])} final={r['final_draft']}")
+
+  current["drafts"], current["verdicts"] = bad_drafts, bad_verdicts
+  r = optimize("write a tagline", 2)
+  print(f"passed={r['passed']} iters={r['iters']} history_len={len(r['history'])} final={r['final_draft']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    passed=True iters=3 history_len=3 final=v3-good
+    passed=False iters=2 history_len=2 final=stub2
+  normalize: collapse-trailing-newline
+solution: |
+  good_drafts = iter(["v1-rough", "v2-better", "v3-good"])
+  good_verdicts = iter([
+      {"status": "REJECT", "feedback": "rough"},
+      {"status": "REJECT", "feedback": "better but not enough"},
+      {"status": "PASS",   "feedback": "great"},
+  ])
+
+  bad_drafts = iter(["stub1", "stub2"])
+  bad_verdicts = iter([
+      {"status": "REJECT", "feedback": "still no"},
+      {"status": "REJECT", "feedback": "really no"},
+  ])
+
+  current = {"drafts": good_drafts, "verdicts": good_verdicts}
+
+  def gen(task, feedback=None):
+      return next(current["drafts"])
+
+  def judge(draft):
+      return next(current["verdicts"])
+
+  def optimize(task, max_iters):
+      feedback = None
+      draft = None
+      history = []
+      for i in range(max_iters):
+          draft = gen(task, feedback=feedback)
+          verdict = judge(draft)
+          history.append({
+              "iter": i + 1,
+              "draft": draft,
+              "status": verdict["status"],
+              "feedback": verdict["feedback"],
+          })
+          if verdict["status"] == "PASS":
+              return {
+                  "final_draft": draft,
+                  "iters": i + 1,
+                  "passed": True,
+                  "history": history,
+              }
+          feedback = verdict["feedback"]
+      return {
+          "final_draft": draft,
+          "iters": max_iters,
+          "passed": False,
+          "history": history,
+      }
+
+  current["drafts"], current["verdicts"] = good_drafts, good_verdicts
+  r = optimize("write a tagline", 5)
+  print(f"passed={r['passed']} iters={r['iters']} history_len={len(r['history'])} final={r['final_draft']}")
+
+  current["drafts"], current["verdicts"] = bad_drafts, bad_verdicts
+  r = optimize("write a tagline", 2)
+  print(f"passed={r['passed']} iters={r['iters']} history_len={len(r['history'])} final={r['final_draft']}")
+passThreshold: 0.66

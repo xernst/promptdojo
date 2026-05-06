@@ -1,0 +1,42 @@
+xp: 2
+estSeconds: 60
+concept: pairwise-vs-rubric-fit
+code: |
+  # four eval scenarios. picking the wrong shape costs you reliability.
+  scenarios = {
+      "A": "Regression eval: same prompt v1 vs v2, run on 50 fixed cases, fail CI on regression.",
+      "B": "Daily quality dashboard: one number per day showing 'how well is the model doing'.",
+      "C": "A/B prompt test: which of two prompt drafts produces better support replies on a 30-case set?",
+      "D": "Production gate: every output must meet a minimum quality bar before being shown to users.",
+  }
+  for k, v in scenarios.items():
+      print(f"{k}: {v}")
+prompt: |
+  Pairwise asks "A or B better?" → returns A/B/tie. Rubric asks
+  "does this output pass?" → returns pass/fail. Which TWO scenarios
+  above are the strongest fit for **pairwise**?
+options:
+  - id: a_and_d
+    label: "A (regression) and D (production gate)"
+    explain: "Both need an absolute quality floor — 'pass or fail per case' — and run on every input. Pairwise gives you a relative winner, not a floor."
+  - id: b_and_c
+    label: "B (daily dashboard) and C (A/B prompt test)"
+    explain: "B needs an absolute number for a trend line. Pairwise gives you 'A vs B,' not 'how good is today.'"
+  - id: a_and_c
+    label: "A (regression) and C (A/B prompt test)"
+    explain: "A needs a per-case pass/fail to gate CI. Pairwise can't say 'this case got worse' — only 'this output beat that output.'"
+  - id: c_and_d
+    label: "C (A/B prompt test) and D (production gate)"
+    explain: "D needs an absolute floor per output. Pairwise compares two outputs, doesn't grade one."
+  - id: c_only_paired_correctly
+    label: "C only — the others all fit rubric"
+  - id: pairwise_for_c_and_b_dashboard
+    label: "Both A/B testing scenarios — C is the only A/B test here"
+    explain: "B is a dashboard, not an A/B test."
+answerIds:
+  - c_only_paired_correctly
+hint:
+  - level: 1
+    body: 'Pairwise needs *two outputs to compare* and returns a relative winner. Which scenarios actually have two outputs to compare?'
+  - level: 2
+    body: 'Only C has two prompt drafts to compare. A, B, D all need absolute pass/fail or scores.'

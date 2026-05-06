@@ -1,0 +1,56 @@
+xp: 4
+estSeconds: 100
+concept: max-iterations-safety-rail
+prompt: |
+  This loop has no `max_iters` ceiling. The judge in this test case is
+  stubborn — it never says PASS. As written, the `while True` runs
+  until the iter pool is empty and Python raises `StopIteration`
+  (which in production would mean burning through your API budget).
+
+  Fix the loop to bail out after at most 3 iterations, returning the
+  string `"capped"` if no PASS was reached.
+
+  Expected output:
+  ```
+  capped
+  ```
+brokenCode: |
+  drafts = iter(["v1", "v2", "v3", "v4"])
+  verdicts = iter([
+      {"status": "REJECT", "feedback": "no"},
+      {"status": "REJECT", "feedback": "still no"},
+      {"status": "REJECT", "feedback": "really no"},
+  ])
+
+  def gen(task, feedback=None): return next(drafts)
+  def judge(draft):             return next(verdicts)
+
+  def loop(task):
+      draft = gen(task)
+      while True:                              # bug: no cap
+          verdict = judge(draft)
+          if verdict["status"] == "PASS":
+              return draft
+          draft = gen(task, feedback=verdict["feedback"])
+      return "capped"
+
+  print(loop("describe x"))
+bugLines:
+  - 11
+grader:
+  kind: stdout-equality
+  expected: "capped"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Replace `while True:` with `for _ in range(3):` so the loop bails after 3 iterations. The trailing `return "capped"` will then run.'
+  - level: 2
+    body: |
+      Change line 11 to:
+
+      ```python
+      for _ in range(3):
+      ```
+
+      That makes the bottom `return "capped"` reachable when no PASS comes.
+revealAfter: 4

@@ -26,7 +26,260 @@
         }
       ],
       "xpTotal": 1
+    },
+    {
+      "slug": "read-the-trace-not-the-chat",
+      "title": "Read the trace, not the chat — find the broken turn before reading the user's complaint",
+      "estMinutes": 11,
+      "prerequisites": [
+        "orientation"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "debugging-output/read-the-trace-not-the-chat/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 110,
+          "concept": "trace-first-debugging",
+          "body": "# When the model lies, the trace tells you why\n\nA user complains. The chat shows a wrong answer. Three things will\nhappen if you start by reading the chat:\n\n1. You'll re-read the same wrong sentence five times looking for the\n   bug.\n2. You'll think the model \"hallucinated\" and tweet about it.\n3. You'll ship a regex post-filter that hides the symptom.\n\nNone of those finds the actual bug. The trace does. **Always read\nthe trace first.** The chat is the symptom; the trace is the\nevidence.\n\nThis lesson teaches the methodology: find the broken turn from the\ntrace, classify the failure class, fix UPSTREAM of where it\nsurfaced, then add an eval that would have caught it. Chapter 20\ngave you trace literacy — what each field means. Chapter 21 gave\nyou eval discipline — what to assert. This lesson wires them into\na single triage flow.\n\n## What's in a trace, restated\n\nFrom the capstone you already know the shape:\n\n```python\n{\n    \"turn\": 1,\n    \"stop_reason\": \"tool_use\",\n    \"tools_called\": [\"search\"],\n    \"tokens\": 412,\n    \"validation_errors\": 0,\n}\n```\n\nSix fields. Read them in this order when triaging:\n\n1. **`validation_errors`**: any non-zero value? That turn shows the\n   model called a tool with bad args. Likely the source.\n2. **`stop_reason`**: anything other than `tool_use`/`end_turn`?\n   `max_tokens` truncates output mid-thought; `pause_turn` means a\n   hosted tool ran out of time; `refusal` is a safety stop.\n3. **`tools_called`**: what tools ran? Re-running the same tool 3+\n   times in a row is a tool-loop bug — the tool result didn't\n   actually help.\n4. **`tokens`**: spike on one turn? The model received a giant\n   prompt — chunking issue, or a tool returned a 50K-character\n   response.\n\nMost bugs land on the first or third row. The trace is sorted; the\n*first* turn that violates an assertion is usually where the bug\nstarted.\n\n## Where the bug actually lives\n\nProduction AI bugs sort into four classes. The trace tells you\nwhich:\n\n| Class | Symptom in the trace | Actual fix |\n|---|---|---|\n| **Retrieval** | tool returned wrong/missing data | fix retrieval, not the prompt |\n| **Prompt** | model interpreted instructions wrong | fix the prompt, add a few-shot |\n| **True hallucination** | no tool ran, no retrieval; model made it up | constrain output (schema, citations) |\n| **Downstream mangling** | trace looks fine; output is wrong | fix the JSON parse / regex / display layer |\n\nThe wrong fix applied to the wrong class is the most common waste\nof debugging time. **The fix lives at the layer the trace points\nto**, not at the layer where the user sees the symptom.\n\n## What \"fix upstream of where it surfaced\" means\n\nA user sees a JSON parse error. The natural reflex: catch the parse\nerror, retry, ship. The trace says: the model returned valid JSON\non turn 1, and your post-processor mangled it on the way to the\ndisplay layer.\n\nThe fix isn't \"catch and retry.\" The fix is \"stop mangling the\nJSON.\" Otherwise next month a different bug will produce the same\nsymptom and you'll add a second retry, then a third.\n\n## What you'll build\n\nA `find_suspect_turn(trace)` that scans the trace and returns the\nfirst turn that violates an assertion (non-zero validation errors,\nnon-end_turn final stop, etc.). Then a `summarize_trace(trace)`\nthat produces a one-line summary suitable for filing in a bug\nticket. Then the discipline drill: given a trace + a user\ncomplaint, classify the failure class.",
+          "cta": "Got it",
+          "code": "# a trace dump from a broken agent run.\n# the user's complaint: \"it gave me the wrong city.\"\n# before reading the chat, find the bad turn in the trace.\n\ntrace = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"tokens\": 412, \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"tool_use\", \"tools_called\": [\"read_page\"], \"tokens\": 880, \"validation_errors\": 0},\n    {\"turn\": 3, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"tokens\": 920, \"validation_errors\": 1},  # ← something here\n    {\"turn\": 4, \"stop_reason\": \"end_turn\", \"tools_called\": [],            \"tokens\": 145, \"validation_errors\": 0},\n]\n\n# find the turn with a non-zero validation_errors count.\nfor t in trace:\n    if t[\"validation_errors\"] > 0:\n        print(f\"suspect turn: {t['turn']}, tools_called: {t['tools_called']}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "debugging-output/read-the-trace-not-the-chat/s02-02-where-to-look-first",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The trace is the structured record. The chat is the surface. Always read the structured record first — it's sorted and indexable; the chat is unstructured prose.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 55,
+          "concept": "triage-first-look",
+          "prompt": "A user reports a bad agent response. Where do you look FIRST?\n",
+          "options": [
+            {
+              "id": "b_trace_first",
+              "label": "B — open the trace and scan for the broken turn"
+            },
+            {
+              "id": "a_chat_first",
+              "label": "A — re-read the chat to spot the issue",
+              "explain": "The chat shows the symptom; the trace shows the cause. Reading the chat first is how you waste 30 minutes before finding the actual broken turn."
+            },
+            {
+              "id": "c_rerun",
+              "label": "C — re-run the agent and see if it reproduces",
+              "explain": "Re-running BEFORE understanding the trace is debugging by superstition. You want to know what happened *that* time, not what happens *this* time."
+            },
+            {
+              "id": "d_trycatch",
+              "label": "D — add a try/except to catch errors next time",
+              "explain": "This silences future symptoms without finding the cause. You'll catch the error 100 more times and still not know why it fires."
+            }
+          ],
+          "answerIds": [
+            "b_trace_first"
+          ],
+          "shuffle": false,
+          "code": "# a complaint comes in. four places you could look first.\nplaces = {\n    \"A\": \"Re-read the user's complaint and the agent's answer.\",\n    \"B\": \"Open the trace and scan for non-zero validation_errors / non-end_turn stop_reason.\",\n    \"C\": \"Re-run the agent on the same input and see what happens.\",\n    \"D\": \"Add a try/except around the call site to catch errors.\",\n}\nfor k, v in places.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "debugging-output/read-the-trace-not-the-chat/s03-03-the-four-failure-classes",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "failure-class-taxonomy",
+          "body": "# The four classes, by where the bug lives\n\nEvery broken AI output belongs to exactly one of these classes. The\nfix layer is *different* for each. Confusing them produces the\nclassic \"we shipped a fix that didn't fix anything\" rotation.\n\n## 1. Retrieval\n\nThe agent called a tool, the tool returned wrong or missing data,\nthe model passed it on. The classic case: a RAG retriever pulls the\ntop-3 chunks but the right chunk is chunk 4. The model's prompt\nincludes irrelevant context. The model does its best and produces a\nconfident wrong answer.\n\n**Trace signature**: `tools_called` shows a search/retrieval tool;\nthe tool's response (in the user-role tool_result) is the bad data.\n\n**Fix layer**: the retriever. Re-chunk the source. Increase top-k.\nSwitch embedding models. The prompt and the model are innocent.\n\n## 2. Prompt\n\nThe model got correct context and clear input, but interpreted the\ninstructions wrong. The agent was told to \"extract the invoice\ntotal\" and instead returned the line-item total. The model wasn't\nhallucinating — it was reading your prompt and answering the\nquestion your prompt actually asked.\n\n**Trace signature**: tools_called is empty or returned correct data;\nthe model's answer doesn't match user intent.\n\n**Fix layer**: the prompt. Add a constraint, an example, a negative\ncase (\"not the line-item total — the invoice total\"). The model and\nthe retriever are innocent.\n\n## 3. True hallucination\n\nNo tool ran. No retrieval happened. The model just made it up. The\nclassic case: a chat without grounding tools, the model is asked\nabout a recent event past its training cutoff, and confidently\nfabricates.\n\n**Trace signature**: `tools_called` is empty across all turns; the\nanswer references facts the model couldn't verify.\n\n**Fix layer**: constrain output. Force tool use (\"you MUST search\nbefore answering\"). Require citations. Refuse on uncertainty.\n\n## 4. Downstream mangling\n\nThe trace is FINE. The model returned a correct, well-formed\nanswer. Then your code mangled it. JSON parse stripped a field. A\nregex post-processor ate a backtick. The frontend HTML-escaped a\nquote. The bug isn't AI — the bug is the boring code between the\nmodel and the user.\n\n**Trace signature**: trace looks healthy; output as logged matches\nexpected; what the user sees doesn't.\n\n**Fix layer**: post-processing code. The model is innocent. The\nretriever is innocent. The prompt is innocent.\n\n## Why the classification matters\n\nThe fix layer ≠ the symptom layer. A user-visible JSON parse error\nmight be:\n\n- **Class 1 (retrieval)** if a tool returned malformed JSON\n- **Class 2 (prompt)** if the model wasn't told what shape to return\n- **Class 3 (hallucination)** if the model invented a structure\n- **Class 4 (mangling)** if your code dropped a closing brace\n\nSame symptom, four different fixes. The trace is what tells you\nwhich class — and adding the wrong fix doesn't help.\n\n## What this lesson does NOT cover\n\nTool-loop bugs (where the model calls the same tool 5 times in a\nrow) are their own class. They show up as a `tools_called` pattern\nin the trace, not as a wrong-answer in the output. We're scoping\nthis lesson to the four output-failure classes; tool loops are a\nseparate skill.",
+          "cta": "Got it",
+          "code": "# four failure classes. each has a different fix layer.\n\nCLASSES = {\n    \"retrieval\":          \"Tool/RAG returned wrong or missing data.\",\n    \"prompt\":             \"Model interpreted instructions wrong.\",\n    \"true_hallucination\": \"No tool ran; model invented from nothing.\",\n    \"downstream_mangling\": \"Trace fine; post-processing broke the output.\",\n}\n\nFIXES = {\n    \"retrieval\":          \"Fix the retriever — chunking, top-k, embedding model.\",\n    \"prompt\":             \"Fix the prompt — clearer instructions, few-shot example.\",\n    \"true_hallucination\": \"Constrain output — schema, citations, refuse on uncertainty.\",\n    \"downstream_mangling\": \"Fix the JSON parse / regex / display layer.\",\n}\n\nfor name in CLASSES:\n    print(f\"{name}: {CLASSES[name]}\")\n    print(f\"  fix: {FIXES[name]}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "predict",
+          "id": "debugging-output/read-the-trace-not-the-chat/s04-04-predict-the-bad-turn",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The loop iterates turns 1, 2, 3, 4. The break fires when `validation_errors > 0` — first true on turn 3. `suspect` is set to 3 and the loop exits.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 75,
+          "concept": "scan-trace-for-anomaly",
+          "code": "trace = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"tokens\": 412, \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"tool_use\", \"tools_called\": [\"read_page\"], \"tokens\": 880, \"validation_errors\": 0},\n    {\"turn\": 3, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"tokens\": 920, \"validation_errors\": 1},\n    {\"turn\": 4, \"stop_reason\": \"end_turn\", \"tools_called\": [],            \"tokens\": 145, \"validation_errors\": 0},\n]\n\n# find the FIRST turn with a non-zero validation_errors count.\nsuspect = None\nfor t in trace:\n    if t[\"validation_errors\"] > 0:\n        suspect = t[\"turn\"]\n        break\n\nprint(f\"suspect turn: {suspect}\")\n",
+          "prompt": "Read the trace in the editor. Four turns. The third turn has\n`validation_errors: 1` — the rest are zero. The script scans\nfor the first turn with non-zero validation_errors and prints\nits turn number. What's the output?\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "suspect turn: 3",
+            "normalize": "collapse-trailing-newline"
+          }
+        },
+        {
+          "type": "fill",
+          "id": "debugging-output/read-the-trace-not-the-chat/s05-05-fill-the-find-bad-turn",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Pass two arguments: the trace, and a lambda that returns True when `t[\"tokens\"] > 500`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`find_first(trace, lambda t: t[\"tokens\"] > 500)` — predicate as a single-line lambda. Lambdas are how production code parameterizes \"find the bad turn\" without writing a new function for each criterion.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 65,
+          "concept": "predicate-based-trace-search",
+          "prompt": "The function `find_first(trace, predicate)` should return the\nfirst turn where `predicate(turn)` returns `True`, or `None` if\nno turn matches. Fill in the call so the example finds the first\nturn with `tokens > 500`.\n\nExpected output:\n```\nbad turn: 2\n```\n",
+          "code": "trace = [\n    {\"turn\": 1, \"tokens\": 412},\n    {\"turn\": 2, \"tokens\": 880},\n    {\"turn\": 3, \"tokens\": 920},\n    {\"turn\": 4, \"tokens\": 145},\n]\n\ndef find_first(trace, predicate):\n    for t in trace:\n        if predicate(t):\n            return t\n    return None\n\nbad = ___\nprint(f\"bad turn: {bad['turn']}\")\n",
+          "blanks": [
+            {
+              "id": "find_first_call",
+              "accept": [
+                "find_first(trace, lambda t: t['tokens'] > 500)",
+                "find_first(trace, lambda t: t[\"tokens\"] > 500)"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "id": "debugging-output/read-the-trace-not-the-chat/s06-06-fix-the-fix-the-symptom",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Replace `return \"unknown\"` with a return of the diagnostic dict including the raw text. The caller then knows WHICH layer to fix.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Change line 7 to:\n\n```python\nreturn {\"class\": \"prompt\", \"fix_layer\": \"the prompt\", \"raw\": raw_text}\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "fix-upstream-not-symptom",
+          "brokenCode": "import json\n\ndef parse_model_output(raw_text):\n    try:\n        return json.loads(raw_text)\n    except json.JSONDecodeError:\n        # bug: hides the failure class. caller sees \"unknown\" forever.\n        return \"unknown\"\n\nraw = \"I think the answer is 42\"\nresult = parse_model_output(raw)\nprint(result)\n",
+          "prompt": "The agent returned malformed JSON. The downstream parser is\ncatching the error and returning `\"unknown\"`. This *hides* the\nsymptom but doesn't fix the bug — the next user gets the same\nwrong answer, packaged as `\"unknown\"`.\n\nThe trace shows the bug is upstream: the prompt didn't tell the\nmodel to return JSON. The fix is to return a `dict` describing\nthe upstream class so the caller can route to the right fix.\n\nFix the parser to RETURN\n`{\"class\": \"prompt\", \"fix_layer\": \"the prompt\", \"raw\": <the raw model output>}`\ninstead of swallowing the error with `\"unknown\"`.\n\nExpected output:\n```\n{'class': 'prompt', 'fix_layer': 'the prompt', 'raw': 'I think the answer is 42'}\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "{'class': 'prompt', 'fix_layer': 'the prompt', 'raw': 'I think the answer is 42'}",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            7
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "fix",
+          "id": "debugging-output/read-the-trace-not-the-chat/s07-07-fix-the-blame-the-model",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Read `trace[-1][\"tools_called\"]`. If it has any items, return `\"retrieval\"`. Otherwise return `\"true_hallucination\"`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Replace the body of `classify` with:\n\n```python\nif trace[-1][\"tools_called\"]:\n    return \"retrieval\"\nreturn \"true_hallucination\"\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "classify-not-blame",
+          "brokenCode": "trace = [\n    {\"turn\": 1, \"tools_called\": [\"search\"], \"tool_result_snippet\": \"wrong data here\"},\n]\n\ndef classify(trace):\n    # bug: ignores the trace. always blames hallucination.\n    return \"true_hallucination\"\n\nprint(f\"class: {classify(trace)}\")\n",
+          "prompt": "The triage code is hardcoded to blame \"true_hallucination\" no\nmatter what the trace shows. But the trace says the agent's\nsearch tool ran AND returned data — so this is a **retrieval**\nproblem (wrong data came back), not a hallucination (model\ninventing from nothing).\n\nFix the classifier to check `trace[-1][\"tools_called\"]`. If it's\nnon-empty, this is `\"retrieval\"`. Otherwise it's\n`\"true_hallucination\"`.\n\nExpected output:\n```\nclass: retrieval\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "class: retrieval",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            6
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "write",
+          "id": "debugging-output/read-the-trace-not-the-chat/s08-08-write-the-trace-summary",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Compute each summary number with a comprehension over `trace`: `len(trace)`, `sum(len(t[\"tools_called\"]) for t in trace)`, `sum(t[\"validation_errors\"] for t in trace)`, `trace[-1][\"stop_reason\"]`. Then format as the f-string.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`f\"{n_turns} turns, {n_tools} tools, {n_validation} validation_errors, final stop={final_stop}\"` — exact phrasing matters for grading.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "trace-summary-for-bug-ticket",
+          "prompt": "Write `summarize_trace(trace)` that produces a one-line bug-ticket\nsummary. The function:\n\n- Takes a trace (list of turn dicts).\n- Returns a string formatted exactly:\n  `\"<N> turns, <M> tools, <V> validation_errors, final stop=<stop_reason>\"`.\n  Where:\n  - `<N>` is the number of turns.\n  - `<M>` is the total number of tool calls across all turns\n    (sum of `len(t[\"tools_called\"])`).\n  - `<V>` is the total `validation_errors` summed across turns.\n  - `<stop_reason>` is `trace[-1][\"stop_reason\"]`.\n\nThree traces run for you. Expected output:\n```\n4 turns, 3 tools, 0 validation_errors, final stop=end_turn\n3 turns, 2 tools, 1 validation_errors, final stop=end_turn\n2 turns, 0 tools, 0 validation_errors, final stop=max_tokens\n```\n",
+          "starter": "trace_a = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"tool_use\", \"tools_called\": [\"read_page\"], \"validation_errors\": 0},\n    {\"turn\": 3, \"stop_reason\": \"tool_use\", \"tools_called\": [\"summarize\"], \"validation_errors\": 0},\n    {\"turn\": 4, \"stop_reason\": \"end_turn\", \"tools_called\": [],            \"validation_errors\": 0},\n]\n\ntrace_b = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"validation_errors\": 1},\n    {\"turn\": 2, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"validation_errors\": 0},\n    {\"turn\": 3, \"stop_reason\": \"end_turn\", \"tools_called\": [],            \"validation_errors\": 0},\n]\n\ntrace_c = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\",   \"tools_called\": [],          \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"max_tokens\", \"tools_called\": [],          \"validation_errors\": 0},\n]\n\n# define summarize_trace(trace) below\n\nfor tr in [trace_a, trace_b, trace_c]:\n    print(summarize_trace(tr))\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "4 turns, 3 tools, 0 validation_errors, final stop=end_turn\n3 turns, 2 tools, 1 validation_errors, final stop=end_turn\n2 turns, 0 tools, 0 validation_errors, final stop=max_tokens\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "trace_a = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"tool_use\", \"tools_called\": [\"read_page\"], \"validation_errors\": 0},\n    {\"turn\": 3, \"stop_reason\": \"tool_use\", \"tools_called\": [\"summarize\"], \"validation_errors\": 0},\n    {\"turn\": 4, \"stop_reason\": \"end_turn\", \"tools_called\": [],            \"validation_errors\": 0},\n]\n\ntrace_b = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"validation_errors\": 1},\n    {\"turn\": 2, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"],    \"validation_errors\": 0},\n    {\"turn\": 3, \"stop_reason\": \"end_turn\", \"tools_called\": [],            \"validation_errors\": 0},\n]\n\ntrace_c = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\",   \"tools_called\": [],          \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"max_tokens\", \"tools_called\": [],          \"validation_errors\": 0},\n]\n\ndef summarize_trace(trace):\n    n_turns = len(trace)\n    n_tools = sum(len(t[\"tools_called\"]) for t in trace)\n    n_validation = sum(t[\"validation_errors\"] for t in trace)\n    final_stop = trace[-1][\"stop_reason\"]\n    return f\"{n_turns} turns, {n_tools} tools, {n_validation} validation_errors, final stop={final_stop}\"\n\nfor tr in [trace_a, trace_b, trace_c]:\n    print(summarize_trace(tr))\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "debugging-output/read-the-trace-not-the-chat/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 220,
+          "concept": "full-triage-pipeline",
+          "prompt": "Final drill. Build the full triage flow. Write `triage(trace)`\nthat:\n\n- Computes `n_tools` (total tool calls across the trace) and\n  `n_validation` (total validation errors).\n- Returns a dict `{\"class\": <class>, \"fix_layer\": <layer>, \"summary\": <one-line summary>}` where:\n  - If `n_validation > 0`: `class = \"retrieval\"`, `fix_layer = \"retriever / tool inputs\"`.\n  - Else if `trace[-1][\"stop_reason\"] == \"max_tokens\"`:\n    `class = \"prompt\"`, `fix_layer = \"prompt (output too long; cap or split task)\"`.\n  - Else if `n_tools == 0`: `class = \"true_hallucination\"`,\n    `fix_layer = \"constrain output (force tool use, require citations)\"`.\n  - Else: `class = \"downstream_mangling\"`, `fix_layer = \"post-processing code\"`.\n  - `summary` is the same one-line string from step 8:\n    `\"<N> turns, <M> tools, <V> validation_errors, final stop=<stop_reason>\"`.\n\nThree traces run for you. Expected output:\n```\nclass=retrieval fix_layer=retriever / tool inputs summary=3 turns, 2 tools, 1 validation_errors, final stop=end_turn\nclass=true_hallucination fix_layer=constrain output (force tool use, require citations) summary=2 turns, 0 tools, 0 validation_errors, final stop=end_turn\nclass=prompt fix_layer=prompt (output too long; cap or split task) summary=2 turns, 1 tools, 0 validation_errors, final stop=max_tokens\n```\n",
+          "starter": "trace_retrieval = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"], \"validation_errors\": 1},\n    {\"turn\": 2, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"], \"validation_errors\": 0},\n    {\"turn\": 3, \"stop_reason\": \"end_turn\", \"tools_called\": [],         \"validation_errors\": 0},\n]\n\ntrace_hallucination = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [], \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"end_turn\", \"tools_called\": [], \"validation_errors\": 0},\n]\n\ntrace_truncated = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\",   \"tools_called\": [\"search\"], \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"max_tokens\", \"tools_called\": [],         \"validation_errors\": 0},\n]\n\n# define triage(trace) below\n\nfor tr in [trace_retrieval, trace_hallucination, trace_truncated]:\n    r = triage(tr)\n    print(f\"class={r['class']} fix_layer={r['fix_layer']} summary={r['summary']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "class=retrieval fix_layer=retriever / tool inputs summary=3 turns, 2 tools, 1 validation_errors, final stop=end_turn\nclass=true_hallucination fix_layer=constrain output (force tool use, require citations) summary=2 turns, 0 tools, 0 validation_errors, final stop=end_turn\nclass=prompt fix_layer=prompt (output too long; cap or split task) summary=2 turns, 1 tools, 0 validation_errors, final stop=max_tokens\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "trace_retrieval = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"], \"validation_errors\": 1},\n    {\"turn\": 2, \"stop_reason\": \"tool_use\", \"tools_called\": [\"search\"], \"validation_errors\": 0},\n    {\"turn\": 3, \"stop_reason\": \"end_turn\", \"tools_called\": [],         \"validation_errors\": 0},\n]\n\ntrace_hallucination = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\", \"tools_called\": [], \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"end_turn\", \"tools_called\": [], \"validation_errors\": 0},\n]\n\ntrace_truncated = [\n    {\"turn\": 1, \"stop_reason\": \"tool_use\",   \"tools_called\": [\"search\"], \"validation_errors\": 0},\n    {\"turn\": 2, \"stop_reason\": \"max_tokens\", \"tools_called\": [],         \"validation_errors\": 0},\n]\n\ndef triage(trace):\n    n_turns = len(trace)\n    n_tools = sum(len(t[\"tools_called\"]) for t in trace)\n    n_validation = sum(t[\"validation_errors\"] for t in trace)\n    final_stop = trace[-1][\"stop_reason\"]\n    summary = f\"{n_turns} turns, {n_tools} tools, {n_validation} validation_errors, final stop={final_stop}\"\n\n    if n_validation > 0:\n        return {\"class\": \"retrieval\", \"fix_layer\": \"retriever / tool inputs\", \"summary\": summary}\n    if final_stop == \"max_tokens\":\n        return {\"class\": \"prompt\", \"fix_layer\": \"prompt (output too long; cap or split task)\", \"summary\": summary}\n    if n_tools == 0:\n        return {\"class\": \"true_hallucination\", \"fix_layer\": \"constrain output (force tool use, require citations)\", \"summary\": summary}\n    return {\"class\": \"downstream_mangling\", \"fix_layer\": \"post-processing code\", \"summary\": summary}\n\nfor tr in [trace_retrieval, trace_hallucination, trace_truncated]:\n    r = triage(tr)\n    print(f\"class={r['class']} fix_layer={r['fix_layer']} summary={r['summary']}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 32
     }
   ],
-  "xpTotal": 1
+  "xpTotal": 33
 }

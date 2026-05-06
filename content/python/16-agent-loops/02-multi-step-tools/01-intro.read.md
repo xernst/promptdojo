@@ -35,7 +35,8 @@ tool runs.
 
 ## What "multi-step" actually means
 
-Two patterns sit underneath the phrase, and people mix them up:
+Anthropic's [*Building Effective Agents*](https://www.anthropic.com/engineering/building-effective-agents)
+distinguishes two patterns under this name, and people mix them up:
 
 1. **Multi-tool dispatch**. One turn, one tool — but the model
    chooses from many. `search` this turn, `read_page` next turn,

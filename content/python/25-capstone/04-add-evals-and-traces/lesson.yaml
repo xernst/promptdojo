@@ -1,0 +1,17 @@
+slug: add-evals-and-traces
+title: "Add evals and traces — measure the agent, don't trust it"
+estMinutes: 13
+prerequisites:
+  - build-a-cli-agent
+  - wire-the-real-model
+  - validate-tool-inputs
+order:
+  - 01-intro.read.md
+  - 02-which-eval-fits.mc.yaml
+  - 03-the-trace-shape.read.md
+  - 04-predict-the-pass-rate.predict.yaml
+  - 05-fill-the-trace-append.fill.yaml
+  - 06-fix-the-trace-mutation.fix.yaml
+  - 07-fix-the-tautological-eval.fix.yaml
+  - 08-write-the-eval-runner.write.yaml
+  - 09-checkpoint.checkpoint.yaml

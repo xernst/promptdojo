@@ -1,0 +1,43 @@
+xp: 3
+estSeconds: 80
+concept: cache-vs-uncached-cost
+code: |
+  # the math, simplified. ignore output tokens; focus on the input savings.
+
+  INPUT_RATE      = 3.0   # $3 per 1M input tokens
+  CACHE_WRITE_X   = 1.25
+  CACHE_READ_X    = 0.1
+
+  STABLE = 8000
+  VAR    = 200
+  CALLS  = 100
+
+  def cost_uncached():
+      return INPUT_RATE * (STABLE + VAR) * CALLS / 1_000_000
+
+  def cost_cached():
+      write = INPUT_RATE * CACHE_WRITE_X * STABLE / 1_000_000
+      read  = INPUT_RATE * CACHE_READ_X  * STABLE * (CALLS - 1) / 1_000_000
+      var   = INPUT_RATE * VAR * CALLS / 1_000_000
+      return write + read + var
+
+  print(f"uncached: ${cost_uncached():.2f}")
+  print(f"cached:   ${cost_cached():.2f}")
+prompt: |
+  Read the editor. The same agent, 100 calls. Stable content per
+  call: 8000 tokens. Variable content: 200 tokens. Compute the
+  uncached cost first. The cached cost should be much lower because
+  reads are 0.1× input rate.
+
+  What two lines does the script print (rounded to 2 decimals)?
+grader:
+  kind: stdout-equality
+  expected: |
+    uncached: $2.46
+    cached:   $0.33
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Uncached: 3 * (8000 + 200) * 100 / 1M = 2.46. Cached: write(0.03) + read(0.2376) + var(0.06) = 0.33.'
+  - level: 2
+    body: 'Cached total: $0.33 vs uncached $2.46. Net savings: ~$2.13, an 87% cost reduction on this workload.'

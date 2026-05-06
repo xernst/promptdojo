@@ -1,0 +1,111 @@
+xp: 8
+estSeconds: 220
+concept: chunker-with-overlap
+prompt: |
+  Final drill. Build a structure-aware chunker WITH overlap. Write
+  `chunk_document(text, max_chars, overlap, separators)` that:
+
+  - First runs the recursive split (algorithm from step 8) to get
+    chunks ≤ `max_chars`.
+  - Then adds overlap: for each chunk after the first, prepend the
+    LAST `overlap` characters of the previous chunk.
+  - Returns the overlap-augmented chunk list.
+
+  Three cases run for you. Expected output:
+  ```
+  3 chunks, lengths: [22, 30, 27]
+  first chunk: 'First short paragraph.'
+  second chunk starts with: 'ragraph.Second paragrap'
+  ```
+starter: |
+  def recursive_split(text, max_chars, separators):
+      if len(text) <= max_chars:
+          return [text]
+      for i, sep in enumerate(separators):
+          if sep == "":
+              return [text[j:j + max_chars] for j in range(0, len(text), max_chars)]
+          if sep in text:
+              parts = text.split(sep)
+              chunks = []
+              current = ""
+              for part in parts:
+                  candidate = current + (sep if current else "") + part
+                  if len(candidate) <= max_chars:
+                      current = candidate
+                  else:
+                      if current:
+                          chunks.append(current)
+                      current = part
+              if current:
+                  chunks.append(current)
+              result = []
+              next_seps = separators[i + 1:]
+              for chunk in chunks:
+                  if len(chunk) > max_chars:
+                      result.extend(recursive_split(chunk, max_chars, next_seps))
+                  else:
+                      result.append(chunk)
+              return result
+      return [text]
+
+  # define chunk_document(text, max_chars, overlap, separators) below
+
+  doc = "First short paragraph.\n\nSecond paragraph here.\n\nAnd third one ends."
+  chunks = chunk_document(doc, 22, 8, ["\n\n", ". ", " ", ""])
+  print(f"{len(chunks)} chunks, lengths: {[len(c) for c in chunks]}")
+  print(f"first chunk: {chunks[0]!r}")
+  print(f"second chunk starts with: {chunks[1][:23]!r}")
+grader:
+  kind: stdout-equality
+  expected: |
+    3 chunks, lengths: [22, 30, 27]
+    first chunk: 'First short paragraph.'
+    second chunk starts with: 'ragraph.Second paragrap'
+  normalize: collapse-trailing-newline
+solution: |
+  def recursive_split(text, max_chars, separators):
+      if len(text) <= max_chars:
+          return [text]
+      for i, sep in enumerate(separators):
+          if sep == "":
+              return [text[j:j + max_chars] for j in range(0, len(text), max_chars)]
+          if sep in text:
+              parts = text.split(sep)
+              chunks = []
+              current = ""
+              for part in parts:
+                  candidate = current + (sep if current else "") + part
+                  if len(candidate) <= max_chars:
+                      current = candidate
+                  else:
+                      if current:
+                          chunks.append(current)
+                      current = part
+              if current:
+                  chunks.append(current)
+              result = []
+              next_seps = separators[i + 1:]
+              for chunk in chunks:
+                  if len(chunk) > max_chars:
+                      result.extend(recursive_split(chunk, max_chars, next_seps))
+                  else:
+                      result.append(chunk)
+              return result
+      return [text]
+
+  def chunk_document(text, max_chars, overlap, separators):
+      raw_chunks = recursive_split(text, max_chars, separators)
+      if overlap <= 0 or len(raw_chunks) <= 1:
+          return raw_chunks
+      result = [raw_chunks[0]]
+      for prev, current in zip(raw_chunks, raw_chunks[1:]):
+          carry = prev[-overlap:]
+          result.append(carry + current)
+      return result
+
+  doc = "First short paragraph.\n\nSecond paragraph here.\n\nAnd third one ends."
+  chunks = chunk_document(doc, 22, 8, ["\n\n", ". ", " ", ""])
+  print(f"{len(chunks)} chunks, lengths: {[len(c) for c in chunks]}")
+  print(f"first chunk: {chunks[0]!r}")
+  print(f"second chunk starts with: {chunks[1][:23]!r}")
+passThreshold: 0.66

@@ -1,0 +1,67 @@
+xp: 5
+estSeconds: 200
+concept: cost-with-and-without-cache
+prompt: |
+  Write `estimate_cost(stable_tokens, variable_tokens, calls, cached, input_rate)` that:
+
+  - Returns the total cost in dollars (a float, rounded to 2 places).
+  - When `cached=False`: `input_rate * (stable_tokens + variable_tokens) * calls / 1_000_000`.
+  - When `cached=True`:
+    - Cache write (one-time): `input_rate * 1.25 * stable_tokens / 1_000_000`
+    - Cache reads (calls - 1 of them): `input_rate * 0.1 * stable_tokens * (calls - 1) / 1_000_000`
+    - Variable tokens (full price every call): `input_rate * variable_tokens * calls / 1_000_000`
+    - Sum them.
+
+  Two cases run for you. Expected output:
+  ```
+  uncached: 2.46
+  cached: 0.33
+  savings: 2.13
+  ```
+starter: |
+  STABLE = 8000
+  VAR    = 200
+  CALLS  = 100
+  RATE   = 3.0  # $3 per 1M input tokens
+
+  # define estimate_cost(stable_tokens, variable_tokens, calls, cached, input_rate) below
+
+  uncached = estimate_cost(STABLE, VAR, CALLS, cached=False, input_rate=RATE)
+  cached   = estimate_cost(STABLE, VAR, CALLS, cached=True,  input_rate=RATE)
+
+  print(f"uncached: {uncached}")
+  print(f"cached: {cached}")
+  print(f"savings: {round(uncached - cached, 2)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    uncached: 2.46
+    cached: 0.33
+    savings: 2.13
+  normalize: collapse-trailing-newline
+solution: |
+  STABLE = 8000
+  VAR    = 200
+  CALLS  = 100
+  RATE   = 3.0
+
+  def estimate_cost(stable_tokens, variable_tokens, calls, cached, input_rate):
+      if not cached:
+          total = input_rate * (stable_tokens + variable_tokens) * calls / 1_000_000
+          return round(total, 2)
+      write_cost = input_rate * 1.25 * stable_tokens / 1_000_000
+      read_cost  = input_rate * 0.1  * stable_tokens * (calls - 1) / 1_000_000
+      var_cost   = input_rate * variable_tokens * calls / 1_000_000
+      return round(write_cost + read_cost + var_cost, 2)
+
+  uncached = estimate_cost(STABLE, VAR, CALLS, cached=False, input_rate=RATE)
+  cached   = estimate_cost(STABLE, VAR, CALLS, cached=True,  input_rate=RATE)
+
+  print(f"uncached: {uncached}")
+  print(f"cached: {cached}")
+  print(f"savings: {round(uncached - cached, 2)}")
+hint:
+  - level: 1
+    body: 'Two branches. Uncached: one formula. Cached: three sub-formulas (write, read, variable) summed. Round each return to 2 decimal places.'
+  - level: 2
+    body: 'Cache write fires once at calls=1. Cache reads fire (calls - 1) times. Variable tokens are paid full-price every call regardless of cache state.'

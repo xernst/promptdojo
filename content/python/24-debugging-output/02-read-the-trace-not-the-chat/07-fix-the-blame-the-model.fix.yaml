@@ -1,0 +1,47 @@
+xp: 4
+estSeconds: 100
+concept: classify-not-blame
+prompt: |
+  The triage code is hardcoded to blame "true_hallucination" no
+  matter what the trace shows. But the trace says the agent's
+  search tool ran AND returned data — so this is a **retrieval**
+  problem (wrong data came back), not a hallucination (model
+  inventing from nothing).
+
+  Fix the classifier to check `trace[-1]["tools_called"]`. If it's
+  non-empty, this is `"retrieval"`. Otherwise it's
+  `"true_hallucination"`.
+
+  Expected output:
+  ```
+  class: retrieval
+  ```
+brokenCode: |
+  trace = [
+      {"turn": 1, "tools_called": ["search"], "tool_result_snippet": "wrong data here"},
+  ]
+
+  def classify(trace):
+      # bug: ignores the trace. always blames hallucination.
+      return "true_hallucination"
+
+  print(f"class: {classify(trace)}")
+bugLines:
+  - 6
+grader:
+  kind: stdout-equality
+  expected: "class: retrieval"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Read `trace[-1]["tools_called"]`. If it has any items, return `"retrieval"`. Otherwise return `"true_hallucination"`.'
+  - level: 2
+    body: |
+      Replace the body of `classify` with:
+
+      ```python
+      if trace[-1]["tools_called"]:
+          return "retrieval"
+      return "true_hallucination"
+      ```
+revealAfter: 4

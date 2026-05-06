@@ -1,0 +1,30 @@
+xp: 3
+estSeconds: 60
+concept: per-turn-trace-record
+prompt: |
+  The agent loop tracks a `trace` list and is about to append the
+  per-turn record. Fill in the `.append(...)` call so each entry is
+  a dict with `turn`, `stop_reason`, and `tokens` fields.
+
+  Expected output:
+  ```
+  [{'turn': 1, 'stop_reason': 'end_turn', 'tokens': 35}]
+  ```
+code: |
+  trace = []
+  i = 0
+  response = {"stop_reason": "end_turn", "usage": {"input_tokens": 30, "output_tokens": 5}}
+
+  ___
+
+  print(trace)
+blanks:
+  - id: append_call
+    accept:
+      - 'trace.append({"turn": i + 1, "stop_reason": response["stop_reason"], "tokens": response["usage"]["input_tokens"] + response["usage"]["output_tokens"]})'
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Build the dict literal with three keys: `turn` (i + 1, 1-based), `stop_reason` (read from response), `tokens` (sum of input_tokens + output_tokens). Append to `trace`.'
+  - level: 2
+    body: '`trace.append({"turn": i + 1, "stop_reason": response["stop_reason"], "tokens": response["usage"]["input_tokens"] + response["usage"]["output_tokens"]})`'

@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 50
+concept: validation-fit
+code: |
+  scenarios = {
+      "A": "Tool reads a URL the model picked. URL must be a string starting with https://.",
+      "B": "Tool that hardcodes a fixed config — no inputs.",
+      "C": "Tool that takes a 'page_size' integer, must be 1-100.",
+      "D": "Tool that takes free-text the user typed, passed straight to a printf-debugger.",
+  }
+  for k, v in scenarios.items():
+      print(f"{k}: {v}")
+prompt: |
+  Four tools. Validation costs ~1ms per call but catches the model
+  inventing arguments. Which TWO benefit MOST from input validation
+  before dispatch?
+options:
+  - id: a_and_c
+    label: "A (URL must start with https://) and C (page_size 1-100)"
+  - id: b_and_d
+    label: "B (hardcoded config) and D (printf debugger)"
+    explain: "B has no inputs — nothing to validate. D's input is from the user, not the model — model didn't invent it."
+  - id: a_and_b
+    label: "A and B"
+    explain: "B has no inputs. Validation here is a no-op."
+  - id: c_and_d
+    label: "C and D"
+    explain: "D's input came from the user, not the model. The bug class validation prevents (model inventing args) doesn't apply."
+answerIds:
+  - a_and_c
+hint:
+  - level: 1
+    body: 'Validation catches the model inventing or mis-typing arguments. Which tools (a) take inputs from the model and (b) have constraints those inputs must satisfy?'

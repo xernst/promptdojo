@@ -1,0 +1,35 @@
+xp: 3
+estSeconds: 60
+concept: example-block-formatting
+prompt: |
+  Build a few-shot example block. Each example has `input` and
+  `output` keys. Format each as `"Input: <input>\nOutput: <output>\n\n"`,
+  then join all examples into a single string.
+
+  Expected output:
+  ```
+  Input: a
+  Output: 1
+
+  Input: b
+  Output: 2
+  ```
+code: |
+  examples = [
+      {"input": "a", "output": "1"},
+      {"input": "b", "output": "2"},
+  ]
+
+  block = ___
+  print(block.rstrip())
+blanks:
+  - id: example_block
+    accept:
+      - '"".join(f"Input: {e[\"input\"]}\nOutput: {e[\"output\"]}\n\n" for e in examples)'
+      - '"".join(f"Input: {e['input']}\nOutput: {e['output']}\n\n" for e in examples)'
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Use `"".join(...)` over a generator expression. Each iteration produces `f"Input: {e[\"input\"]}\nOutput: {e[\"output\"]}\n\n"`. The trailing `\n\n` separates examples; `rstrip()` cleans the very end.'
+  - level: 2
+    body: '`"".join(f"Input: {e[\"input\"]}\nOutput: {e[\"output\"]}\n\n" for e in examples)` — generator expression over examples, each line emits the formatted block.'

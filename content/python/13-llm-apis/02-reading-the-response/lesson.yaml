@@ -1,0 +1,15 @@
+slug: reading-the-response
+title: "Reading the response — content blocks, stop_reason, usage"
+estMinutes: 11
+prerequisites:
+  - the-messages-pattern
+order:
+  - 01-intro.read.md
+  - 02-which-block-do-you-read.mc.yaml
+  - 03-the-five-stop-reasons.read.md
+  - 04-predict-the-text.predict.yaml
+  - 05-fill-the-text-extract.fill.yaml
+  - 06-fix-the-content-zero.fix.yaml
+  - 07-fix-the-stop-assumption.fix.yaml
+  - 08-write-the-extractor.write.yaml
+  - 09-checkpoint.checkpoint.yaml

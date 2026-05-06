@@ -1,0 +1,18 @@
+slug: wire-an-mcp-tool
+title: "Wire an MCP tool — load tools from a server, not a registry"
+estMinutes: 13
+prerequisites:
+  - build-a-cli-agent
+  - wire-the-real-model
+  - validate-tool-inputs
+  - add-evals-and-traces
+order:
+  - 01-intro.read.md
+  - 02-when-to-use-mcp.mc.yaml
+  - 03-the-mcp-protocol.read.md
+  - 04-predict-the-tool-list.predict.yaml
+  - 05-fill-the-tools-call.fill.yaml
+  - 06-fix-the-result-shape.fix.yaml
+  - 07-fix-the-iserror-flag.fix.yaml
+  - 08-write-the-mcp-bridge.write.yaml
+  - 09-checkpoint.checkpoint.yaml

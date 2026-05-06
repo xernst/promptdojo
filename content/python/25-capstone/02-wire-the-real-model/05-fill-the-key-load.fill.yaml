@@ -1,0 +1,36 @@
+xp: 3
+estSeconds: 60
+concept: getenv-with-default-error
+prompt: |
+  The agent expects `ANTHROPIC_API_KEY` from the environment. Fill in
+  the load using `os.getenv` so a missing key returns `None`, then
+  the code immediately raises a clear error instead of crashing five
+  frames deep when the SDK rejects the call.
+
+  In this demo the env var IS set (mocked via `os.environ`), so the
+  load succeeds and the script prints `loaded`.
+
+  Expected output:
+  ```
+  loaded
+  ```
+code: |
+  import os
+  os.environ["ANTHROPIC_API_KEY"] = "sk-ant-test-key-deterministic-for-demo"
+
+  api_key = ___
+  if api_key is None:
+      raise RuntimeError("ANTHROPIC_API_KEY is not set; export it or load .env first")
+
+  print("loaded")
+blanks:
+  - id: getenv_call
+    accept:
+      - 'os.getenv("ANTHROPIC_API_KEY")'
+      - "os.getenv('ANTHROPIC_API_KEY')"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Use `os.getenv` (returns None on miss), not `os.environ[...]` (raises KeyError on miss). The argument is the env var name as a string.'
+  - level: 2
+    body: '`os.getenv("ANTHROPIC_API_KEY")` — getenv with the var name. The `if api_key is None` branch handles the miss case cleanly.'

@@ -1,0 +1,32 @@
+xp: 3
+estSeconds: 60
+concept: filter-blocks-by-type
+prompt: |
+  Fill in the list comprehension that extracts the `text` field from
+  every block whose `type` is `"text"`. The result should be a list
+  of strings — text parts, in original order.
+
+  Expected output:
+  ```
+  ['Hello', 'world']
+  ```
+code: |
+  content = [
+      {"type": "text",     "text":     "Hello"},
+      {"type": "tool_use", "id": "t1", "name": "search", "input": {}},
+      {"type": "text",     "text":     "world"},
+  ]
+
+  text_parts = ___
+  print(text_parts)
+blanks:
+  - id: comprehension
+    accept:
+      - '[b["text"] for b in content if b["type"] == "text"]'
+      - "[b['text'] for b in content if b['type'] == 'text']"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'List comprehension with a filter: `[expression for item in iterable if condition]`. The expression reads `b["text"]`; the condition is `b["type"] == "text"`.'
+  - level: 2
+    body: '`[b["text"] for b in content if b["type"] == "text"]` — pull `text` field, filtered to text-type blocks only.'

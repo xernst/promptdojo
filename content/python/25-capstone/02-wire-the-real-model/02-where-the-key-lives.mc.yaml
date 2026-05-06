@@ -1,0 +1,36 @@
+xp: 2
+estSeconds: 50
+concept: env-var-loading
+code: |
+  import os
+
+  # five places people put the API key. only some are correct.
+  options = {
+      "A": 'api_key = "sk-ant-api03-xxxxx"  # right at top of agent.py',
+      "B": 'api_key = os.environ["ANTHROPIC_API_KEY"]',
+      "C": 'api_key = os.getenv("ANTHROPIC_API_KEY")',
+      "D": 'api_key = open(".env").read().strip().split("=")[1]',
+      "E": 'api_key = os.getenv("ANTHROPIC_API_KEY") or raise_clear_error()',
+  }
+  for k, v in options.items():
+      print(f"{k}: {v}")
+prompt: |
+  Five ways to load the API key. Which TWO are production-grade
+  patterns you'd ship?
+options:
+  - id: c_and_e
+    label: "C (os.getenv) and E (getenv with explicit error fallback)"
+  - id: b_and_c
+    label: "B (os.environ bracket) and C (os.getenv)"
+    explain: "B raises a raw `KeyError` with no context when the env var is missing. Always prefer `getenv` so you can return your own error message."
+  - id: a_and_d
+    label: "A (hardcoded) and D (manual file parse)"
+    explain: "A puts the key in git history forever. D reinvents `python-dotenv` with all the bugs and none of the standardization. Both are how you leak keys to PRs."
+  - id: c_only
+    label: "C only — E is overengineering"
+    explain: "Falling back with a clear error message *is* production-grade. Returning `None` and crashing five frames deeper makes debugging painful."
+answerIds:
+  - c_and_e
+hint:
+  - level: 1
+    body: 'Two questions: where does the key come from (env var, not source) and what happens if it''s missing (clear error, not a 5-frames-deep crash)?'

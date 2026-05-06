@@ -1,0 +1,44 @@
+xp: 4
+estSeconds: 95
+concept: explicit-ttl
+prompt: |
+  This code was written before March 2026, when Anthropic's default
+  cache TTL was 1 hour. The dev shipped without `ttl`, relying on
+  the default. Anthropic dropped the default to 5 minutes — code
+  using the default now burns cache writes 12× more often than
+  intended.
+
+  Fix the cache_control to pass `ttl: "1h"` explicitly so the cache
+  TTL is locked at 1 hour regardless of provider default changes.
+
+  Expected output:
+  ```
+  ttl: 1h
+  ```
+brokenCode: |
+  system_block = {
+      "type": "text",
+      "text": "You are a helpful assistant.",
+      # bug: no explicit ttl — defaults to 5m post-March 2026.
+      "cache_control": {"type": "ephemeral"},
+  }
+
+  ttl = system_block["cache_control"].get("ttl", "default-5m-since-2026-03")
+  print(f"ttl: {ttl}")
+bugLines:
+  - 5
+grader:
+  kind: stdout-equality
+  expected: "ttl: 1h"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Add `"ttl": "1h"` to the cache_control dict.'
+  - level: 2
+    body: |
+      Change line 5 to:
+
+      ```python
+      "cache_control": {"type": "ephemeral", "ttl": "1h"},
+      ```
+revealAfter: 4

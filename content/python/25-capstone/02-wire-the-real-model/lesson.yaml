@@ -1,0 +1,15 @@
+slug: wire-the-real-model
+title: "Wire the real model — swap fake_llm for the Anthropic SDK shape"
+estMinutes: 14
+prerequisites:
+  - build-a-cli-agent
+order:
+  - 01-intro.read.md
+  - 02-where-the-key-lives.mc.yaml
+  - 03-the-sdk-response-shape.read.md
+  - 04-predict-the-block-type.predict.yaml
+  - 05-fill-the-key-load.fill.yaml
+  - 06-fix-the-hardcoded-key.fix.yaml
+  - 07-fix-the-block-access.fix.yaml
+  - 08-write-the-shape-adapter.write.yaml
+  - 09-checkpoint.checkpoint.yaml

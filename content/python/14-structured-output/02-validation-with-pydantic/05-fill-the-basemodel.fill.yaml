@@ -1,0 +1,38 @@
+xp: 3
+estSeconds: 65
+concept: basemodel-class-definition
+prompt: |
+  Define a `BaseModel` subclass `Order` with three fields: `id` (str),
+  `total` (float), and `items` (int). Annotations only — no field
+  bodies, no validators.
+
+  Expected output:
+  ```
+  id='ORD-1' total=49.99 items=3
+  ```
+code: |
+  from pydantic import BaseModel
+
+  class Order(BaseModel):
+      ___
+
+  o = Order.model_validate({"id": "ORD-1", "total": 49.99, "items": 3})
+  print(o)
+blanks:
+  - id: fields
+    accept:
+      - "id: str\n      total: float\n      items: int"
+      - "id: str\n    total: float\n    items: int"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Three lines, one per field. Pattern: `name: type`. Use Python built-in types (`str`, `float`, `int`) for the annotations.'
+  - level: 2
+    body: |
+      Three field annotations:
+
+      ```python
+      id: str
+      total: float
+      items: int
+      ```

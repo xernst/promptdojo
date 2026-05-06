@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 55
+concept: eval-pattern-selection
+code: |
+  # four agent capstone cases. each needs the right eval pattern.
+  cases = {
+      "A": "Agent returns the capital of a country. Question: 'capital of France?'",
+      "B": "Agent writes a friendly support reply. Tone matters more than exact words.",
+      "C": "Agent extracts a structured invoice (number, date, total) as JSON.",
+      "D": "Agent should answer 'I don't know' when the question is ambiguous.",
+  }
+  for k, v in cases.items():
+      print(f"{k}: {v}")
+prompt: |
+  Four eval patterns: exact, contains, schema, judge. Match each case
+  to its strongest fit. Which combination is correct?
+options:
+  - id: correct_pairing
+    label: "A=contains, B=judge, C=schema, D=contains (literal 'I don't know' substring)"
+  - id: all_judge
+    label: "All four → LLM-as-judge"
+    explain: "A and C have ground truth (a known capital, a known schema). Burning judge calls on those is wasteful and adds bias risk for no gain."
+  - id: all_exact
+    label: "All four → exact match"
+    explain: "B's output varies by tone — exact match would fail valid replies. C's JSON has key ordering issues. Exact only works for fixed strings."
+  - id: a_judge_b_contains
+    label: "A=judge, B=contains, C=judge, D=schema"
+    explain: "A is fact recall — `'Paris' in answer` is the cheap, deterministic check. C produces structured JSON — that's a schema check, not a judge."
+answerIds:
+  - correct_pairing
+hint:
+  - level: 1
+    body: 'Exact = fixed string. Contains = substring with known answer. Schema = structured output validation. Judge = "did it sound right" / semantic. Pick the cheapest pattern that catches the bug for each case.'

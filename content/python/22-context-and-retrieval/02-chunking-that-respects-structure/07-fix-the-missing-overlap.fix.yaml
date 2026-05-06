@@ -1,0 +1,46 @@
+xp: 4
+estSeconds: 105
+concept: chunk-overlap-recall
+prompt: |
+  Sentences are split cleanly into chunks, but the chunks have NO
+  overlap. The user asks "Acme makes WHAT — and when was it
+  founded?" — that fact spans both chunks. Retrieval might pull
+  only chunk 0 ("founded in 1958") OR only chunk 1 ("makes running
+  shoes"), missing half the answer.
+
+  Fix the chunks to add 10 characters of overlap from the END of
+  chunk 0 INTO chunk 1, so retrievers that match either chunk see
+  both facts.
+
+  Expected output:
+  ```
+  ['Acme was founded in 1958.', 'd in 1958. The company makes running shoes.']
+  ```
+brokenCode: |
+  chunks = [
+      "Acme was founded in 1958.",
+      "The company makes running shoes.",
+  ]
+
+  overlap = 10
+  # bug: no overlap. each chunk is isolated; cross-chunk facts get lost.
+  result = chunks
+
+  print(result)
+bugLines:
+  - 7
+grader:
+  kind: stdout-equality
+  expected: "['Acme was founded in 1958.', 'd in 1958. The company makes running shoes.']"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Take the last `overlap` characters of `chunks[0]` and prepend them to `chunks[1]`. Leave `chunks[0]` itself unchanged.'
+  - level: 2
+    body: |
+      ```python
+      result = [chunks[0], chunks[0][-overlap:] + " " + chunks[1]]
+      ```
+
+      Note the space between the overlap and chunk[1] body — a literal space joins the carry-over to the new content.
+revealAfter: 4

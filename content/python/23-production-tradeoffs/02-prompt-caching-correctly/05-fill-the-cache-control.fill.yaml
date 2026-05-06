@@ -1,0 +1,31 @@
+xp: 3
+estSeconds: 65
+concept: cache-control-with-explicit-ttl
+prompt: |
+  You're marking the system prompt as cacheable. The Anthropic
+  default TTL changed from 1 hour to 5 minutes in March 2026, so
+  always pass `ttl` explicitly. Fill in the `cache_control` value
+  for a 1-hour cache.
+
+  Expected output:
+  ```
+  {'type': 'ephemeral', 'ttl': '1h'}
+  ```
+code: |
+  system_block = {
+      "type": "text",
+      "text": "You are a helpful assistant.",
+      "cache_control": ___,
+  }
+  print(system_block["cache_control"])
+blanks:
+  - id: cache_control
+    accept:
+      - '{"type": "ephemeral", "ttl": "1h"}'
+      - "{'type': 'ephemeral', 'ttl': '1h'}"
+    caseSensitive: false
+hint:
+  - level: 1
+    body: 'Two keys: `type` (always `"ephemeral"`) and `ttl` (`"5m"` or `"1h"`). For long-running agents, `1h` is strictly cheaper despite the higher write cost.'
+  - level: 2
+    body: '`{"type": "ephemeral", "ttl": "1h"}` — type fixed, ttl explicit. Never rely on the default — it changed once, it can change again.'

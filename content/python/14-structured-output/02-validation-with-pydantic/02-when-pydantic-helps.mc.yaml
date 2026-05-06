@@ -1,0 +1,34 @@
+xp: 2
+estSeconds: 55
+concept: pydantic-fit
+code: |
+  scenarios = {
+      "A": "Model returns a single string answer (e.g., 'Paris').",
+      "B": "Model returns JSON describing an invoice (number, total, paid, line_items).",
+      "C": "Model returns YES/NO — exact-match grading is enough.",
+      "D": "Tool input the model emits — name, arguments, must match a schema.",
+  }
+  for k, v in scenarios.items():
+      print(f"{k}: {v}")
+prompt: |
+  Pydantic earns its keep when the data is structured (multiple
+  fields, nested types, or constraints). It's overkill for plain
+  scalars. Which TWO scenarios above are the strongest fit for
+  Pydantic validation?
+options:
+  - id: b_and_d
+    label: "B (invoice JSON) and D (tool input schema)"
+  - id: a_and_c
+    label: "A (single string) and C (YES/NO)"
+    explain: "Both are scalars. `assert isinstance(answer, str)` or `answer in {\"YES\", \"NO\"}` is enough — Pydantic adds overhead for no gain."
+  - id: a_and_d
+    label: "A and D"
+    explain: "A is a scalar. Pydantic on a single string is overkill."
+  - id: c_and_d
+    label: "C and D"
+    explain: "C is a fixed-vocabulary scalar (just YES/NO). A set membership check is simpler than a BaseModel."
+answerIds:
+  - b_and_d
+hint:
+  - level: 1
+    body: 'Pydantic shines when (a) there are multiple fields, (b) types are non-trivial (nested, optional, constrained), or (c) the schema doubles as a contract you''ll send TO the model. Plain scalars don''t qualify.'

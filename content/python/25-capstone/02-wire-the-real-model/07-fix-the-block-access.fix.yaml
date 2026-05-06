@@ -1,0 +1,58 @@
+xp: 4
+estSeconds: 100
+concept: block-type-attribute-access
+prompt: |
+  The loop is reading `.text` on every block in `response.content`,
+  but one of the blocks is a `tool_use` block that has no `.text`
+  attribute — it has `.name`, `.input`, `.id`. The current code
+  raises `AttributeError` on that block.
+
+  Fix the loop to branch on `block.type` first, so text blocks emit
+  their text and tool_use blocks emit their name.
+
+  Expected output:
+  ```
+  TEXT: Let me search.
+  TOOL: search
+  ```
+brokenCode: |
+  class MockTextBlock:
+      def __init__(self, text):
+          self.type = "text"
+          self.text = text
+
+  class MockToolUseBlock:
+      def __init__(self, name):
+          self.type = "tool_use"
+          self.name = name
+
+  blocks = [
+      MockTextBlock("Let me search."),
+      MockToolUseBlock("search"),
+  ]
+
+  for block in blocks:
+      # bug: assumes every block has .text — AttributeError on tool_use.
+      print(f"TEXT: {block.text}")
+bugLines:
+  - 18
+grader:
+  kind: stdout-equality
+  expected: |
+    TEXT: Let me search.
+    TOOL: search
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Branch on `block.type` before reading type-specific attributes. Text blocks have `.text`; tool_use blocks have `.name`, `.input`, `.id`.'
+  - level: 2
+    body: |
+      Replace the `print` line with:
+
+      ```python
+      if block.type == "text":
+          print(f"TEXT: {block.text}")
+      elif block.type == "tool_use":
+          print(f"TOOL: {block.name}")
+      ```
+revealAfter: 5

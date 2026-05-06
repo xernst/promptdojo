@@ -1,0 +1,90 @@
+xp: 5
+estSeconds: 180
+concept: rubric-judge-suite
+prompt: |
+  Build a rubric-style eval suite. Write `run_judge_suite(cases)` that:
+
+  - Takes a list of dicts, each shaped
+    `{"question": str, "answer": str, "rubric": str}`.
+  - For each case, calls `judge_rubric(question, answer, rubric)`.
+    The judge returns `{"passed": bool, "critique": str}`.
+  - Counts how many cases pass.
+  - Returns a dict `{"total": <count>, "passed": <count of passes>, "failed": <count of fails>, "pass_rate": <0.0-1.0 rounded to 2 places>}`.
+
+  The script will run a 4-case suite. Expected output:
+  ```
+  total=4 passed=2 failed=2 pass_rate=0.5
+  ```
+starter: |
+  def judge_rubric(question, answer, rubric):
+      # mock judge: passes if "Paris" appears in answer.
+      if "Paris" in answer:
+          return {"passed": True,  "critique": "Names Paris."}
+      return {"passed": False, "critique": "Does not name Paris."}
+
+  cases = [
+      {"question": "capital of France?", "answer": "Paris.",                          "rubric": "Reward correct answer."},
+      {"question": "capital of France?", "answer": "Lyon, I think.",                  "rubric": "Reward correct answer."},
+      {"question": "capital of France?", "answer": "Paris, in northern France.",      "rubric": "Reward correct, concise answer."},
+      {"question": "capital of France?", "answer": "Some city in the south, maybe.",  "rubric": "Reward correct answer."},
+  ]
+
+  # define run_judge_suite(cases) below
+
+  result = run_judge_suite(cases)
+  print(f"total={result['total']} passed={result['passed']} failed={result['failed']} pass_rate={result['pass_rate']}")
+grader:
+  kind: stdout-equality
+  expected: "total=4 passed=2 failed=2 pass_rate=0.5"
+  normalize: collapse-trailing-newline
+solution: |
+  def judge_rubric(question, answer, rubric):
+      if "Paris" in answer:
+          return {"passed": True,  "critique": "Names Paris."}
+      return {"passed": False, "critique": "Does not name Paris."}
+
+  cases = [
+      {"question": "capital of France?", "answer": "Paris.",                          "rubric": "Reward correct answer."},
+      {"question": "capital of France?", "answer": "Lyon, I think.",                  "rubric": "Reward correct answer."},
+      {"question": "capital of France?", "answer": "Paris, in northern France.",      "rubric": "Reward correct, concise answer."},
+      {"question": "capital of France?", "answer": "Some city in the south, maybe.",  "rubric": "Reward correct answer."},
+  ]
+
+  def run_judge_suite(cases):
+      passed_count = 0
+      for c in cases:
+          v = judge_rubric(c["question"], c["answer"], c["rubric"])
+          if v["passed"]:
+              passed_count += 1
+      total = len(cases)
+      failed_count = total - passed_count
+      pass_rate = round(passed_count / total, 2) if total else 0.0
+      return {
+          "total": total,
+          "passed": passed_count,
+          "failed": failed_count,
+          "pass_rate": pass_rate,
+      }
+
+  result = run_judge_suite(cases)
+  print(f"total={result['total']} passed={result['passed']} failed={result['failed']} pass_rate={result['pass_rate']}")
+hint:
+  - level: 1
+    body: 'Loop over cases, call the judge, increment a counter on `v["passed"]`. After the loop compute `total - passed` for failures and `passed / total` for the rate.'
+  - level: 2
+    body: |
+      ```python
+      def run_judge_suite(cases):
+          passed_count = 0
+          for c in cases:
+              v = judge_rubric(c["question"], c["answer"], c["rubric"])
+              if v["passed"]:
+                  passed_count += 1
+          total = len(cases)
+          return {
+              "total": total,
+              "passed": passed_count,
+              "failed": total - passed_count,
+              "pass_rate": round(passed_count / total, 2),
+          }
+      ```

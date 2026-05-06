@@ -1,0 +1,43 @@
+xp: 3
+estSeconds: 65
+concept: pass-status-exit
+prompt: |
+  The evaluator-optimizer loop is missing its exit condition. Fill in
+  the comparison so the function returns the draft as soon as the
+  judge's `status` field equals `"PASS"`.
+
+  Expected output:
+  ```
+  done in 2 iters
+  ```
+code: |
+  drafts = iter(["v1", "v2"])
+  verdicts = iter([
+      {"status": "REJECT", "feedback": "needs work"},
+      {"status": "PASS",   "feedback": "ok"},
+  ])
+
+  def gen(task, feedback=None): return next(drafts)
+  def judge(draft):             return next(verdicts)
+
+  def loop(task, max_iters=5):
+      draft = gen(task)
+      for i in range(max_iters):
+          verdict = judge(draft)
+          if ___:
+              return f"done in {i + 1} iters"
+          draft = gen(task, feedback=verdict["feedback"])
+      return "capped"
+
+  print(loop("describe x"))
+blanks:
+  - id: exit
+    accept:
+      - 'verdict["status"] == "PASS"'
+      - "verdict['status'] == 'PASS'"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'The judge returns a dict like `{"status": "PASS", ...}`. Read the `status` key and compare it to the literal string.'
+  - level: 2
+    body: '`verdict["status"] == "PASS"` — read the field, compare to the string the schema enforces.'

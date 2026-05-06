@@ -20,7 +20,7 @@
           "phase": "warmup",
           "estSeconds": 95,
           "concept": "agent-loop-overview",
-          "body": "# An agent is a `while` loop with three rules\n\nThe word \"agent\" sounds magical. The implementation is anything but.\nClaude Code, Cursor, every coding agent you've used — they all run the\nsame five-step loop. Once you see it, you'll never be intimidated by\nthe term again.\n\n```\n1. Send messages + tool definitions to the model.\n2. Read the response.\n3. If stop_reason == \"end_turn\": print the text and STOP.\n4. If stop_reason == \"tool_use\": run the requested tool, append the\n   tool_result to messages, GOTO 1.\n5. (Bound the loop with a max iteration count to prevent runaways.)\n```\n\nThat's the agent loop. The model decides what to do; your code wires\nit to the world.\n\n## The three blocks you'll see in `content`\n\nAfter the model runs, `response.content` is a list of blocks. The two\nthat matter for agents:\n\n- `{\"type\": \"text\", \"text\": \"...\"}` — natural language for the user\n- `{\"type\": \"tool_use\", \"id\": \"...\", \"name\": \"...\", \"input\": {...}}` —\n  the model is asking you to run a tool\n\nWhen you respond back to the model, you send a `user` turn with a\nmatching `tool_result` block:\n\n```python\n{\n    \"role\": \"user\",\n    \"content\": [\n        {\n            \"type\": \"tool_result\",\n            \"tool_use_id\": \"toolu_01\",      # MUST match the tool_use id\n            \"content\": \"72°F, sunny\",\n        }\n    ],\n}\n```\n\nThe `tool_use_id` link is mandatory. The model needs to know *which*\ntool call this result belongs to, because it may have made several in\nparallel.\n\n## The four stop reasons you actually care about\n\n| `stop_reason` | What it means |\n|---------------|---------------|\n| `end_turn`    | Done. The model is finished. Exit the loop. |\n| `tool_use`    | Run the requested tools and call again. |\n| `max_tokens`  | The response was cut off. Increase budget or summarize. |\n| `stop_sequence` | A custom stop string was hit (rarely used). |\n\nIf your loop doesn't check `stop_reason`, you have two bugs waiting:\nignoring `tool_use` (the agent stalls) and never exiting on `end_turn`\n(infinite loop, dead API key).\n\n## Where AI specifically gets this wrong\n\n- **Treating any response as final.** Cursor's first agent attempt\n  almost always misses the `tool_use` branch and returns whatever\n  text was alongside the tool call as the \"answer.\" Wrong answer.\n- **Mismatched `tool_use_id`.** Hardcoding `\"id\": \"1\"` in the\n  tool_result instead of echoing the model's actual id. The model\n  rejects the next call.\n- **No iteration cap.** A misbehaving agent that loops on the same\n  tool call can drain a budget in minutes. Always cap at 8-16\n  iterations.\n\n> **Browser note:** real agent loops need network calls. We'll mimic\n> the model with a hardcoded function that returns either `tool_use`\n> or `end_turn` based on the conversation so far. Same loop, no wire.\n\nRun the editor. We inspect a single `tool_use` response — what your\nloop sees right before it has to run the requested tool.",
+          "body": "# An agent is a `while` loop with three rules\n\nThe word \"agent\" sounds magical. The implementation is anything but.\nClaude Code, Cursor, every coding agent you've used — they all run the\nsame five-step loop. Once you see it, you'll never be intimidated by\nthe term again.\n\n```\n1. Send messages + tool definitions to the model.\n2. Read the response.\n3. If stop_reason == \"end_turn\": print the text and STOP.\n4. If stop_reason == \"tool_use\": run the requested tool, append the\n   tool_result to messages, GOTO 1.\n5. (Bound the loop with a max iteration count to prevent runaways.)\n```\n\nThat's the agent loop. The model decides what to do; your code wires\nit to the world.\n\n## The three blocks you'll see in `content`\n\nAfter the model runs, `response.content` is a list of blocks. The two\nthat matter for agents:\n\n- `{\"type\": \"text\", \"text\": \"...\"}` — natural language for the user\n- `{\"type\": \"tool_use\", \"id\": \"...\", \"name\": \"...\", \"input\": {...}}` —\n  the model is asking you to run a tool\n\nWhen you respond back to the model, you send a `user` turn with a\nmatching `tool_result` block:\n\n```python\n{\n    \"role\": \"user\",\n    \"content\": [\n        {\n            \"type\": \"tool_result\",\n            \"tool_use_id\": \"toolu_01\",      # MUST match the tool_use id\n            \"content\": \"72°F, sunny\",\n        }\n    ],\n}\n```\n\nThe `tool_use_id` link is mandatory. The model needs to know *which*\ntool call this result belongs to, because it may have made several in\nparallel.\n\n## The four stop reasons you actually care about\n\n| `stop_reason` | What it means |\n|---------------|---------------|\n| `end_turn`    | Done. The model is finished. Exit the loop. |\n| `tool_use`    | Run the requested tools and call again. |\n| `max_tokens`  | The response was cut off. Increase budget or summarize. |\n| `stop_sequence` | A custom stop string was hit (rarely used). |\n\nIf your loop doesn't check `stop_reason`, you have two bugs waiting:\nignoring `tool_use` (the agent stalls) and never exiting on `end_turn`\n(infinite loop, dead API key).\n\n## Where AI specifically gets this wrong\n\n- **Treating any response as final.** Cursor's first agent attempt\n  almost always misses the `tool_use` branch and returns whatever\n  text was alongside the tool call as the \"answer.\" Wrong answer.\n- **Mismatched `tool_use_id`.** Hardcoding `\"id\": \"1\"` in the\n  tool_result instead of echoing the model's actual id. The model\n  rejects the next call.\n- **No iteration cap.** A misbehaving agent that loops on the same\n  tool call can drain a budget in minutes. Always cap at 8-16\n  iterations.\n\n> **Browser note:** real agent loops need network calls. We'll mimic\n> the model with a hardcoded function that returns either `tool_use`\n> or `end_turn` based on the conversation so far. Same loop, no wire.\n\n## What everyone calls it\n\nAnthropic's [*Building Effective Agents*](https://www.anthropic.com/engineering/building-effective-agents)\nnames this \"the augmented LLM\" — a loop that runs until the model\nsays it's done. Every framework wraps the same primitive:\n\n| Framework | Primitive |\n|---|---|\n| **Anthropic SDK** | `messages.create(...)` returns a response with `stop_reason` ∈ {`end_turn`, `tool_use`, ...}. The loop is hand-rolled around it. |\n| **OpenAI Responses API** | `response.output[]` blocks (`text`, `tool_call`); `response.status` carries the equivalent of stop_reason. |\n| **LangGraph** | `StateGraph` with a `ToolNode` and a conditional edge that re-enters the model node when `tool_calls` are present. |\n| **Vercel AI SDK** | `streamText({ tools, stopWhen })` — the loop is implicit; `stopWhen` controls termination. |\n| **OpenAI Agents SDK** | `Agent` + `Runner` — the runner wraps the loop you'd write yourself. |\n\nSame primitive everywhere. Different ergonomics, same `stop_reason`\nbranching underneath. Once you've written it once (step 8), you'll\nread every framework's docs and recognize the shape.\n\nRun the editor. We inspect a single `tool_use` response — what your\nloop sees right before it has to run the requested tool.",
           "cta": "Got it",
           "code": "# one round-trip in an agent loop, hardcoded.\n# the model returned a tool_use block instead of stopping.\nresponse = {\n    \"role\": \"assistant\",\n    \"stop_reason\": \"tool_use\",\n    \"content\": [\n        {\"type\": \"text\", \"text\": \"Let me check the weather.\"},\n        {\n            \"type\": \"tool_use\",\n            \"id\": \"toolu_01\",\n            \"name\": \"get_weather\",\n            \"input\": {\"city\": \"Tokyo\"},\n        },\n    ],\n}\n\n# is the model done, or do we owe it a tool result?\nif response[\"stop_reason\"] == \"tool_use\":\n    # find the tool_use block in content\n    for block in response[\"content\"]:\n        if block[\"type\"] == \"tool_use\":\n            print(f\"call {block['name']} with {block['input']}\")\n            print(f\"tool_use_id = {block['id']}\")\n",
           "runnable": true
@@ -271,7 +271,7 @@
           "phase": "warmup",
           "estSeconds": 110,
           "concept": "tool-registry-pattern",
-          "body": "# One loop, many tools\n\nChapter 16 lesson 1 gave you the agent loop with *one* tool. That's\nthe toy version. Real agents — Cursor, Claude Code, your own — have\nten, twenty, fifty tools registered. The model picks one each turn,\nsometimes several in parallel, and your loop dispatches.\n\nGood news: the loop doesn't change. Same `while`, same `stop_reason`\nbranches, same `tool_result` reply. The only difference is *which*\ntool runs.\n\n## What \"multi-step\" actually means\n\nTwo patterns sit underneath the phrase, and people mix them up:\n\n1. **Multi-tool dispatch**. One turn, one tool — but the model\n   chooses from many. `search` this turn, `read_page` next turn,\n   `summarize` after that. The model orchestrates the chain; the\n   loop just runs whichever tool got picked.\n2. **Parallel tool calls**. One turn, *several* tool_use blocks at\n   once. \"Read these three files.\" Your loop runs all three (often\n   concurrently) and replies with three `tool_result` blocks in one\n   user turn.\n\nBoth are everyday production patterns. This lesson teaches dispatch\nfirst, then parallel calls.\n\n## Why a registry, not a chain of `if`\n\nThe naive version of this is `if name == \"search\": ...` repeated\nten times. It works for two tools and rots fast. Every new tool means\nediting the dispatch function, and you'll forget one.\n\nThe registry pattern — a `dict` mapping name → function — is what\nevery framework uses internally. LangChain calls it a `Toolkit`.\nLangGraph calls it `tools`. The Vercel AI SDK calls it `tools`. They\nall flatten to the same shape:\n\n```python\nTOOLS = {\n    \"search\": search_fn,\n    \"read_page\": read_page_fn,\n    \"summarize\": summarize_fn,\n}\n\n# anywhere in the loop:\nresult = TOOLS[name](**input)\n```\n\nOne line of dispatch. Adding a tool is one line in the dict and one\nnew function. The agent loop never changes.\n\n## Where the chain comes from\n\nNotice that *the loop* doesn't define the order `search → read_page\n→ summarize`. The model does. You hand it a registry; the model\ndecides which tool serves the user's question this turn, sees the\nresult, and decides which one comes next.\n\nThis is the part that surprises people first writing agents: there's\nno orchestration code. The orchestration is the model's reasoning,\nexpressed as a sequence of `tool_use` blocks. Your job is to keep\nthe loop honest — dispatch correctly, hand back well-formed\n`tool_result` blocks, and keep the message history intact.\n\n## What you'll see in the editor\n\nThree tools registered as a dict. One `tool_use` block from the\nmodel picking `search`. One line of dispatch — `TOOLS[name](**input)`\n— runs the right function. Print the result. Run it.\n\nThe next steps wire this dispatch into the full loop, then add\nparallel tool calls and the bugs that come with them.",
+          "body": "# One loop, many tools\n\nChapter 16 lesson 1 gave you the agent loop with *one* tool. That's\nthe toy version. Real agents — Cursor, Claude Code, your own — have\nten, twenty, fifty tools registered. The model picks one each turn,\nsometimes several in parallel, and your loop dispatches.\n\nGood news: the loop doesn't change. Same `while`, same `stop_reason`\nbranches, same `tool_result` reply. The only difference is *which*\ntool runs.\n\n## What \"multi-step\" actually means\n\nAnthropic's [*Building Effective Agents*](https://www.anthropic.com/engineering/building-effective-agents)\ndistinguishes two patterns under this name, and people mix them up:\n\n1. **Multi-tool dispatch**. One turn, one tool — but the model\n   chooses from many. `search` this turn, `read_page` next turn,\n   `summarize` after that. The model orchestrates the chain; the\n   loop just runs whichever tool got picked.\n2. **Parallel tool calls**. One turn, *several* tool_use blocks at\n   once. \"Read these three files.\" Your loop runs all three (often\n   concurrently) and replies with three `tool_result` blocks in one\n   user turn.\n\nBoth are everyday production patterns. This lesson teaches dispatch\nfirst, then parallel calls.\n\n## Why a registry, not a chain of `if`\n\nThe naive version of this is `if name == \"search\": ...` repeated\nten times. It works for two tools and rots fast. Every new tool means\nediting the dispatch function, and you'll forget one.\n\nThe registry pattern — a `dict` mapping name → function — is what\nevery framework uses internally. LangChain calls it a `Toolkit`.\nLangGraph calls it `tools`. The Vercel AI SDK calls it `tools`. They\nall flatten to the same shape:\n\n```python\nTOOLS = {\n    \"search\": search_fn,\n    \"read_page\": read_page_fn,\n    \"summarize\": summarize_fn,\n}\n\n# anywhere in the loop:\nresult = TOOLS[name](**input)\n```\n\nOne line of dispatch. Adding a tool is one line in the dict and one\nnew function. The agent loop never changes.\n\n## Where the chain comes from\n\nNotice that *the loop* doesn't define the order `search → read_page\n→ summarize`. The model does. You hand it a registry; the model\ndecides which tool serves the user's question this turn, sees the\nresult, and decides which one comes next.\n\nThis is the part that surprises people first writing agents: there's\nno orchestration code. The orchestration is the model's reasoning,\nexpressed as a sequence of `tool_use` blocks. Your job is to keep\nthe loop honest — dispatch correctly, hand back well-formed\n`tool_result` blocks, and keep the message history intact.\n\n## What you'll see in the editor\n\nThree tools registered as a dict. One `tool_use` block from the\nmodel picking `search`. One line of dispatch — `TOOLS[name](**input)`\n— runs the right function. Print the result. Run it.\n\nThe next steps wire this dispatch into the full loop, then add\nparallel tool calls and the bugs that come with them.",
           "cta": "Got it",
           "code": "# the model gets a *list* of tools each turn. it picks one (or several).\n# your job is to dispatch the call to the right Python function.\n\nTOOLS = {\n    \"search\": lambda q: f\"3 results for {q}\",\n    \"read_page\": lambda url: f\"<article from {url}>\",\n    \"summarize\": lambda text: f\"summary: {text[:20]}...\",\n}\n\n# one assistant turn — the model picked `search`.\ntool_use = {\"type\": \"tool_use\", \"id\": \"toolu_a\", \"name\": \"search\", \"input\": {\"q\": \"ramen tokyo\"}}\n\n# dispatch is a one-line lookup, not a giant if/elif.\nfn = TOOLS[tool_use[\"name\"]]\nresult = fn(**tool_use[\"input\"])\nprint(result)\n",
           "runnable": true
@@ -511,7 +511,525 @@
         }
       ],
       "xpTotal": 32
+    },
+    {
+      "slug": "routing",
+      "title": "Routing — pick the path before doing the work",
+      "estMinutes": 11,
+      "prerequisites": [
+        "the-loop",
+        "multi-step-tools"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "agent-loops/routing/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 110,
+          "concept": "routing-pattern",
+          "body": "# Pick the path before you do the work\n\nLesson 02 had one agent with many tools. Routing flips it: many\n*specialist* agents, and a small classifier picks which one runs.\n\nThe shape is intuitive once you see it. A user asks something. You\ndon't send it to your one mega-prompt. You send it to a tiny model\ncall whose only job is to return a category — `billing`,\n`technical`, `general` — and that category maps to a handler with\nits own prompt, its own tools, and possibly its own model size.\n\nEvery customer support bot you've ever talked to is doing this.\nEvery \"tell me what kind of question this is, then I'll answer\" UX\nis doing this. Anthropic's *Building Effective Agents* post calls it\none of the five canonical patterns. LangChain calls it a\n`RouterChain`. The Vercel AI SDK exposes it via `experimental_output`\n+ a switch. Same primitive underneath — small classifier, dispatch\ntable, specialist runs.\n\n## Why route at all\n\nThree reasons, in the order they bite:\n\n1. **One mega-prompt rots fast.** A prompt that handles billing AND\n   technical AND general gets longer every time you find an edge\n   case. By the third edge case it contradicts itself, and the model\n   guesses.\n2. **Different routes have different costs.** A billing question\n   needs to read the order database and call the refund API. A\n   \"what time do you open\" question needs neither. Routing lets you\n   call cheap tools for cheap routes and expensive tools only when\n   you have to.\n3. **Different routes have different models.** Sometimes the\n   billing route needs your best, most cautious model. The general\n   route is fine on Haiku. Routing makes that choice explicit.\n\n## The two-call shape\n\nMost routers run as two model calls per user turn:\n\n```\nuser → classifier (small model)  →  category\n       category + user → specialist (any model) → answer\n```\n\nThe classifier call is short and cheap. The specialist call is\nwhere the real work happens. People who measure tokens find the\nclassifier costs about 5% of what one big merged prompt would —\nand the specialist's answer quality is *higher* because its prompt\nis smaller and focused.\n\n## When NOT to route\n\nRouting is overkill when:\n\n- You only have one path. Don't add a classifier whose answer is\n  always the same.\n- The categories overlap heavily and you'll need cross-route\n  context anyway. (You probably want one prompt with branches, not\n  routing.)\n- The user can pick the category from a UI dropdown. The user is a\n  better classifier than your model and free.\n\nThe bug isn't \"should I route\" — it's \"should this *new* path become\nits own route, or fold into an existing route.\" Default to folding\nuntil a route earns its keep.\n\n## What you'll build\n\nA `route(question)` function that calls a tiny classifier, looks up\nthe matching specialist in a dispatch table, and runs it. Then a\nfallback for when the classifier returns garbage. Then a real\nmulti-route agent that handles three categories plus an unknown.",
+          "cta": "Got it",
+          "code": "# routing in five lines: ask a small model \"what is this?\", then dispatch.\n\ndef classify(question):\n    # in real code, this is an LLM call constrained to one of the keys.\n    if \"refund\" in question.lower(): return \"billing\"\n    if \"error\"  in question.lower(): return \"technical\"\n    return \"general\"\n\nROUTES = {\n    \"billing\":   lambda q: f\"[billing agent] processing: {q}\",\n    \"technical\": lambda q: f\"[tech agent] debugging: {q}\",\n    \"general\":   lambda q: f\"[general agent] answering: {q}\",\n}\n\ndef route(question):\n    category = classify(question)\n    handler = ROUTES[category]\n    return handler(question)\n\nprint(route(\"I need a refund for my order\"))\nprint(route(\"Getting a 500 error\"))\nprint(route(\"How does this work?\"))\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "agent-loops/routing/s02-02-when-to-route",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Routing earns its keep when categories have *different tools, prompts, or costs*. Same tools + same prompt = no route needed.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 55,
+          "concept": "when-routing-helps",
+          "prompt": "Four features above. Which one is the strongest fit for a routing\npattern (LLM classifier → dispatch table)?\n",
+          "options": [
+            {
+              "id": "a",
+              "label": "A — single fixed message templates",
+              "explain": "Two outcomes hardcoded by status. A classifier here adds latency and cost for no decision the model makes."
+            },
+            {
+              "id": "b",
+              "label": "B — support inbox with different categories and tool sets"
+            },
+            {
+              "id": "c",
+              "label": "C — search with a user-selected category dropdown",
+              "explain": "The user already classified for you. Adding a model classifier on top is pure waste."
+            },
+            {
+              "id": "d",
+              "label": "D — one chatbot, one corpus, every question",
+              "explain": "All paths read the same docs. There's no specialist to dispatch to."
+            }
+          ],
+          "answerIds": [
+            "b"
+          ],
+          "shuffle": false,
+          "code": "# four hypothetical features. only some of them benefit from a router.\nfeatures = {\n    \"A\": \"A status-check page that says either 'all systems normal' or 'incident: <text>'.\",\n    \"B\": \"A support inbox that handles billing, technical, and account questions, each with its own tools.\",\n    \"C\": \"A search box where the user picks 'docs', 'people', or 'orders' from a dropdown before searching.\",\n    \"D\": \"A chatbot that answers ANY product question by reading the same docs corpus.\",\n}\nfor k, v in features.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "agent-loops/routing/s03-03-classifier-output",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 95,
+          "concept": "constrained-classifier-output",
+          "body": "# The classifier output is the most important constraint\n\nA routing system fails the *first* time the classifier returns a\nstring that isn't in your dispatch table. `KeyError`. The user gets\na 500. You get paged.\n\nThe fix is constraining the classifier *before* it answers, not\nafter. Three ways, in increasing reliability:\n\n## 1. Enum in the prompt (weakest)\n\n```\n\"Classify the user message as one of: billing, technical, general.\n Respond with ONLY the category word, nothing else.\"\n```\n\nThis *usually* works. Modern models are obedient. But \"usually\" is\nnot a reliability guarantee. Production routers see drift here:\n`\"Billing\"` (capital B), `\"billing or technical\"`, `\"general\nquestion\"`. Each is a `KeyError` waiting to happen.\n\n## 2. Structured output with an `enum` schema (strong)\n\n```python\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": {\"type\": \"string\", \"enum\": [\"billing\", \"technical\", \"general\"]}\n  },\n  \"required\": [\"category\"]\n}\n```\n\nNow the model can't return `\"Billing\"` even if it wants to — the\nschema rejects it. Anthropic, OpenAI, Google all support this via\ntheir \"tool use as structured output\" trick: define a tool whose\ninput schema is your classification schema, force the model to call\nit, and read the input.\n\n## 3. Validate-then-fallback (production-grade)\n\nEven with structured output, you want one more layer:\n\n```python\ncategory = classification.get(\"category\", \"\")\nif category not in ALLOWED:\n    category = \"general\"  # or \"fallback\", or whatever your default is\n```\n\nThis is the load-bearing line in every routing system that's been\nin production for more than a month. Models drift. Schemas can be\nbypassed by a prompt-injected user. The dispatch table needs a\nsafe default.\n\n## What people get wrong\n\nThe most common failure mode in beginner routers is using the model\nto do *both* the classification and the answer in one call —\n\"classify this and respond appropriately.\" The model usually does,\nbut you've lost the dispatch decoupling. You can't swap out a\nspecialist. You can't measure per-route cost. You can't log which\nroute got chosen. Routing earns its value from the explicit\ntwo-call shape — keep them separate.",
+          "cta": "Got it",
+          "code": "# the classifier MUST return a value the dispatch table knows about.\n# two ways to make that happen: an enum of allowed strings, or a\n# JSON schema with `enum`. both ride on top of structured output.\n\nALLOWED = {\"billing\", \"technical\", \"general\"}\n\nclassifier_schema = {\n    \"type\": \"object\",\n    \"properties\": {\n        \"category\": {\"type\": \"string\", \"enum\": list(ALLOWED)},\n        \"confidence\": {\"type\": \"number\"},\n    },\n    \"required\": [\"category\"],\n}\n\n# what the model returns (constrained to the schema):\nclassification = {\"category\": \"billing\", \"confidence\": 0.91}\n\nprint(f\"category: {classification['category']}\")\nprint(f\"in allowed set: {classification['category'] in ALLOWED}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "predict",
+          "id": "agent-loops/routing/s04-04-predict-the-route",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "`fake_classify` returns the mapped category, then `ROUTES[category](question)` runs the matching specialist. Each input prints its category prefix + the question.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Output the three formatted strings in the order the questions appear.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 75,
+          "concept": "route-dispatch-execution",
+          "code": "# a tiny router. the fake classifier returns a fixed category for each input.\ndef fake_classify(question):\n    mapping = {\n        \"I want a refund\":     \"billing\",\n        \"Site is down\":        \"technical\",\n        \"What's your name?\":   \"general\",\n    }\n    return mapping.get(question, \"general\")\n\nROUTES = {\n    \"billing\":   lambda q: f\"BILLING -> {q}\",\n    \"technical\": lambda q: f\"TECH    -> {q}\",\n    \"general\":   lambda q: f\"GEN     -> {q}\",\n}\n\ndef route(question):\n    category = fake_classify(question)\n    return ROUTES[category](question)\n\nfor q in [\"I want a refund\", \"Site is down\", \"What's your name?\"]:\n    print(route(q))\n",
+          "prompt": "Read the editor. The fake classifier maps each input to a fixed\ncategory, and the router dispatches through `ROUTES`. What three\nlines does the loop print, in order?\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "BILLING -> I want a refund\nTECH    -> Site is down\nGEN     -> What's your name?\n",
+            "normalize": "collapse-trailing-newline"
+          }
+        },
+        {
+          "type": "fill",
+          "id": "agent-loops/routing/s05-05-fill-the-dispatch",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Two pieces: look up the handler with `ROUTES[category]`, then call it with `question`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`ROUTES[category](question)` — registry lookup, then call with the user input.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 60,
+          "concept": "route-table-lookup",
+          "prompt": "The router classifies the question and is about to dispatch to the\nmatching specialist. Fill in the missing expression so the right\nhandler runs.\n\nExpected output:\n```\nTECH -> server is on fire\n```\n",
+          "code": "ROUTES = {\n    \"billing\":   lambda q: f\"BILL -> {q}\",\n    \"technical\": lambda q: f\"TECH -> {q}\",\n    \"general\":   lambda q: f\"GEN  -> {q}\",\n}\n\ncategory = \"technical\"\nquestion = \"server is on fire\"\n\nresult = ___\nprint(result)\n",
+          "blanks": [
+            {
+              "id": "dispatch",
+              "accept": [
+                "ROUTES[category](question)"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "id": "agent-loops/routing/s06-06-fix-the-fallback",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Use `ROUTES.get(category, ROUTES[\"general\"])` — `dict.get` with a default returns the general handler when the key is missing.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Replace line 11 with:\n\n```python\nhandler = ROUTES.get(category, ROUTES[\"general\"])\nresult = handler(question)\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 90,
+          "concept": "router-fallback-default",
+          "brokenCode": "ROUTES = {\n    \"billing\":   lambda q: f\"BILL -> {q}\",\n    \"technical\": lambda q: f\"TECH -> {q}\",\n    \"general\":   lambda q: f\"GEN  -> {q}\",\n}\n\ncategory = \"unknown\"  # the classifier drifted\nquestion = \"what time do you open\"\n\n# this raises KeyError on unknown categories.\nresult = ROUTES[category](question)\nprint(result)\n",
+          "prompt": "The classifier just returned `\"unknown\"` — a category not in the\ndispatch table. The current code raises `KeyError` and the user\ngets a 500. Fix the dispatch so an unknown category falls back to\nthe `\"general\"` route instead.\n\nExpected output:\n```\nGEN -> what time do you open\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "GEN  -> what time do you open",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            11
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "fix",
+          "id": "agent-loops/routing/s07-07-fix-the-loose-classifier",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Two steps: `.strip()` to remove whitespace, `.lower()` to normalize case. Both are string methods on `raw_category`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Change line 11 to `category = raw_category.strip().lower()`.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 105,
+          "concept": "classifier-output-normalization",
+          "brokenCode": "ROUTES = {\n    \"billing\":   lambda q: f\"BILL -> {q}\",\n    \"technical\": lambda q: f\"TECH -> {q}\",\n    \"general\":   lambda q: f\"GEN  -> {q}\",\n}\n\nraw_category = \"  Billing  \"  # what the model returned\nquestion = \"refund please\"\n\n# normalize raw_category here so the lookup works.\ncategory = raw_category\nhandler = ROUTES.get(category, ROUTES[\"general\"])\nprint(handler(question))\n",
+          "prompt": "The classifier model returned `\"  Billing  \"` — capitalized, with\nwhitespace. The dispatch table only knows `\"billing\"` (lowercase,\ntrimmed). Without normalization, this falls through to the\nfallback even though the classifier got it right.\n\nFix the normalization so the category is lowercased AND stripped\nbefore the dispatch lookup.\n\nExpected output:\n```\nBILL -> refund please\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "BILL -> refund please",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            11
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "write",
+          "id": "agent-loops/routing/s08-08-write-the-router",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Three lines: classify, normalize, dispatch. Use `.strip().lower()` on the classifier output and `ROUTES.get(category, ROUTES[\"general\"])` for the dispatch.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\ndef route(question):\n    raw = fake_classifier(question)\n    category = raw.strip().lower()\n    handler = ROUTES.get(category, ROUTES[\"general\"])\n    return handler(question)\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 180,
+          "concept": "full-router-implementation",
+          "prompt": "Build a full router. Write `route(question)` that:\n\n- Calls `fake_classifier(question)` to get a raw category string.\n- Normalizes it: `.strip().lower()`.\n- If the normalized category is in `ROUTES`, run that handler with\n  the question.\n- Otherwise run `ROUTES[\"general\"]` as the fallback.\n- Returns the handler's output.\n\nThe classifier may return messy strings (`\"Billing\"`, `\"  general\n\"`, `\"unknown_category\"`). Your router should handle all three.\n\nThen the script will run four cases. Expected output:\n```\nBILL -> I want a refund\nTECH -> 500 error on checkout\nGEN  -> what time do you open\nGEN  -> something completely off-topic\n```\n",
+          "starter": "ROUTES = {\n    \"billing\":   lambda q: f\"BILL -> {q}\",\n    \"technical\": lambda q: f\"TECH -> {q}\",\n    \"general\":   lambda q: f\"GEN  -> {q}\",\n}\n\nclassifier_outputs = iter([\"Billing\", \"technical\", \"  general  \", \"unknown_category\"])\n\ndef fake_classifier(question):\n    return next(classifier_outputs)\n\n# define route(question) below\n\nquestions = [\n    \"I want a refund\",\n    \"500 error on checkout\",\n    \"what time do you open\",\n    \"something completely off-topic\",\n]\nfor q in questions:\n    print(route(q))\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "BILL -> I want a refund\nTECH -> 500 error on checkout\nGEN  -> what time do you open\nGEN  -> something completely off-topic\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "ROUTES = {\n    \"billing\":   lambda q: f\"BILL -> {q}\",\n    \"technical\": lambda q: f\"TECH -> {q}\",\n    \"general\":   lambda q: f\"GEN  -> {q}\",\n}\n\nclassifier_outputs = iter([\"Billing\", \"technical\", \"  general  \", \"unknown_category\"])\n\ndef fake_classifier(question):\n    return next(classifier_outputs)\n\ndef route(question):\n    raw = fake_classifier(question)\n    category = raw.strip().lower()\n    handler = ROUTES.get(category, ROUTES[\"general\"])\n    return handler(question)\n\nquestions = [\n    \"I want a refund\",\n    \"500 error on checkout\",\n    \"what time do you open\",\n    \"something completely off-topic\",\n]\nfor q in questions:\n    print(route(q))\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "agent-loops/routing/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 200,
+          "concept": "routing-checkpoint",
+          "prompt": "Final drill. Build a routing layer that wraps the agent loop you\nalready know. Write `run_router(question)` that:\n\n- Calls `fake_classifier(question)` and normalizes the output\n  (`.strip().lower()`).\n- Looks up the normalized category in `SPECIALISTS`. If missing,\n  fall back to `\"general\"`.\n- Calls the specialist function with `question`. Each specialist\n  returns a dict shaped like `{\"answer\": \"...\", \"tools_used\": N}`.\n- Returns a single dict:\n  `{\"category\": <normalized category used>, \"answer\": <specialist's answer>, \"tools_used\": <specialist's count>}`.\n\nNote: the *category used* is what you actually dispatched to —\nthat's `\"general\"` when the classifier produced something unknown,\nnot the raw classifier string.\n\nThe script runs four cases. Expected output:\n```\ncategory=billing tools=1 answer=refunded\ncategory=technical tools=2 answer=restarted\ncategory=general tools=0 answer=hours: 9-5\ncategory=general tools=0 answer=fallback answer\n```\n",
+          "starter": "def billing_specialist(q):\n    return {\"answer\": \"refunded\", \"tools_used\": 1}\n\ndef technical_specialist(q):\n    return {\"answer\": \"restarted\", \"tools_used\": 2}\n\ndef general_specialist(q):\n    if \"open\" in q or \"hour\" in q:\n        return {\"answer\": \"hours: 9-5\", \"tools_used\": 0}\n    return {\"answer\": \"fallback answer\", \"tools_used\": 0}\n\nSPECIALISTS = {\n    \"billing\":   billing_specialist,\n    \"technical\": technical_specialist,\n    \"general\":   general_specialist,\n}\n\nclassifier_outputs = iter([\"BILLING\", \" technical \", \"general\", \"weird_unknown\"])\n\ndef fake_classifier(question):\n    return next(classifier_outputs)\n\n# define run_router(question) below\n\nquestions = [\n    \"Refund my subscription\",\n    \"Site is throwing 500s\",\n    \"What hours are you open?\",\n    \"totally off topic\",\n]\nfor q in questions:\n    r = run_router(q)\n    print(f\"category={r['category']} tools={r['tools_used']} answer={r['answer']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "category=billing tools=1 answer=refunded\ncategory=technical tools=2 answer=restarted\ncategory=general tools=0 answer=hours: 9-5\ncategory=general tools=0 answer=fallback answer\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "def billing_specialist(q):\n    return {\"answer\": \"refunded\", \"tools_used\": 1}\n\ndef technical_specialist(q):\n    return {\"answer\": \"restarted\", \"tools_used\": 2}\n\ndef general_specialist(q):\n    if \"open\" in q or \"hour\" in q:\n        return {\"answer\": \"hours: 9-5\", \"tools_used\": 0}\n    return {\"answer\": \"fallback answer\", \"tools_used\": 0}\n\nSPECIALISTS = {\n    \"billing\":   billing_specialist,\n    \"technical\": technical_specialist,\n    \"general\":   general_specialist,\n}\n\nclassifier_outputs = iter([\"BILLING\", \" technical \", \"general\", \"weird_unknown\"])\n\ndef fake_classifier(question):\n    return next(classifier_outputs)\n\ndef run_router(question):\n    raw = fake_classifier(question)\n    category = raw.strip().lower()\n    if category not in SPECIALISTS:\n        category = \"general\"\n    result = SPECIALISTS[category](question)\n    return {\n        \"category\": category,\n        \"answer\": result[\"answer\"],\n        \"tools_used\": result[\"tools_used\"],\n    }\n\nquestions = [\n    \"Refund my subscription\",\n    \"Site is throwing 500s\",\n    \"What hours are you open?\",\n    \"totally off topic\",\n]\nfor q in questions:\n    r = run_router(q)\n    print(f\"category={r['category']} tools={r['tools_used']} answer={r['answer']}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 32
+    },
+    {
+      "slug": "evaluator-optimizer",
+      "title": "Evaluator-optimizer — write a draft, let a judge critique it, revise",
+      "estMinutes": 12,
+      "prerequisites": [
+        "the-loop",
+        "multi-step-tools",
+        "routing"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "agent-loops/evaluator-optimizer/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 120,
+          "concept": "evaluator-optimizer-pattern",
+          "body": "# Two prompts beat one mega-prompt\n\nThere's a reason the best AI features look like Cursor's \"let me try\nagain\" loop and not like a single long prompt: when one model writes\nand a *different* prompt critiques, you get to keep iterating until\nthe output meets a bar. One prompt has to be everything to everyone\nand ships its first guess.\n\nThat's the evaluator-optimizer pattern. Anthropic calls it out as one\nof the five canonical agent workflows in *Building Effective Agents*:\n\n> \"In the evaluator-optimizer workflow, one LLM call generates a\n> response while another provides evaluation and feedback in a loop.\"\n\nThe shape is a tiny state machine:\n\n```\n   ┌────────────┐  draft   ┌────────────┐\n   │ Generator  ├──────────▶  Evaluator │\n   └────────────┘          └─────┬──────┘\n        ▲                        │\n        │ feedback (REJECT)      │ verdict\n        └────────────────────────┘\n                                 │\n                                 │ PASS\n                                 ▼\n                              return\n```\n\nTwo model calls per loop iteration. One generates. One judges. If the\njudge accepts, you're done. If not, the judge's feedback flows into\nthe next generation as additional context, and you go again. With a\nceiling on iterations so a stubborn judge doesn't bankrupt you.\n\n## When this pattern earns its keep\n\nAnthropic's two signals:\n\n1. **A human articulating their feedback would demonstrably improve\n   the response.** If the response is already as good as you can make\n   it by talking to it, the loop has nothing to optimize.\n2. **The LLM can produce that kind of feedback.** Some domains the\n   judge is great at (code style, factual coverage, tone). Others it\n   isn't (mathematical correctness, factual recall against a database\n   it can't see).\n\nTwo textbook fits: literary translation (you can keep refining\nnuance) and code review (correctness + style + complexity, all\ncheckable in text). Two textbook anti-fits: arithmetic (no amount of\ncritique will fix a wrong number) and \"is this funny\" (judge has no\nground truth).\n\n## What everyone calls it\n\n| Framework | Name |\n|---|---|\n| Anthropic cookbook | `evaluator_optimizer` (XML `<evaluation>PASS</evaluation>` protocol) |\n| LangGraph | \"Evaluator-optimizer workflow\" — two nodes + conditional edge |\n| Vercel AI SDK | \"Evaluator-Optimizer\" pattern — `generateText` + `generateObject` + `while` |\n| AutoGen | \"Reflection\" design pattern — two agents in a loop |\n| OpenAI Agents SDK | No native primitive — manual `Agent` + `Agent` driver |\n\nSame primitive everywhere: a writer, a judge, a feedback channel, a\nceiling. You'll write the framework-free version in step 8. Once you\nhave, you'll read every framework's wrapper and recognize what it's\nhiding.\n\n## What you'll build\n\nA `write_with_judge(task, generator, judge, max_iters)` that runs the\nloop. Then a fix for the most common bug (parsing the judge's\nverdict from free text instead of structured output). Then the cap\nfix everyone forgets. Then a real version that threads the judge's\nfeedback back into the generator and counts iterations.",
+          "cta": "Got it",
+          "code": "# the loop in 8 lines: draft, judge, revise on REJECT, exit on PASS.\n\ndef write_with_judge(task, generator, judge, max_iters=5):\n    feedback = None\n    draft = None\n    for i in range(max_iters):\n        draft = generator(task, feedback=feedback)\n        verdict = judge(draft)\n        if verdict[\"status\"] == \"PASS\":\n            return draft, i + 1\n        feedback = verdict[\"feedback\"]\n    return draft, max_iters\n\n# mock generator + judge so the function runs without a real model.\ndrafts = iter([\"Cats are animals.\", \"Cats are small carnivorous mammals.\"])\nverdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"Too short. Add detail.\"},\n    {\"status\": \"PASS\",   \"feedback\": \"Clear and detailed.\"},\n])\n\nresult, iters = write_with_judge(\n    \"Describe cats\",\n    generator=lambda task, feedback=None: next(drafts),\n    judge=lambda draft: next(verdicts),\n)\nprint(f\"final draft (iter {iters}): {result}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "agent-loops/evaluator-optimizer/s02-02-when-it-earns-its-keep",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Which tasks have qualitative judgment built in (style, completeness, tone) versus a single numerical right answer?",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 55,
+          "concept": "evaluator-optimizer-fit",
+          "prompt": "Anthropic's two signals: (1) human-articulated feedback would\ndemonstrably improve the response, and (2) the LLM can produce that\nkind of feedback. Which TWO features above are the strongest fit for\nthe evaluator-optimizer pattern?\n",
+          "options": [
+            {
+              "id": "a_and_c",
+              "label": "A (translator) and C (code reviewer)"
+            },
+            {
+              "id": "a_and_b",
+              "label": "A (translator) and B (arithmetic)",
+              "explain": "Arithmetic has a single correct answer. A judge can't 'critique' a wrong number into a right one — you need a calculator, not a critic."
+            },
+            {
+              "id": "c_and_d",
+              "label": "C (code reviewer) and D (weather)",
+              "explain": "Weather is a lookup with a ground-truth value. There's nothing to refine — either you have the right number from the API or you don't."
+            },
+            {
+              "id": "b_and_d",
+              "label": "B (arithmetic) and D (weather)",
+              "explain": "Both are exact-answer tasks. Iterative refinement adds latency and cost without changing correctness."
+            }
+          ],
+          "answerIds": [
+            "a_and_c"
+          ],
+          "shuffle": false,
+          "code": "# four hypothetical features. only some benefit from this pattern.\nfeatures = {\n    \"A\": \"A translator that should preserve nuance and tone across attempts.\",\n    \"B\": \"An arithmetic helper that returns the answer to '17 * 23'.\",\n    \"C\": \"A code reviewer that emits a refactored version of a function.\",\n    \"D\": \"A weather lookup that returns the current temp for a city.\",\n}\nfor k, v in features.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "agent-loops/evaluator-optimizer/s03-03-judge-output-shape",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "structured-judge-output",
+          "body": "# The judge's output is a contract, not a vibe\n\nThe single most-broken evaluator-optimizer in the wild has the same\nbug: parsing the judge's verdict from free text. The code looks\nsomething like:\n\n```python\nverdict = judge(draft)\nif \"good\" in verdict.lower() or \"pass\" in verdict.lower():\n    return draft\n```\n\nThis breaks the first time the judge says *\"this is **not** good\"* —\nthe substring match sees `\"good\"`, returns happily, and ships the\nbroken draft.\n\nThree hardening levels, in production order:\n\n## Level 1 — XML tags (Anthropic cookbook style)\n\nForce the judge to wrap its verdict in a fixed token:\n\n```\n<evaluation>PASS</evaluation>\nor\n<evaluation>NEEDS_IMPROVEMENT</evaluation>\n<feedback>...</feedback>\n```\n\nYou parse by extracting the contents of `<evaluation>`. Robust enough\nfor prototypes; the cookbook ships it.\n\n## Level 2 — Structured output (preferred today)\n\nUse the model's structured-output mode and a JSON schema:\n\n```python\n{\n  \"status\": {\"type\": \"string\", \"enum\": [\"PASS\", \"REJECT\"]},\n  \"feedback\": {\"type\": \"string\"},\n  \"score\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 10}\n}\n```\n\nThe model literally cannot return `\"PaSs\"` or `\"good\"` — the schema\nforbids it. Anthropic does this via `tools=[...]` (the tool-use\ntrick). OpenAI does it via `response_format={\"type\": \"json_schema\"}`.\nVercel AI SDK does it via `generateObject` + Zod.\n\n## Level 3 — Validate-then-default\n\nEven with structured output, one more belt-and-suspenders line:\n\n```python\nstatus = verdict.get(\"status\", \"REJECT\")\nif status not in {\"PASS\", \"REJECT\"}:\n    status = \"REJECT\"  # default to \"loop again\" — never to PASS\n```\n\nThe default-on-anomaly is always REJECT, never PASS. Because the\nfailure mode of \"model returned garbage and we shipped\" is worse than\n\"model returned garbage and we did one more revision.\"\n\n## Why a separate judge prompt matters\n\nThe other half of the contract: the judge cannot share a system\nprompt with the generator. Self-preference bias is documented\n(arxiv.org/abs/2410.21819) — when the same prompt-personality writes\n*and* judges, you get a 90%+ pass rate on iteration 1, regardless of\nquality. The judge needs to be told to *find specific defects*, not\nasked for an opinion. Different model entirely is even better when\nyou can afford it.\n\n## Three numbers production loops always have\n\n```python\nfeedback = None\ndraft = None\nfor i in range(MAX_ITERATIONS):       # 1. cap\n    draft = generator(task, feedback=feedback)\n    verdict = judge(draft)            # 2. structured verdict\n    if verdict[\"status\"] == \"PASS\":\n        return draft\n    feedback = verdict[\"feedback\"]    # 3. feedback flows back\nreturn draft  # bail with the latest draft, never raise\n```\n\nThree load-bearing pieces: **MAX_ITERATIONS**, **structured verdict**,\n**feedback threaded back into the generator**. Miss any one and the\nloop fails — runs forever, ships garbage, or never improves.",
+          "cta": "Got it",
+          "code": "# the judge's output is the load-bearing contract of this pattern.\n# parse it as structured data, never as natural language.\n\n# GOOD — structured verdict, easy to branch on:\ngood_verdict = {\n    \"status\": \"REJECT\",\n    \"feedback\": \"The second paragraph contradicts the first. Pick one.\",\n    \"score\": 4,\n}\n\n# BAD — free-text verdict you'd parse with `if \"good\" in verdict.lower()`:\nbad_verdict = \"This is mostly good but not great, I'd say a 6/10 if you fixed the contradiction.\"\n\n# which one do you want to dispatch on?\nif good_verdict[\"status\"] == \"PASS\":\n    print(\"done\")\nelse:\n    print(\"revise:\", good_verdict[\"feedback\"])\n",
+          "runnable": true
+        },
+        {
+          "type": "predict",
+          "id": "agent-loops/evaluator-optimizer/s04-04-predict-the-iterations",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Trace it: gen → judge (REJECT, iter 1) → gen → judge (REJECT, iter 2) → gen → judge (PASS, iter 3). The PASS branch returns `i + 1`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Three iterations: two rejections plus the accepting one.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 80,
+          "concept": "evaluator-optimizer-iteration-trace",
+          "code": "# the judge rejects the first two drafts, then accepts the third.\n\ndrafts = iter([\n    \"Cats are animals.\",\n    \"Cats are small mammals.\",\n    \"Cats are small carnivorous mammals kept as pets worldwide.\",\n])\nverdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"Too short.\"},\n    {\"status\": \"REJECT\", \"feedback\": \"Add detail about diet.\"},\n    {\"status\": \"PASS\",   \"feedback\": \"Detailed and accurate.\"},\n])\n\ndef gen(task, feedback=None):\n    return next(drafts)\n\ndef judge(draft):\n    return next(verdicts)\n\ndef write_with_judge(task, max_iters=5):\n    draft = gen(task)\n    for i in range(max_iters):\n        verdict = judge(draft)\n        if verdict[\"status\"] == \"PASS\":\n            return i + 1\n        draft = gen(task, feedback=verdict[\"feedback\"])\n    return max_iters\n\niterations = write_with_judge(\"Describe cats\")\nprint(f\"iterations: {iterations}\")\n",
+          "prompt": "Read the editor. The fake judge rejects drafts 1 and 2, then accepts\ndraft 3. The function returns the iteration count when the judge\nPASSES. How many iterations does it take?\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "iterations: 3",
+            "normalize": "collapse-trailing-newline"
+          }
+        },
+        {
+          "type": "fill",
+          "id": "agent-loops/evaluator-optimizer/s05-05-fill-the-exit",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The judge returns a dict like `{\"status\": \"PASS\", ...}`. Read the `status` key and compare it to the literal string.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`verdict[\"status\"] == \"PASS\"` — read the field, compare to the string the schema enforces.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 65,
+          "concept": "pass-status-exit",
+          "prompt": "The evaluator-optimizer loop is missing its exit condition. Fill in\nthe comparison so the function returns the draft as soon as the\njudge's `status` field equals `\"PASS\"`.\n\nExpected output:\n```\ndone in 2 iters\n```\n",
+          "code": "drafts = iter([\"v1\", \"v2\"])\nverdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"needs work\"},\n    {\"status\": \"PASS\",   \"feedback\": \"ok\"},\n])\n\ndef gen(task, feedback=None): return next(drafts)\ndef judge(draft):             return next(verdicts)\n\ndef loop(task, max_iters=5):\n    draft = gen(task)\n    for i in range(max_iters):\n        verdict = judge(draft)\n        if ___:\n            return f\"done in {i + 1} iters\"\n        draft = gen(task, feedback=verdict[\"feedback\"])\n    return \"capped\"\n\nprint(loop(\"describe x\"))\n",
+          "blanks": [
+            {
+              "id": "exit",
+              "accept": [
+                "verdict[\"status\"] == \"PASS\"",
+                "verdict['status'] == 'PASS'"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "id": "agent-loops/evaluator-optimizer/s06-06-fix-the-judge-parsing",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Use `verdict.startswith(\"PASS\")` instead of `\"good\" in verdict.lower()`. Production code uses structured output for exactly this reason — substring matches lie.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Change line 4 to:\n\n```python\nif verdict.startswith(\"PASS\"):\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "free-text-parsing-bug",
+          "brokenCode": "verdict = \"REJECT: this is not good, please fix the second sentence\"\n\n# bug: substring match on \"good\" matches \"not good\" too.\nif \"good\" in verdict.lower():\n    print(\"accepted, shipping\")\nelse:\n    print(\"rejected, will revise\")\n",
+          "prompt": "The judge is now returning free-text verdicts (the model wasn't\nforced into structured output). The current loop checks\n`if \"good\" in verdict.lower()` — and the judge said *\"this is **not**\ngood, please fix it\"*. The substring match sees `\"good\"`, exits the\nloop happily, and ships the broken draft.\n\nFix the parsing so it requires the verdict to START with the\nliteral token `\"PASS\"` (case-sensitive). Anything else is a reject.\n\nExpected output:\n```\nrejected, will revise\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "rejected, will revise",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            4
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "fix",
+          "id": "agent-loops/evaluator-optimizer/s07-07-fix-the-missing-cap",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Replace `while True:` with `for _ in range(3):` so the loop bails after 3 iterations. The trailing `return \"capped\"` will then run.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Change line 11 to:\n\n```python\nfor _ in range(3):\n```\n\nThat makes the bottom `return \"capped\"` reachable when no PASS comes.\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "max-iterations-safety-rail",
+          "brokenCode": "drafts = iter([\"v1\", \"v2\", \"v3\", \"v4\"])\nverdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"no\"},\n    {\"status\": \"REJECT\", \"feedback\": \"still no\"},\n    {\"status\": \"REJECT\", \"feedback\": \"really no\"},\n])\n\ndef gen(task, feedback=None): return next(drafts)\ndef judge(draft):             return next(verdicts)\n\ndef loop(task):\n    draft = gen(task)\n    while True:                              # bug: no cap\n        verdict = judge(draft)\n        if verdict[\"status\"] == \"PASS\":\n            return draft\n        draft = gen(task, feedback=verdict[\"feedback\"])\n    return \"capped\"\n\nprint(loop(\"describe x\"))\n",
+          "prompt": "This loop has no `max_iters` ceiling. The judge in this test case is\nstubborn — it never says PASS. As written, the `while True` runs\nuntil the iter pool is empty and Python raises `StopIteration`\n(which in production would mean burning through your API budget).\n\nFix the loop to bail out after at most 3 iterations, returning the\nstring `\"capped\"` if no PASS was reached.\n\nExpected output:\n```\ncapped\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "capped",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            11
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "write",
+          "id": "agent-loops/evaluator-optimizer/s08-08-write-the-evaluator-optimizer",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Track `feedback` as a local variable starting at `None`. Inside the loop: call `gen(task, feedback=feedback)`, judge the result, branch on PASS, otherwise update `feedback = verdict[\"feedback\"]`. After the loop: return the last draft with `passed=False`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\ndef write_with_judge(task, max_iters):\n    feedback = None\n    draft = None\n    for i in range(max_iters):\n        draft = gen(task, feedback=feedback)\n        verdict = judge(draft)\n        if verdict[\"status\"] == \"PASS\":\n            return {\"draft\": draft, \"iters\": i + 1, \"passed\": True}\n        feedback = verdict[\"feedback\"]\n    return {\"draft\": draft, \"iters\": max_iters, \"passed\": False}\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 180,
+          "concept": "full-evaluator-optimizer",
+          "prompt": "Build the full evaluator-optimizer. Write `write_with_judge(task, max_iters)` that:\n\n- Maintains `feedback = None` (initial draft has no prior feedback).\n- Loops up to `max_iters` times. Each iteration:\n  - Calls `gen(task, feedback=feedback)` to produce a draft.\n  - Calls `judge(draft)` to get a verdict dict.\n  - If `verdict[\"status\"] == \"PASS\"`: return a dict\n    `{\"draft\": <draft>, \"iters\": <iteration count, 1-based>, \"passed\": True}`.\n  - Otherwise update `feedback = verdict[\"feedback\"]` and continue.\n- If `max_iters` is exhausted without a PASS, return\n  `{\"draft\": <last draft>, \"iters\": max_iters, \"passed\": False}`.\n\nThe script will run two cases (one that PASSes on iter 2, one that\nexhausts the cap). Expected output:\n```\npassed=True iters=2 draft=Cats are small carnivorous mammals.\npassed=False iters=2 draft=v2\n```\n",
+          "starter": "good_drafts = iter([\n    \"Cats are animals.\",\n    \"Cats are small carnivorous mammals.\",\n])\ngood_verdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"Too short.\"},\n    {\"status\": \"PASS\",   \"feedback\": \"Detailed.\"},\n])\n\nbad_drafts = iter([\"v1\", \"v2\"])\nbad_verdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"no\"},\n    {\"status\": \"REJECT\", \"feedback\": \"still no\"},\n])\n\ncurrent = {\"drafts\": good_drafts, \"verdicts\": good_verdicts}\n\ndef gen(task, feedback=None):\n    return next(current[\"drafts\"])\n\ndef judge(draft):\n    return next(current[\"verdicts\"])\n\n# define write_with_judge(task, max_iters) below\n\ncurrent[\"drafts\"], current[\"verdicts\"] = good_drafts, good_verdicts\nr = write_with_judge(\"describe cats\", 3)\nprint(f\"passed={r['passed']} iters={r['iters']} draft={r['draft']}\")\n\ncurrent[\"drafts\"], current[\"verdicts\"] = bad_drafts, bad_verdicts\nr = write_with_judge(\"describe cats\", 2)\nprint(f\"passed={r['passed']} iters={r['iters']} draft={r['draft']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "passed=True iters=2 draft=Cats are small carnivorous mammals.\npassed=False iters=2 draft=v2\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "good_drafts = iter([\n    \"Cats are animals.\",\n    \"Cats are small carnivorous mammals.\",\n])\ngood_verdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"Too short.\"},\n    {\"status\": \"PASS\",   \"feedback\": \"Detailed.\"},\n])\n\nbad_drafts = iter([\"v1\", \"v2\"])\nbad_verdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"no\"},\n    {\"status\": \"REJECT\", \"feedback\": \"still no\"},\n])\n\ncurrent = {\"drafts\": good_drafts, \"verdicts\": good_verdicts}\n\ndef gen(task, feedback=None):\n    return next(current[\"drafts\"])\n\ndef judge(draft):\n    return next(current[\"verdicts\"])\n\ndef write_with_judge(task, max_iters):\n    feedback = None\n    draft = None\n    for i in range(max_iters):\n        draft = gen(task, feedback=feedback)\n        verdict = judge(draft)\n        if verdict[\"status\"] == \"PASS\":\n            return {\"draft\": draft, \"iters\": i + 1, \"passed\": True}\n        feedback = verdict[\"feedback\"]\n    return {\"draft\": draft, \"iters\": max_iters, \"passed\": False}\n\ncurrent[\"drafts\"], current[\"verdicts\"] = good_drafts, good_verdicts\nr = write_with_judge(\"describe cats\", 3)\nprint(f\"passed={r['passed']} iters={r['iters']} draft={r['draft']}\")\n\ncurrent[\"drafts\"], current[\"verdicts\"] = bad_drafts, bad_verdicts\nr = write_with_judge(\"describe cats\", 2)\nprint(f\"passed={r['passed']} iters={r['iters']} draft={r['draft']}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "agent-loops/evaluator-optimizer/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 200,
+          "concept": "evaluator-optimizer-checkpoint",
+          "prompt": "Final drill. Build a production-grade evaluator-optimizer that\ntracks the full revision history. Write\n`optimize(task, max_iters)` that:\n\n- Maintains `feedback = None` and `history = []`.\n- Loops up to `max_iters` times. Each iteration:\n  - Calls `gen(task, feedback=feedback)` to produce a draft.\n  - Calls `judge(draft)` to get a verdict dict.\n  - Appends one entry to `history`:\n    `{\"iter\": <1-based>, \"draft\": <draft>, \"status\": <verdict status>, \"feedback\": <verdict feedback>}`.\n  - On PASS: return\n    `{\"final_draft\": draft, \"iters\": <iteration that passed>, \"passed\": True, \"history\": history}`.\n  - On REJECT: update `feedback = verdict[\"feedback\"]` and continue.\n- On cap exhaustion without a PASS: return\n  `{\"final_draft\": <last draft>, \"iters\": max_iters, \"passed\": False, \"history\": history}`.\n\nThe script will run two cases. Expected output:\n```\npassed=True iters=3 history_len=3 final=v3-good\npassed=False iters=2 history_len=2 final=stub2\n```\n",
+          "starter": "good_drafts = iter([\"v1-rough\", \"v2-better\", \"v3-good\"])\ngood_verdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"rough\"},\n    {\"status\": \"REJECT\", \"feedback\": \"better but not enough\"},\n    {\"status\": \"PASS\",   \"feedback\": \"great\"},\n])\n\nbad_drafts = iter([\"stub1\", \"stub2\"])\nbad_verdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"still no\"},\n    {\"status\": \"REJECT\", \"feedback\": \"really no\"},\n])\n\ncurrent = {\"drafts\": good_drafts, \"verdicts\": good_verdicts}\n\ndef gen(task, feedback=None):\n    return next(current[\"drafts\"])\n\ndef judge(draft):\n    return next(current[\"verdicts\"])\n\n# define optimize(task, max_iters) below\n\ncurrent[\"drafts\"], current[\"verdicts\"] = good_drafts, good_verdicts\nr = optimize(\"write a tagline\", 5)\nprint(f\"passed={r['passed']} iters={r['iters']} history_len={len(r['history'])} final={r['final_draft']}\")\n\ncurrent[\"drafts\"], current[\"verdicts\"] = bad_drafts, bad_verdicts\nr = optimize(\"write a tagline\", 2)\nprint(f\"passed={r['passed']} iters={r['iters']} history_len={len(r['history'])} final={r['final_draft']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "passed=True iters=3 history_len=3 final=v3-good\npassed=False iters=2 history_len=2 final=stub2\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "good_drafts = iter([\"v1-rough\", \"v2-better\", \"v3-good\"])\ngood_verdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"rough\"},\n    {\"status\": \"REJECT\", \"feedback\": \"better but not enough\"},\n    {\"status\": \"PASS\",   \"feedback\": \"great\"},\n])\n\nbad_drafts = iter([\"stub1\", \"stub2\"])\nbad_verdicts = iter([\n    {\"status\": \"REJECT\", \"feedback\": \"still no\"},\n    {\"status\": \"REJECT\", \"feedback\": \"really no\"},\n])\n\ncurrent = {\"drafts\": good_drafts, \"verdicts\": good_verdicts}\n\ndef gen(task, feedback=None):\n    return next(current[\"drafts\"])\n\ndef judge(draft):\n    return next(current[\"verdicts\"])\n\ndef optimize(task, max_iters):\n    feedback = None\n    draft = None\n    history = []\n    for i in range(max_iters):\n        draft = gen(task, feedback=feedback)\n        verdict = judge(draft)\n        history.append({\n            \"iter\": i + 1,\n            \"draft\": draft,\n            \"status\": verdict[\"status\"],\n            \"feedback\": verdict[\"feedback\"],\n        })\n        if verdict[\"status\"] == \"PASS\":\n            return {\n                \"final_draft\": draft,\n                \"iters\": i + 1,\n                \"passed\": True,\n                \"history\": history,\n            }\n        feedback = verdict[\"feedback\"]\n    return {\n        \"final_draft\": draft,\n        \"iters\": max_iters,\n        \"passed\": False,\n        \"history\": history,\n    }\n\ncurrent[\"drafts\"], current[\"verdicts\"] = good_drafts, good_verdicts\nr = optimize(\"write a tagline\", 5)\nprint(f\"passed={r['passed']} iters={r['iters']} history_len={len(r['history'])} final={r['final_draft']}\")\n\ncurrent[\"drafts\"], current[\"verdicts\"] = bad_drafts, bad_verdicts\nr = optimize(\"write a tagline\", 2)\nprint(f\"passed={r['passed']} iters={r['iters']} history_len={len(r['history'])} final={r['final_draft']}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 32
     }
   ],
-  "xpTotal": 64
+  "xpTotal": 128
 }

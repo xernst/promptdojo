@@ -1,0 +1,90 @@
+xp: 8
+estSeconds: 220
+concept: full-triage-pipeline
+prompt: |
+  Final drill. Build the full triage flow. Write `triage(trace)`
+  that:
+
+  - Computes `n_tools` (total tool calls across the trace) and
+    `n_validation` (total validation errors).
+  - Returns a dict `{"class": <class>, "fix_layer": <layer>, "summary": <one-line summary>}` where:
+    - If `n_validation > 0`: `class = "retrieval"`, `fix_layer = "retriever / tool inputs"`.
+    - Else if `trace[-1]["stop_reason"] == "max_tokens"`:
+      `class = "prompt"`, `fix_layer = "prompt (output too long; cap or split task)"`.
+    - Else if `n_tools == 0`: `class = "true_hallucination"`,
+      `fix_layer = "constrain output (force tool use, require citations)"`.
+    - Else: `class = "downstream_mangling"`, `fix_layer = "post-processing code"`.
+    - `summary` is the same one-line string from step 8:
+      `"<N> turns, <M> tools, <V> validation_errors, final stop=<stop_reason>"`.
+
+  Three traces run for you. Expected output:
+  ```
+  class=retrieval fix_layer=retriever / tool inputs summary=3 turns, 2 tools, 1 validation_errors, final stop=end_turn
+  class=true_hallucination fix_layer=constrain output (force tool use, require citations) summary=2 turns, 0 tools, 0 validation_errors, final stop=end_turn
+  class=prompt fix_layer=prompt (output too long; cap or split task) summary=2 turns, 1 tools, 0 validation_errors, final stop=max_tokens
+  ```
+starter: |
+  trace_retrieval = [
+      {"turn": 1, "stop_reason": "tool_use", "tools_called": ["search"], "validation_errors": 1},
+      {"turn": 2, "stop_reason": "tool_use", "tools_called": ["search"], "validation_errors": 0},
+      {"turn": 3, "stop_reason": "end_turn", "tools_called": [],         "validation_errors": 0},
+  ]
+
+  trace_hallucination = [
+      {"turn": 1, "stop_reason": "tool_use", "tools_called": [], "validation_errors": 0},
+      {"turn": 2, "stop_reason": "end_turn", "tools_called": [], "validation_errors": 0},
+  ]
+
+  trace_truncated = [
+      {"turn": 1, "stop_reason": "tool_use",   "tools_called": ["search"], "validation_errors": 0},
+      {"turn": 2, "stop_reason": "max_tokens", "tools_called": [],         "validation_errors": 0},
+  ]
+
+  # define triage(trace) below
+
+  for tr in [trace_retrieval, trace_hallucination, trace_truncated]:
+      r = triage(tr)
+      print(f"class={r['class']} fix_layer={r['fix_layer']} summary={r['summary']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    class=retrieval fix_layer=retriever / tool inputs summary=3 turns, 2 tools, 1 validation_errors, final stop=end_turn
+    class=true_hallucination fix_layer=constrain output (force tool use, require citations) summary=2 turns, 0 tools, 0 validation_errors, final stop=end_turn
+    class=prompt fix_layer=prompt (output too long; cap or split task) summary=2 turns, 1 tools, 0 validation_errors, final stop=max_tokens
+  normalize: collapse-trailing-newline
+solution: |
+  trace_retrieval = [
+      {"turn": 1, "stop_reason": "tool_use", "tools_called": ["search"], "validation_errors": 1},
+      {"turn": 2, "stop_reason": "tool_use", "tools_called": ["search"], "validation_errors": 0},
+      {"turn": 3, "stop_reason": "end_turn", "tools_called": [],         "validation_errors": 0},
+  ]
+
+  trace_hallucination = [
+      {"turn": 1, "stop_reason": "tool_use", "tools_called": [], "validation_errors": 0},
+      {"turn": 2, "stop_reason": "end_turn", "tools_called": [], "validation_errors": 0},
+  ]
+
+  trace_truncated = [
+      {"turn": 1, "stop_reason": "tool_use",   "tools_called": ["search"], "validation_errors": 0},
+      {"turn": 2, "stop_reason": "max_tokens", "tools_called": [],         "validation_errors": 0},
+  ]
+
+  def triage(trace):
+      n_turns = len(trace)
+      n_tools = sum(len(t["tools_called"]) for t in trace)
+      n_validation = sum(t["validation_errors"] for t in trace)
+      final_stop = trace[-1]["stop_reason"]
+      summary = f"{n_turns} turns, {n_tools} tools, {n_validation} validation_errors, final stop={final_stop}"
+
+      if n_validation > 0:
+          return {"class": "retrieval", "fix_layer": "retriever / tool inputs", "summary": summary}
+      if final_stop == "max_tokens":
+          return {"class": "prompt", "fix_layer": "prompt (output too long; cap or split task)", "summary": summary}
+      if n_tools == 0:
+          return {"class": "true_hallucination", "fix_layer": "constrain output (force tool use, require citations)", "summary": summary}
+      return {"class": "downstream_mangling", "fix_layer": "post-processing code", "summary": summary}
+
+  for tr in [trace_retrieval, trace_hallucination, trace_truncated]:
+      r = triage(tr)
+      print(f"class={r['class']} fix_layer={r['fix_layer']} summary={r['summary']}")
+passThreshold: 0.66

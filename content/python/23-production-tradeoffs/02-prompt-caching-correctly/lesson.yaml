@@ -1,0 +1,15 @@
+slug: prompt-caching-correctly
+title: "Prompt caching correctly — the variable input goes LAST"
+estMinutes: 12
+prerequisites:
+  - orientation
+order:
+  - 01-intro.read.md
+  - 02-which-piece-caches.mc.yaml
+  - 03-the-cache-breakpoints.read.md
+  - 04-predict-the-savings.predict.yaml
+  - 05-fill-the-cache-control.fill.yaml
+  - 06-fix-the-cache-buster.fix.yaml
+  - 07-fix-the-ttl-default.fix.yaml
+  - 08-write-the-cost-estimator.write.yaml
+  - 09-checkpoint.checkpoint.yaml

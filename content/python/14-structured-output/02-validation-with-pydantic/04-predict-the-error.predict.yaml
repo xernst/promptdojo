@@ -1,0 +1,36 @@
+xp: 3
+estSeconds: 80
+concept: error-iteration
+code: |
+  from pydantic import BaseModel, ValidationError
+
+  class User(BaseModel):
+      name: str
+      age: int
+
+  # the model returned a dict where age is a string. Pydantic v2 is
+  # strict by default — it does NOT coerce "42" to 42.
+  try:
+      User.model_validate({"name": "Ada", "age": "forty-two"})
+  except ValidationError as e:
+      print(f"errors: {len(e.errors())}")
+      for err in e.errors():
+          print(f"field: {err['loc'][0]}, type: {err['type']}")
+prompt: |
+  Read the editor. The model returned `age: "forty-two"` (a string,
+  not an integer). Pydantic v2 is strict — it doesn't coerce
+  arbitrary strings to int. The script catches the ValidationError
+  and prints the error count plus each error's field and type.
+
+  What does the script print?
+grader:
+  kind: stdout-equality
+  expected: |
+    errors: 1
+    field: age, type: int_parsing
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'One field is wrong (`age`), so `len(e.errors()) == 1`. The error type for "string that can''t be parsed as int" in Pydantic v2 is `int_parsing`.'
+  - level: 2
+    body: 'Pydantic v2 will coerce `"42"` (a numeric string) to int by default in lax mode, but `"forty-two"` is unambiguously not a number — it raises with type `int_parsing`.'

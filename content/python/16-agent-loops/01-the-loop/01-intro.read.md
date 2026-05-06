@@ -106,5 +106,23 @@ ignoring `tool_use` (the agent stalls) and never exiting on `end_turn`
 > the model with a hardcoded function that returns either `tool_use`
 > or `end_turn` based on the conversation so far. Same loop, no wire.
 
+## What everyone calls it
+
+Anthropic's [*Building Effective Agents*](https://www.anthropic.com/engineering/building-effective-agents)
+names this "the augmented LLM" — a loop that runs until the model
+says it's done. Every framework wraps the same primitive:
+
+| Framework | Primitive |
+|---|---|
+| **Anthropic SDK** | `messages.create(...)` returns a response with `stop_reason` ∈ {`end_turn`, `tool_use`, ...}. The loop is hand-rolled around it. |
+| **OpenAI Responses API** | `response.output[]` blocks (`text`, `tool_call`); `response.status` carries the equivalent of stop_reason. |
+| **LangGraph** | `StateGraph` with a `ToolNode` and a conditional edge that re-enters the model node when `tool_calls` are present. |
+| **Vercel AI SDK** | `streamText({ tools, stopWhen })` — the loop is implicit; `stopWhen` controls termination. |
+| **OpenAI Agents SDK** | `Agent` + `Runner` — the runner wraps the loop you'd write yourself. |
+
+Same primitive everywhere. Different ergonomics, same `stop_reason`
+branching underneath. Once you've written it once (step 8), you'll
+read every framework's docs and recognize the shape.
+
 Run the editor. We inspect a single `tool_use` response — what your
 loop sees right before it has to run the requested tool.

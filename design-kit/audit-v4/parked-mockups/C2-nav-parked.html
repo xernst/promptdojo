@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C2 — parked floating glass pill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink-950:#14140f; --ink-900:#1a1a14; --ink-800:#25241f; --ink-700:#36352f;
+    --ink-500:#6b6a62; --ink-400:#9c9c93; --ink-300:#d4d3cd; --ink-100:#fafaf7;
+    --green-400:#34d399; --green-500:#2aa06a; --green-700:#186b46;
+    --display:'Fraunces',serif; --mono:'JetBrains Mono',monospace;
+  }
+  *,*::before,*::after { box-sizing:border-box; }
+  html, body { margin:0; padding:0; background:var(--ink-950); color:var(--ink-100); font-family:var(--display); position:relative; }
+  body { width:1920px; height:1080px; overflow:hidden; }
+  .label-tag {
+    position:fixed; top:16px; right:16px; z-index:50;
+    font-family:var(--mono); font-size:11px; font-weight:800; letter-spacing:0.4em; text-transform:uppercase;
+    background:var(--green-500); color:var(--ink-950); padding:6px 14px;
+  }
+
+  /* faint backdrop pattern so glass blur reads as actually doing something */
+  body::before {
+    content: "";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(42,160,106,0.08), transparent 60%),
+      radial-gradient(ellipse at 80% 70%, rgba(42,160,106,0.05), transparent 60%);
+    pointer-events:none;
+  }
+
+  .glass-pill {
+    position:absolute; top:32px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:32px;
+    padding:14px 28px;
+    background:rgba(26,26,20,0.65);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:32px;
+    backdrop-filter:blur(24px) saturate(1.4);
+    -webkit-backdrop-filter:blur(24px) saturate(1.4);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+    font-family:var(--mono); font-size:13px;
+    z-index:10;
+  }
+  .glass-pill .wm { font-weight:800; letter-spacing:-0.015em; font-size:14px; color:var(--ink-100); }
+  .glass-pill .wm .caret { color:var(--green-500); margin-right:6px; }
+  .glass-pill .sep { width:1px; height:18px; background:rgba(255,255,255,0.12); }
+  .glass-pill a {
+    color:var(--ink-400); font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+    text-decoration:none; font-size:12px;
+  }
+  .glass-pill a.active { color:var(--green-400); }
+  .glass-pill .cta {
+    margin-left:8px;
+    background:var(--green-500); color:var(--ink-950);
+    padding:8px 18px; border-radius:18px;
+    font-weight:800; letter-spacing:0.06em; text-transform:uppercase; font-size:12px;
+  }
+
+  main { padding:200px 120px 120px; max-width:1640px; margin:0 auto; position:relative; z-index:1; }
+  .eyebrow {
+    font-family:var(--mono); color:var(--green-500); font-weight:800;
+    font-size:14px; letter-spacing:0.4em; text-transform:uppercase;
+    margin-bottom:24px;
+  }
+  .h1 {
+    font-family:var(--display); font-weight:900;
+    font-variation-settings:'opsz' 144;
+    font-size:160px; line-height:0.92; letter-spacing:-0.045em;
+    margin:0;
+  }
+  .h1 em { font-style:italic; color:var(--green-500); }
+  .lede {
+    font-family:var(--display); font-size:24px; line-height:1.45;
+    margin:36px 0 0; max-width:60ch; color:var(--ink-300);
+  }
+</style>
+</head>
+<body>
+<span class="label-tag">parked · proposed</span>
+
+<div class="glass-pill">
+  <span class="wm"><span class="caret">❯</span>promptdojo</span>
+  <span class="sep"></span>
+  <a class="active">course</a>
+  <a>about</a>
+  <a>changelog</a>
+  <a>github</a>
+  <span class="sep"></span>
+  <span class="cta">follow @tfispython</span>
+</div>
+
+<main>
+  <div class="eyebrow">chapter 07 · mutation and state</div>
+  <h1 class="h1">ai writes this.<br><em>it&rsquo;s wrong.</em></h1>
+  <p class="lede">a python school for the version of you that lives in cursor. 25 chapters · 624 interactive steps · runs in your browser.</p>
+</main>
+</body>
+</html>

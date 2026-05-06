@@ -1,0 +1,91 @@
+xp: 5
+estSeconds: 200
+concept: recursive-text-splitter
+prompt: |
+  Write `recursive_split(text, max_chars, separators)` that returns
+  a list of chunks, each ≤ `max_chars`. Logic:
+
+  - **Base case**: if `len(text) <= max_chars`, return `[text]`.
+  - Otherwise iterate `separators` in order. For the first separator
+    that exists in `text`:
+    - Split `text` on that separator into `parts`.
+    - Reassemble parts greedily: accumulate parts into `current`
+      (joined with the separator); when adding the next part would
+      exceed `max_chars`, push `current` into `chunks` and start a
+      new accumulator.
+    - For any chunk still bigger than `max_chars`, recurse with
+      `separators` advanced past the current one.
+    - Return the result.
+  - If no separator fits, fall through and hard-cut every
+    `max_chars` characters.
+
+  The separators are `["\n\n", ". ", " ", ""]`. Use them in order.
+
+  Two cases run for you. Expected output:
+  ```
+  paragraph case: 3 chunks
+  long-sentence case: 3 chunks
+  ```
+starter: |
+  # define recursive_split(text, max_chars, separators) below
+
+  doc1 = "Para one short.\n\nPara two also short.\n\nPara three is here."
+  result1 = recursive_split(doc1, 25, ["\n\n", ". ", " ", ""])
+  print(f"paragraph case: {len(result1)} chunks")
+
+  doc2 = "Sentence one. Sentence two is much longer than the others."
+  result2 = recursive_split(doc2, 30, ["\n\n", ". ", " ", ""])
+  print(f"long-sentence case: {len(result2)} chunks")
+grader:
+  kind: stdout-equality
+  expected: |
+    paragraph case: 3 chunks
+    long-sentence case: 3 chunks
+  normalize: collapse-trailing-newline
+solution: |
+  def recursive_split(text, max_chars, separators):
+      if len(text) <= max_chars:
+          return [text]
+
+      for i, sep in enumerate(separators):
+          if sep == "":
+              return [text[j:j + max_chars] for j in range(0, len(text), max_chars)]
+
+          if sep in text:
+              parts = text.split(sep)
+              chunks = []
+              current = ""
+              for part in parts:
+                  candidate = current + (sep if current else "") + part
+                  if len(candidate) <= max_chars:
+                      current = candidate
+                  else:
+                      if current:
+                          chunks.append(current)
+                      current = part
+              if current:
+                  chunks.append(current)
+
+              result = []
+              next_seps = separators[i + 1:]
+              for chunk in chunks:
+                  if len(chunk) > max_chars:
+                      result.extend(recursive_split(chunk, max_chars, next_seps))
+                  else:
+                      result.append(chunk)
+              return result
+
+      return [text]
+
+  doc1 = "Para one short.\n\nPara two also short.\n\nPara three is here."
+  result1 = recursive_split(doc1, 25, ["\n\n", ". ", " ", ""])
+  print(f"paragraph case: {len(result1)} chunks")
+
+  doc2 = "Sentence one. Sentence two is much longer than the others."
+  result2 = recursive_split(doc2, 30, ["\n\n", ". ", " ", ""])
+  print(f"long-sentence case: {len(result2)} chunks")
+hint:
+  - level: 1
+    body: 'Two halves: (1) base case + separator-loop with greedy accumulation, (2) recursion on chunks that are still too big with the next separator. Use `enumerate(separators)` to track which one you''re on.'
+  - level: 2
+    body: 'Key trick: greedy accumulation. Start with `current = ""`. For each part, build `candidate = current + sep + part`. If candidate fits, current = candidate. If not, push current to chunks and start a new current = part.'

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>B1 — current curriculum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink-950:#14140f; --ink-900:#1a1a14; --ink-800:#25241f; --ink-700:#36352f;
+    --ink-500:#6b6a62; --ink-400:#9c9c93; --ink-300:#d4d3cd; --ink-100:#fafaf7;
+    --green-400:#34d399; --green-500:#2aa06a; --green-700:#186b46;
+    --display:'Fraunces',serif; --mono:'JetBrains Mono',monospace;
+  }
+  *,*::before,*::after { box-sizing:border-box; }
+  html, body { margin:0; padding:0; background:var(--ink-950); color:var(--ink-100); font-family:var(--display); }
+  body { width:1920px; height:1080px; overflow:hidden; }
+  .label-tag {
+    position:fixed; top:16px; right:16px; z-index:50;
+    font-family:var(--mono); font-size:11px; font-weight:800; letter-spacing:0.4em; text-transform:uppercase;
+    background:var(--ink-800); color:var(--ink-300); padding:6px 14px;
+  }
+  .topbar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 56px; border-bottom:1px solid var(--ink-800);
+    font-family:var(--mono); font-size:11px; color:var(--ink-500);
+  }
+  .wm { font-weight:800; font-size:13px; color:var(--ink-100); letter-spacing:-0.015em; }
+  .wm .caret { color:var(--green-500); margin-right:6px; }
+  main { padding:48px 80px; }
+  .eyebrow {
+    font-family:var(--mono); color:var(--green-500); font-weight:800;
+    font-size:13px; letter-spacing:0.4em; text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .h1 {
+    font-family:var(--display); font-weight:900;
+    font-variation-settings:'opsz' 144;
+    font-size:84px; line-height:0.95; letter-spacing:-0.04em;
+    margin:0 0 48px;
+  }
+  .phase-band {
+    border-left:3px solid var(--green-700); padding-left:24px; margin-bottom:24px; display:flex; align-items:baseline; gap:24px;
+  }
+  .phase-band .label {
+    font-family:var(--mono); font-size:13px; color:var(--green-500); font-weight:800;
+    letter-spacing:0.4em; text-transform:uppercase;
+  }
+  .phase-band .name { font-family:var(--display); font-size:32px; font-weight:800; letter-spacing:-0.02em; color:var(--ink-100); }
+  .phase-band .meta { font-family:var(--mono); font-size:13px; color:var(--ink-500); margin-left:auto; }
+
+  .ch-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:40px; }
+  .ch-card {
+    border:1px solid var(--ink-800); padding:18px 22px;
+    background:var(--ink-900);
+  }
+  .ch-card .num { font-family:var(--mono); font-size:11px; color:var(--green-500); letter-spacing:0.3em; text-transform:uppercase; font-weight:800; }
+  .ch-card .name { font-family:var(--display); font-size:22px; font-weight:800; letter-spacing:-0.015em; margin-top:6px; line-height:1.15; }
+  .ch-card .meta { font-family:var(--mono); font-size:11px; color:var(--ink-500); letter-spacing:0.04em; margin-top:8px; }
+  .ch-card .pbar { height:1px; background:var(--ink-800); margin-top:10px; }
+</style>
+</head>
+<body>
+<span class="label-tag">current · live now</span>
+
+<div class="topbar">
+  <span class="wm"><span class="caret">❯</span>promptdojo</span>
+  <span>course / about / changelog / github</span>
+</div>
+
+<main>
+  <div class="eyebrow">the curriculum</div>
+  <h1 class="h1">25 chapters. 5 phases.</h1>
+
+  <div class="phase-band">
+    <span class="label">phase 01</span>
+    <span class="name">foundations</span>
+    <span class="meta">ch 01–07 · ~1h 4m</span>
+  </div>
+  <div class="ch-grid">
+    <div class="ch-card"><div class="num">ch 01</div><div class="name">variables</div><div class="meta">26 steps · ~22m · 0/26</div><div class="pbar"></div></div>
+    <div class="ch-card"><div class="num">ch 02</div><div class="name">functions</div><div class="meta">27 steps · ~23m · 0/27</div><div class="pbar"></div></div>
+    <div class="ch-card"><div class="num">ch 03</div><div class="name">lists and dicts</div><div class="meta">27 steps · ~23m · 0/27</div><div class="pbar"></div></div>
+    <div class="ch-card"><div class="num">ch 04</div><div class="name">loops</div><div class="meta">28 steps · ~24m · 0/28</div><div class="pbar"></div></div>
+    <div class="ch-card"><div class="num">ch 05</div><div class="name">conditionals</div><div class="meta">17 steps · ~14m · 0/17</div><div class="pbar"></div></div>
+    <div class="ch-card"><div class="num">ch 06</div><div class="name">tracebacks</div><div class="meta">26 steps · ~22m · 0/26</div><div class="pbar"></div></div>
+    <div class="ch-card"><div class="num">ch 07</div><div class="name">mutation and state</div><div class="meta">17 steps · ~14m · 0/17</div><div class="pbar"></div></div>
+  </div>
+
+  <div class="phase-band">
+    <span class="label">phase 02</span>
+    <span class="name">real python</span>
+    <span class="meta">ch 08–12 · ~1h 56m</span>
+  </div>
+  <div class="ch-grid">
+    <div class="ch-card"><div class="num">ch 08</div><div class="name">modules and imports</div><div class="meta">17 steps · ~14m · 0/17</div><div class="pbar"></div></div>
+    <div class="ch-card"><div class="num">ch 09</div><div class="name">error handling</div><div class="meta">27 steps · ~23m · 0/27</div><div class="pbar"></div></div>
+    <div class="ch-card"><div class="num">ch 10</div><div class="name">files and i/o</div><div class="meta">27 steps · ~23m · 0/27</div><div class="pbar"></div></div>
+    <div class="ch-card"><div class="num">ch 11</div><div class="name">classes basics</div><div class="meta">27 steps · ~23m · 0/27</div><div class="pbar"></div></div>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,32 @@
+xp: 3
+estSeconds: 65
+concept: jsonrpc-tools-call-request
+prompt: |
+  You're constructing a JSON-RPC `tools/call` request. The method
+  string is fixed (`"tools/call"`), the params carry `name` and
+  `arguments`. Fill in the params dict so the server runs the
+  `search` tool with `{"q": "ramen"}`.
+
+  Expected output:
+  ```
+  {'jsonrpc': '2.0', 'id': 1, 'method': 'tools/call', 'params': {'name': 'search', 'arguments': {'q': 'ramen'}}}
+  ```
+code: |
+  request = {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "tools/call",
+      "params": ___,
+  }
+  print(request)
+blanks:
+  - id: params_dict
+    accept:
+      - '{"name": "search", "arguments": {"q": "ramen"}}'
+      - "{'name': 'search', 'arguments': {'q': 'ramen'}}"
+    caseSensitive: false
+hint:
+  - level: 1
+    body: 'Two keys: `name` (the tool to call as a string) and `arguments` (the dict of inputs). Build a dict literal.'
+  - level: 2
+    body: '`{"name": "search", "arguments": {"q": "ramen"}}` — JSON-RPC params with the tool name and its argument dict.'

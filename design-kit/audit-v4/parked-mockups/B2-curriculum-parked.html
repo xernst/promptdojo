@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>B2 — parked curriculum (accordion)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink-950:#14140f; --ink-900:#1a1a14; --ink-800:#25241f; --ink-700:#36352f;
+    --ink-500:#6b6a62; --ink-400:#9c9c93; --ink-300:#d4d3cd; --ink-100:#fafaf7;
+    --green-400:#34d399; --green-500:#2aa06a; --green-700:#186b46;
+    --display:'Fraunces',serif; --mono:'JetBrains Mono',monospace;
+  }
+  *,*::before,*::after { box-sizing:border-box; }
+  html, body { margin:0; padding:0; background:var(--ink-950); color:var(--ink-100); font-family:var(--display); }
+  body { width:1920px; height:1080px; overflow:hidden; }
+  .label-tag {
+    position:fixed; top:16px; right:16px; z-index:50;
+    font-family:var(--mono); font-size:11px; font-weight:800; letter-spacing:0.4em; text-transform:uppercase;
+    background:var(--green-500); color:var(--ink-950); padding:6px 14px;
+  }
+  .topbar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 56px; border-bottom:1px solid var(--ink-800);
+    font-family:var(--mono); font-size:11px; color:var(--ink-500);
+  }
+  .wm { font-weight:800; font-size:13px; color:var(--ink-100); letter-spacing:-0.015em; }
+  .wm .caret { color:var(--green-500); margin-right:6px; }
+  main {
+    padding:48px 80px;
+    display:grid; grid-template-columns:520px 1fr; gap:96px;
+  }
+  .left .eyebrow {
+    font-family:var(--mono); color:var(--green-500); font-weight:800;
+    font-size:13px; letter-spacing:0.4em; text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .left .h1 {
+    font-family:var(--display); font-weight:900;
+    font-variation-settings:'opsz' 144;
+    font-size:104px; line-height:0.92; letter-spacing:-0.045em;
+    margin:0 0 28px;
+  }
+  .left .h1 em { font-style:italic; color:var(--green-500); }
+  .left .lede {
+    font-family:var(--display); font-size:18px; line-height:1.55;
+    color:var(--ink-300); margin:0 0 28px; max-width:42ch;
+  }
+  .left .stats {
+    display:flex; gap:32px; padding:24px 0;
+    border-top:1px solid var(--ink-800); border-bottom:1px solid var(--ink-800);
+  }
+  .left .stats .num {
+    font-family:var(--display); font-weight:900;
+    font-variation-settings:'opsz' 144;
+    font-size:48px; line-height:1; letter-spacing:-0.04em;
+    color:var(--ink-100);
+  }
+  .left .stats .lbl {
+    font-family:var(--mono); font-size:10px; letter-spacing:0.25em;
+    text-transform:uppercase; color:var(--ink-500); margin-top:6px;
+  }
+
+  .acc-wrap { padding-top:8px; }
+
+  .phase-section {
+    padding:24px 0 8px;
+    font-family:var(--mono); font-size:12px; color:var(--green-500);
+    letter-spacing:0.4em; text-transform:uppercase; font-weight:800;
+    display:flex; align-items:baseline; gap:18px;
+  }
+  .phase-section .name { color:var(--ink-300); letter-spacing:0.04em; text-transform:none; font-size:13px; }
+  .phase-section .meta { color:var(--ink-500); margin-left:auto; font-size:11px; letter-spacing:0.05em; text-transform:none; }
+
+  .acc-row {
+    border-top:1px solid var(--ink-800);
+    padding:16px 0;
+  }
+  .acc-row:last-of-type { border-bottom:1px solid var(--ink-800); }
+  .acc-row .head {
+    display:grid; grid-template-columns:48px 1fr 80px 100px 24px; gap:32px; align-items:baseline;
+  }
+  .acc-row .num { font-family:var(--mono); font-size:13px; color:var(--ink-500); letter-spacing:0.2em; }
+  .acc-row .name {
+    font-family:var(--display); font-weight:800; font-size:28px;
+    letter-spacing:-0.02em; line-height:1.15; color:var(--ink-100);
+  }
+  .acc-row .name em { font-style:normal; color:var(--green-500); }
+  .acc-row .time { font-family:var(--mono); font-size:13px; color:var(--ink-500); letter-spacing:0.04em; }
+  .acc-row .steps {
+    font-family:var(--mono); font-size:13px; color:var(--ink-400);
+    letter-spacing:0.04em; font-variant-numeric:tabular-nums;
+  }
+  .acc-row .chev { font-family:var(--mono); color:var(--ink-500); font-size:18px; }
+
+  .acc-row.expanded { background:linear-gradient(to right, rgba(42,160,106,0.04), transparent); }
+  .acc-row.expanded .chev { transform:rotate(90deg); display:inline-block; }
+  .acc-row.expanded .body {
+    margin:14px 0 8px 80px;
+    font-family:var(--display); font-size:16px; line-height:1.55;
+    color:var(--ink-300); max-width:64ch;
+  }
+  .acc-row.expanded .lessons {
+    margin:8px 0 0 80px;
+    font-family:var(--mono); font-size:12px; color:var(--ink-500);
+    letter-spacing:0.05em; line-height:2;
+  }
+  .acc-row.expanded .lessons .l { color:var(--ink-300); }
+  .acc-row.expanded .lessons .l::before { content:"─ "; color:var(--ink-700); }
+</style>
+</head>
+<body>
+<span class="label-tag">parked · proposed</span>
+
+<div class="topbar">
+  <span class="wm"><span class="caret">❯</span>promptdojo</span>
+  <span>course / about / changelog / github</span>
+</div>
+
+<main>
+  <div class="left">
+    <div class="eyebrow">the curriculum</div>
+    <h1 class="h1">25 <em>chapters.</em><br>5 <em>phases.</em></h1>
+    <p class="lede">click a chapter to see what&rsquo;s inside. every step runs in your browser. every line of code is real.</p>
+    <div class="stats">
+      <div><div class="num">624</div><div class="lbl">runnable steps</div></div>
+      <div><div class="num">~9h</div><div class="lbl">give or take</div></div>
+      <div><div class="num">$0</div><div class="lbl">forever</div></div>
+    </div>
+  </div>
+
+  <div class="acc-wrap">
+    <div class="phase-section">phase 01 <span class="name">foundations</span><span class="meta">7 chapters · 1h 4m</span></div>
+
+    <div class="acc-row">
+      <div class="head"><div class="num">01</div><div class="name">variables</div><div class="time">22m</div><div class="steps">26 steps</div><div class="chev">›</div></div>
+    </div>
+    <div class="acc-row expanded">
+      <div class="head"><div class="num">02</div><div class="name">functions</div><div class="time">23m</div><div class="steps">27 steps</div><div class="chev">›</div></div>
+      <div class="body">the python that sits between you and the model. parameters, return values, scope — the four shapes ai gets wrong most often.</div>
+      <div class="lessons">
+        <span class="l">l1 · the function header</span><br>
+        <span class="l">l2 · scope and the LEGB rule</span><br>
+        <span class="l">l3 · returning vs printing</span>
+      </div>
+    </div>
+    <div class="acc-row"><div class="head"><div class="num">03</div><div class="name">lists and dicts</div><div class="time">23m</div><div class="steps">27 steps</div><div class="chev">›</div></div></div>
+    <div class="acc-row"><div class="head"><div class="num">04</div><div class="name">loops</div><div class="time">24m</div><div class="steps">28 steps</div><div class="chev">›</div></div></div>
+    <div class="acc-row"><div class="head"><div class="num">05</div><div class="name">conditionals</div><div class="time">14m</div><div class="steps">17 steps</div><div class="chev">›</div></div></div>
+    <div class="acc-row"><div class="head"><div class="num">06</div><div class="name">tracebacks</div><div class="time">22m</div><div class="steps">26 steps</div><div class="chev">›</div></div></div>
+    <div class="acc-row"><div class="head"><div class="num">07</div><div class="name">mutation <em>and state</em></div><div class="time">14m</div><div class="steps">17 steps</div><div class="chev">›</div></div></div>
+
+    <div class="phase-section">phase 02 <span class="name">real python</span><span class="meta">5 chapters · 1h 56m</span></div>
+    <div class="acc-row"><div class="head"><div class="num">08</div><div class="name">modules and imports</div><div class="time">14m</div><div class="steps">17 steps</div><div class="chev">›</div></div></div>
+  </div>
+</main>
+</body>
+</html>

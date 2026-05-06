@@ -1,0 +1,33 @@
+xp: 3
+estSeconds: 75
+concept: validator-error-trace
+code: |
+  def validate(args, schema):
+      for field in schema.get("required", []):
+          if field not in args:
+              return {"ok": False, "error": f"missing required field: {field}"}
+      for field, expected_type in schema.get("types", {}).items():
+          if field in args and not isinstance(args[field], expected_type):
+              actual = type(args[field]).__name__
+              return {"ok": False, "error": f"{field} should be {expected_type.__name__}, got {actual}"}
+      return {"ok": True, "args": args}
+
+  search_schema = {"required": ["q"], "types": {"q": str}}
+
+  # the model invented a field name. classic.
+  bad_args = {"query": "ramen tokyo"}
+  result = validate(bad_args, search_schema)
+  print(result)
+prompt: |
+  Read the editor. The schema says `q` is required. The model passed
+  `{"query": "ramen tokyo"}` instead — wrong field name. What does
+  the validator return?
+grader:
+  kind: stdout-equality
+  expected: "{'ok': False, 'error': 'missing required field: q'}"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The first check loops over `required` fields. The required field `q` is not in the args dict (only `query` is). The function returns the dict with `ok=False` and the missing-field error.'
+  - level: 2
+    body: '`{"ok": False, "error": "missing required field: q"}` — Python dict repr uses single quotes by default.'

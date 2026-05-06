@@ -1,0 +1,116 @@
+xp: 8
+estSeconds: 220
+concept: instrumented-agent-eval-suite
+prompt: |
+  Final drill. Build the fully instrumented agent + eval suite.
+  Write `run_agent(question)` that:
+
+  - Loops up to 5 times calling `fake_create(question, turn_index)`
+    which returns a dict with `stop_reason`, `text`, `input_tokens`,
+    `output_tokens`.
+  - Builds a `trace` list — one fresh dict per turn, with keys
+    `turn` (1-based), `stop_reason`, `tokens` (input + output).
+  - On `end_turn`: returns `{"answer": <text>, "trace": <trace>}`.
+  - On cap: returns `{"answer": "capped", "trace": <trace>}`.
+
+  Then write `run_eval_suite(cases)` that:
+
+  - For each case `{"question", "expected", "max_turns"}`, runs the
+    agent.
+  - All-three-true: `expected` in `answer`, `len(trace) <= max_turns`,
+    `trace[-1]["stop_reason"] == "end_turn"`.
+  - Returns
+    `{"total", "passed", "failed", "pass_rate" (rounded 2)}`.
+
+  Two cases run for you. Expected output:
+  ```
+  total=2 passed=1 failed=1 pass_rate=0.5
+  ```
+starter: |
+  RESPONSES = {
+      "capital of France?": [
+          {"stop_reason": "end_turn", "text": "Paris is the capital.", "input_tokens": 30, "output_tokens": 5},
+      ],
+      "capital of Tibet?": [
+          {"stop_reason": "tool_use", "text": "",                       "input_tokens": 30, "output_tokens": 10},
+          {"stop_reason": "tool_use", "text": "",                       "input_tokens": 35, "output_tokens": 10},
+          {"stop_reason": "tool_use", "text": "",                       "input_tokens": 40, "output_tokens": 10},
+          {"stop_reason": "tool_use", "text": "",                       "input_tokens": 45, "output_tokens": 10},
+          {"stop_reason": "tool_use", "text": "",                       "input_tokens": 50, "output_tokens": 10},
+      ],
+  }
+
+  def fake_create(question, turn_index):
+      return RESPONSES[question][turn_index]
+
+  cases = [
+      {"question": "capital of France?", "expected": "Paris",  "max_turns": 3},
+      {"question": "capital of Tibet?",  "expected": "Lhasa",  "max_turns": 3},
+  ]
+
+  # define run_agent(question) below
+
+  # define run_eval_suite(cases) below
+
+  result = run_eval_suite(cases)
+  print(f"total={result['total']} passed={result['passed']} failed={result['failed']} pass_rate={result['pass_rate']}")
+grader:
+  kind: stdout-equality
+  expected: "total=2 passed=1 failed=1 pass_rate=0.5"
+  normalize: collapse-trailing-newline
+solution: |
+  RESPONSES = {
+      "capital of France?": [
+          {"stop_reason": "end_turn", "text": "Paris is the capital.", "input_tokens": 30, "output_tokens": 5},
+      ],
+      "capital of Tibet?": [
+          {"stop_reason": "tool_use", "text": "", "input_tokens": 30, "output_tokens": 10},
+          {"stop_reason": "tool_use", "text": "", "input_tokens": 35, "output_tokens": 10},
+          {"stop_reason": "tool_use", "text": "", "input_tokens": 40, "output_tokens": 10},
+          {"stop_reason": "tool_use", "text": "", "input_tokens": 45, "output_tokens": 10},
+          {"stop_reason": "tool_use", "text": "", "input_tokens": 50, "output_tokens": 10},
+      ],
+  }
+
+  def fake_create(question, turn_index):
+      return RESPONSES[question][turn_index]
+
+  cases = [
+      {"question": "capital of France?", "expected": "Paris",  "max_turns": 3},
+      {"question": "capital of Tibet?",  "expected": "Lhasa",  "max_turns": 3},
+  ]
+
+  def run_agent(question):
+      trace = []
+      for i in range(5):
+          response = fake_create(question, i)
+          record = {
+              "turn": i + 1,
+              "stop_reason": response["stop_reason"],
+              "tokens": response["input_tokens"] + response["output_tokens"],
+          }
+          trace.append(record)
+          if response["stop_reason"] == "end_turn":
+              return {"answer": response["text"], "trace": trace}
+      return {"answer": "capped", "trace": trace}
+
+  def run_eval_suite(cases):
+      passed_count = 0
+      for c in cases:
+          result = run_agent(c["question"])
+          ok_answer = c["expected"] in result["answer"]
+          ok_turns  = len(result["trace"]) <= c["max_turns"]
+          ok_exit   = result["trace"][-1]["stop_reason"] == "end_turn"
+          if ok_answer and ok_turns and ok_exit:
+              passed_count += 1
+      total = len(cases)
+      return {
+          "total": total,
+          "passed": passed_count,
+          "failed": total - passed_count,
+          "pass_rate": round(passed_count / total, 2) if total else 0.0,
+      }
+
+  result = run_eval_suite(cases)
+  print(f"total={result['total']} passed={result['passed']} failed={result['failed']} pass_rate={result['pass_rate']}")
+passThreshold: 0.66

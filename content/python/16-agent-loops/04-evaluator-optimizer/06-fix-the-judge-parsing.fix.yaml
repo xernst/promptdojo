@@ -1,0 +1,42 @@
+xp: 4
+estSeconds: 100
+concept: free-text-parsing-bug
+prompt: |
+  The judge is now returning free-text verdicts (the model wasn't
+  forced into structured output). The current loop checks
+  `if "good" in verdict.lower()` — and the judge said *"this is **not**
+  good, please fix it"*. The substring match sees `"good"`, exits the
+  loop happily, and ships the broken draft.
+
+  Fix the parsing so it requires the verdict to START with the
+  literal token `"PASS"` (case-sensitive). Anything else is a reject.
+
+  Expected output:
+  ```
+  rejected, will revise
+  ```
+brokenCode: |
+  verdict = "REJECT: this is not good, please fix the second sentence"
+
+  # bug: substring match on "good" matches "not good" too.
+  if "good" in verdict.lower():
+      print("accepted, shipping")
+  else:
+      print("rejected, will revise")
+bugLines:
+  - 4
+grader:
+  kind: stdout-equality
+  expected: "rejected, will revise"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Use `verdict.startswith("PASS")` instead of `"good" in verdict.lower()`. Production code uses structured output for exactly this reason — substring matches lie.'
+  - level: 2
+    body: |
+      Change line 4 to:
+
+      ```python
+      if verdict.startswith("PASS"):
+      ```
+revealAfter: 4

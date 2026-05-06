@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 55
+concept: few-shot-fit-decision
+code: |
+  scenarios = {
+      "A": "Classify ticket as billing/technical/general — your labels, not generic ones.",
+      "B": "Translate a sentence from English to Spanish.",
+      "C": "Compute the sum of a list of numbers.",
+      "D": "Write a friendly customer reply in our brand voice.",
+  }
+  for k, v in scenarios.items():
+      print(f"{k}: {v}")
+prompt: |
+  Few-shot earns its keep when examples teach something *instructions
+  can't say cleanly* — your specific labels, your tone, your output
+  shape. Which TWO scenarios benefit most from few-shot examples?
+options:
+  - id: a_and_d
+    label: "A (custom labels) and D (brand voice)"
+  - id: b_and_c
+    label: "B (translation) and C (sum)"
+    explain: "Translation is the model's strong native task — examples don't add much. Sum is arithmetic — examples can't fix wrong math."
+  - id: a_and_c
+    label: "A and C"
+    explain: "Sum doesn't benefit from examples. The model knows arithmetic; examples won't fix incorrect numerical reasoning."
+  - id: b_and_d
+    label: "B and D"
+    explain: "Translation doesn't need examples. Brand voice does — but B doesn't earn the slot."
+answerIds:
+  - a_and_d
+hint:
+  - level: 1
+    body: 'Few-shot is for "show, don''t tell" cases — your labels (not generic ones), your tone, your format. It''s NOT a fix for tasks the model already does well (translation) or tasks where examples can''t change correctness (math).'

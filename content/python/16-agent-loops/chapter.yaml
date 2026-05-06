@@ -5,3 +5,5 @@ blurb: "An agent isn't a magic. It's a while loop. Learn the actual cycle Claude
 lessons:
   - 01-the-loop
   - 02-multi-step-tools
+  - 03-routing
+  - 04-evaluator-optimizer

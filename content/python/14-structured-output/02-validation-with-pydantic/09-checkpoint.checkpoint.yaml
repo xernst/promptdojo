@@ -1,0 +1,77 @@
+xp: 8
+estSeconds: 220
+concept: full-pydantic-validation-suite
+prompt: |
+  Final drill. Build a validation suite over multiple model outputs.
+  Write `run_validation_suite(cases, schema_class)` that:
+
+  - For each `raw` dict in `cases`, calls
+    `schema_class.model_validate(raw)`.
+  - Returns a dict
+    `{"total": <count>, "passed": <count>, "failed": <count>, "first_failure_fields": <list of (field, type) tuples from the FIRST failing case, or empty list if no failures>}`.
+  - Catch `ValidationError` ONLY (not `Exception`).
+
+  Three cases run. Expected output:
+  ```
+  total=3 passed=2 failed=1 first_failure_fields=[('total', 'float_parsing'), ('paid', 'bool_parsing')]
+  ```
+starter: |
+  from pydantic import BaseModel, ValidationError
+
+  class Invoice(BaseModel):
+      number: str
+      total: float
+      paid: bool
+
+  cases = [
+      {"number": "INV-1", "total": 199.99, "paid": False},  # valid
+      {"number": "INV-2", "total": "abc", "paid": "maybe"}, # two bad fields
+      {"number": "INV-3", "total": 49.0, "paid": True},     # valid
+  ]
+
+  # define run_validation_suite(cases, schema_class) below
+
+  result = run_validation_suite(cases, Invoice)
+  print(f"total={result['total']} passed={result['passed']} failed={result['failed']} first_failure_fields={result['first_failure_fields']}")
+grader:
+  kind: stdout-equality
+  expected: "total=3 passed=2 failed=1 first_failure_fields=[('total', 'float_parsing'), ('paid', 'bool_parsing')]"
+  normalize: collapse-trailing-newline
+solution: |
+  from pydantic import BaseModel, ValidationError
+
+  class Invoice(BaseModel):
+      number: str
+      total: float
+      paid: bool
+
+  cases = [
+      {"number": "INV-1", "total": 199.99, "paid": False},
+      {"number": "INV-2", "total": "abc", "paid": "maybe"},
+      {"number": "INV-3", "total": 49.0, "paid": True},
+  ]
+
+  def run_validation_suite(cases, schema_class):
+      passed_count = 0
+      first_failure_fields = []
+      for raw in cases:
+          try:
+              schema_class.model_validate(raw)
+              passed_count += 1
+          except ValidationError as e:
+              if not first_failure_fields:
+                  first_failure_fields = [
+                      (err["loc"][0] if err["loc"] else "(root)", err["type"])
+                      for err in e.errors()
+                  ]
+      total = len(cases)
+      return {
+          "total": total,
+          "passed": passed_count,
+          "failed": total - passed_count,
+          "first_failure_fields": first_failure_fields,
+      }
+
+  result = run_validation_suite(cases, Invoice)
+  print(f"total={result['total']} passed={result['passed']} failed={result['failed']} first_failure_fields={result['first_failure_fields']}")
+passThreshold: 0.66

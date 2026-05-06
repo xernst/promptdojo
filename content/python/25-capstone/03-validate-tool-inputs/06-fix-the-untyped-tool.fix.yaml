@@ -1,0 +1,57 @@
+xp: 4
+estSeconds: 95
+concept: validate-before-tool-runs
+prompt: |
+  The dispatcher runs the tool BEFORE validating the args. The model
+  passed `{"q": 42}` instead of `{"q": "ramen"}` (number instead of
+  string). The tool's f-string still works, but downstream the
+  search API rejects it with a confusing 400 error.
+
+  Fix the dispatcher to validate FIRST, then only run the tool on
+  valid args. On failure return the error message; never let the
+  tool see bad input.
+
+  Expected output:
+  ```
+  ERROR: q should be str, got int
+  ```
+brokenCode: |
+  def validate(args, schema):
+      for field, expected in schema.get("types", {}).items():
+          if field in args and not isinstance(args[field], expected):
+              actual = type(args[field]).__name__
+              return {"ok": False, "error": f"{field} should be {expected.__name__}, got {actual}"}
+      return {"ok": True, "args": args}
+
+  TOOLS = {"search": lambda q: f"results for {q}"}
+  SCHEMAS = {"search": {"types": {"q": str}}}
+
+  def dispatch(tool_name, args):
+      # bug: tool runs before validation. bad args reach the tool.
+      result = TOOLS[tool_name](**args)
+      verdict = validate(args, SCHEMAS[tool_name])
+      if not verdict["ok"]:
+          return f"ERROR: {verdict['error']}"
+      return result
+
+  print(dispatch("search", {"q": 42}))
+bugLines:
+  - 14
+grader:
+  kind: stdout-equality
+  expected: "ERROR: q should be str, got int"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Move the `validate(...)` call BEFORE the tool runs. If the verdict is bad, return the error and never call the tool.'
+  - level: 2
+    body: |
+      Reorder the body of `dispatch` so validation comes first:
+
+      ```python
+      verdict = validate(args, SCHEMAS[tool_name])
+      if not verdict["ok"]:
+          return f"ERROR: {verdict['error']}"
+      return TOOLS[tool_name](**args)
+      ```
+revealAfter: 5

@@ -1,0 +1,42 @@
+xp: 4
+estSeconds: 95
+concept: split-on-sentence-not-char
+prompt: |
+  The naive splitter is cutting mid-sentence. Two sentences fit in
+  one budget but the cut lands in the middle of the second. The user
+  later asks "what does the second sentence say?" — retrieval gets
+  half of it.
+
+  Fix the split to break on `". "` (sentence boundary) instead of a
+  hard character cut. The two resulting chunks should each contain
+  exactly one complete sentence.
+
+  Expected output:
+  ```
+  ['Acme was founded in 1958.', 'The company makes running shoes.']
+  ```
+brokenCode: |
+  text = "Acme was founded in 1958. The company makes running shoes."
+
+  # bug: hard character cut at position 30 — lands mid-sentence.
+  cut_at = 30
+  chunks = [text[:cut_at].strip(), text[cut_at:].strip()]
+
+  print(chunks)
+bugLines:
+  - 4
+  - 5
+grader:
+  kind: stdout-equality
+  expected: "['Acme was founded in 1958.', 'The company makes running shoes.']"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Replace the hard cut with `text.split(". ")` — but that drops the period from each piece. Re-attach the period to all parts except the last with a list comprehension.'
+  - level: 2
+    body: |
+      ```python
+      parts = text.split(". ")
+      chunks = [p + "." for p in parts[:-1]] + [parts[-1]]
+      ```
+revealAfter: 5

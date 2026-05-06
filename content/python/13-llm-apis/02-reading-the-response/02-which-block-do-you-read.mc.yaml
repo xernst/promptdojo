@@ -1,0 +1,34 @@
+xp: 2
+estSeconds: 55
+concept: block-type-discrimination
+code: |
+  # an assistant turn the model emitted. four blocks of different types.
+  content = [
+      {"type": "thinking", "thinking": "Let me consider..."},
+      {"type": "text",     "text":     "Sure, I'll check."},
+      {"type": "tool_use", "id": "t1", "name": "search", "input": {"q": "ramen"}},
+      {"type": "text",     "text":     "Looking it up now."},
+  ]
+  for block in content:
+      print(f"type={block['type']}")
+prompt: |
+  The user asked "find me ramen news." The model returned four blocks
+  in `content`. Your code wants to surface the AI's natural-language
+  message back to the user. Which blocks should you concatenate?
+options:
+  - id: text_only
+    label: "Only the `text` blocks (block 2 and block 4)"
+  - id: text_plus_thinking
+    label: "Both `text` blocks AND the `thinking` block"
+    explain: "`thinking` is the model's internal reasoning, not user-facing. Showing it to the user breaks the UX (and on some models, leaks safety reasoning)."
+  - id: first_block_only
+    label: "Whatever's in `content[0]`"
+    explain: "First block is `thinking` here, not text. Hardcoding `[0]` only works when the model returns exactly one text block — which is not always."
+  - id: all_blocks
+    label: "All blocks, joined"
+    explain: "Tool_use blocks aren't natural language — they're structured tool calls. Concatenating them as text produces garbage strings."
+answerIds:
+  - text_only
+hint:
+  - level: 1
+    body: 'Filter by `block["type"] == "text"`. Skip `thinking` (internal), `tool_use` (structured calls), and any other type that''s not for the user.'

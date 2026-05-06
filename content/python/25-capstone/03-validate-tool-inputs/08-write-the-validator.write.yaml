@@ -1,0 +1,86 @@
+xp: 5
+estSeconds: 200
+concept: dispatch-with-validation
+prompt: |
+  Write `dispatch_with_validation(tool_name, args)` that:
+
+  - Looks up `SCHEMAS[tool_name]`. If missing, return
+    `"UNKNOWN_TOOL: <name>"` (don't crash).
+  - Runs `validate(args, schema)`. If invalid, return
+    `"VALIDATION_ERROR: <error message>"`.
+  - On valid: looks up `TOOLS[tool_name]`, calls it with
+    `**verdict["args"]`, returns the result.
+
+  Three cases run for you. Expected output:
+  ```
+  results for ramen
+  VALIDATION_ERROR: missing required field: q
+  UNKNOWN_TOOL: frobnicate
+  ```
+starter: |
+  def validate(args, schema):
+      for field in schema.get("required", []):
+          if field not in args:
+              return {"ok": False, "error": f"missing required field: {field}"}
+      for field, expected_type in schema.get("types", {}).items():
+          if field in args and not isinstance(args[field], expected_type):
+              actual = type(args[field]).__name__
+              return {"ok": False, "error": f"{field} should be {expected_type.__name__}, got {actual}"}
+      return {"ok": True, "args": args}
+
+  TOOLS = {"search": lambda q: f"results for {q}"}
+  SCHEMAS = {"search": {"required": ["q"], "types": {"q": str}}}
+
+  # define dispatch_with_validation(tool_name, args) below
+
+  print(dispatch_with_validation("search", {"q": "ramen"}))
+  print(dispatch_with_validation("search", {"query": "ramen"}))
+  print(dispatch_with_validation("frobnicate", {"x": 1}))
+grader:
+  kind: stdout-equality
+  expected: |
+    results for ramen
+    VALIDATION_ERROR: missing required field: q
+    UNKNOWN_TOOL: frobnicate
+  normalize: collapse-trailing-newline
+solution: |
+  def validate(args, schema):
+      for field in schema.get("required", []):
+          if field not in args:
+              return {"ok": False, "error": f"missing required field: {field}"}
+      for field, expected_type in schema.get("types", {}).items():
+          if field in args and not isinstance(args[field], expected_type):
+              actual = type(args[field]).__name__
+              return {"ok": False, "error": f"{field} should be {expected_type.__name__}, got {actual}"}
+      return {"ok": True, "args": args}
+
+  TOOLS = {"search": lambda q: f"results for {q}"}
+  SCHEMAS = {"search": {"required": ["q"], "types": {"q": str}}}
+
+  def dispatch_with_validation(tool_name, args):
+      schema = SCHEMAS.get(tool_name)
+      if schema is None:
+          return f"UNKNOWN_TOOL: {tool_name}"
+      verdict = validate(args, schema)
+      if not verdict["ok"]:
+          return f"VALIDATION_ERROR: {verdict['error']}"
+      return TOOLS[tool_name](**verdict["args"])
+
+  print(dispatch_with_validation("search", {"q": "ramen"}))
+  print(dispatch_with_validation("search", {"query": "ramen"}))
+  print(dispatch_with_validation("frobnicate", {"x": 1}))
+hint:
+  - level: 1
+    body: 'Three branches: tool not in SCHEMAS → UNKNOWN_TOOL; validate fails → VALIDATION_ERROR; both pass → dispatch and return result.'
+  - level: 2
+    body: |
+      ```python
+      def dispatch_with_validation(tool_name, args):
+          schema = SCHEMAS.get(tool_name)
+          if schema is None:
+              return f"UNKNOWN_TOOL: {tool_name}"
+          verdict = validate(args, schema)
+          if not verdict["ok"]:
+              return f"VALIDATION_ERROR: {verdict['error']}"
+          return TOOLS[tool_name](**verdict["args"])
+      ```

@@ -1,0 +1,87 @@
+xp: 8
+estSeconds: 220
+concept: prompt-decision-table
+prompt: |
+  Final drill. Build a decision helper that, given a task and a
+  model, returns a prompt strategy summary: which techniques apply
+  and which don't.
+
+  Write `prompt_strategy(task_kind, model)` that returns a dict:
+
+  - `model_class`: `"reasoning"` if model is in `REASONING_MODELS`,
+    else `"standard"`.
+  - `use_few_shot`: True if task_kind is in `{"classify", "format"}`,
+    False otherwise (few-shot helps with format/labels, less so with
+    pure reasoning).
+  - `use_cot`: True ONLY if `task_kind == "math"` AND model_class
+    is `"standard"`. Reasoning models skip explicit CoT.
+  - `notes`: a one-sentence string explaining why CoT is or isn't
+    applied.
+
+  Four cases run for you. Expected output:
+  ```
+  classify+haiku    → model_class=standard use_few_shot=True  use_cot=False notes=Few-shot for label format; CoT not needed for classification.
+  classify+o3       → model_class=reasoning use_few_shot=True  use_cot=False notes=Few-shot for label format; CoT skipped on reasoning model.
+  math+haiku        → model_class=standard use_few_shot=False use_cot=True  notes=CoT helps standard model on math.
+  math+o3           → model_class=reasoning use_few_shot=False use_cot=False notes=Reasoning model handles math internally; skip CoT.
+  ```
+starter: |
+  REASONING_MODELS = {"o3", "o1", "claude-sonnet-4-6-thinking"}
+
+  # define prompt_strategy(task_kind, model) below
+
+  cases = [
+      ("classify", "claude-haiku", "classify+haiku"),
+      ("classify", "o3",            "classify+o3   "),
+      ("math",     "claude-haiku", "math+haiku    "),
+      ("math",     "o3",            "math+o3       "),
+  ]
+  for task_kind, model, label in cases:
+      s = prompt_strategy(task_kind, model)
+      print(f"{label}→ model_class={s['model_class']} use_few_shot={s['use_few_shot']!s:5} use_cot={s['use_cot']!s:5} notes={s['notes']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    classify+haiku→ model_class=standard use_few_shot=True  use_cot=False notes=Few-shot for label format; CoT not needed for classification.
+    classify+o3   → model_class=reasoning use_few_shot=True  use_cot=False notes=Few-shot for label format; CoT skipped on reasoning model.
+    math+haiku    → model_class=standard use_few_shot=False use_cot=True  notes=CoT helps standard model on math.
+    math+o3       → model_class=reasoning use_few_shot=False use_cot=False notes=Reasoning model handles math internally; skip CoT.
+  normalize: collapse-trailing-newline
+solution: |
+  REASONING_MODELS = {"o3", "o1", "claude-sonnet-4-6-thinking"}
+
+  def prompt_strategy(task_kind, model):
+      model_class = "reasoning" if model in REASONING_MODELS else "standard"
+      use_few_shot = task_kind in {"classify", "format"}
+      use_cot = task_kind == "math" and model_class == "standard"
+
+      if task_kind in {"classify", "format"}:
+          if model_class == "reasoning":
+              notes = "Few-shot for label format; CoT skipped on reasoning model."
+          else:
+              notes = "Few-shot for label format; CoT not needed for classification."
+      elif task_kind == "math":
+          if model_class == "reasoning":
+              notes = "Reasoning model handles math internally; skip CoT."
+          else:
+              notes = "CoT helps standard model on math."
+      else:
+          notes = "Default: rely on standard four-part prompt scaffold."
+
+      return {
+          "model_class": model_class,
+          "use_few_shot": use_few_shot,
+          "use_cot": use_cot,
+          "notes": notes,
+      }
+
+  cases = [
+      ("classify", "claude-haiku", "classify+haiku"),
+      ("classify", "o3",            "classify+o3   "),
+      ("math",     "claude-haiku", "math+haiku    "),
+      ("math",     "o3",            "math+o3       "),
+  ]
+  for task_kind, model, label in cases:
+      s = prompt_strategy(task_kind, model)
+      print(f"{label}→ model_class={s['model_class']} use_few_shot={s['use_few_shot']!s:5} use_cot={s['use_cot']!s:5} notes={s['notes']}")
+passThreshold: 0.66

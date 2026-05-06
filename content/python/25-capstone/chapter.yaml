@@ -4,3 +4,7 @@ title: "Capstone — ship the system"
 blurb: "Wire it all together. Context, retrieval, the prompt, the call, the trace, the eval, the cost. Less a tutorial demo, more the smallest end-to-end LLM feature you could ship to a real user."
 lessons:
   - 01-build-a-cli-agent
+  - 02-wire-the-real-model
+  - 03-validate-tool-inputs
+  - 04-add-evals-and-traces
+  - 05-wire-an-mcp-tool

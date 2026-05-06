@@ -1,0 +1,114 @@
+xp: 8
+estSeconds: 200
+concept: routing-checkpoint
+prompt: |
+  Final drill. Build a routing layer that wraps the agent loop you
+  already know. Write `run_router(question)` that:
+
+  - Calls `fake_classifier(question)` and normalizes the output
+    (`.strip().lower()`).
+  - Looks up the normalized category in `SPECIALISTS`. If missing,
+    fall back to `"general"`.
+  - Calls the specialist function with `question`. Each specialist
+    returns a dict shaped like `{"answer": "...", "tools_used": N}`.
+  - Returns a single dict:
+    `{"category": <normalized category used>, "answer": <specialist's answer>, "tools_used": <specialist's count>}`.
+
+  Note: the *category used* is what you actually dispatched to —
+  that's `"general"` when the classifier produced something unknown,
+  not the raw classifier string.
+
+  The script runs four cases. Expected output:
+  ```
+  category=billing tools=1 answer=refunded
+  category=technical tools=2 answer=restarted
+  category=general tools=0 answer=hours: 9-5
+  category=general tools=0 answer=fallback answer
+  ```
+starter: |
+  def billing_specialist(q):
+      return {"answer": "refunded", "tools_used": 1}
+
+  def technical_specialist(q):
+      return {"answer": "restarted", "tools_used": 2}
+
+  def general_specialist(q):
+      if "open" in q or "hour" in q:
+          return {"answer": "hours: 9-5", "tools_used": 0}
+      return {"answer": "fallback answer", "tools_used": 0}
+
+  SPECIALISTS = {
+      "billing":   billing_specialist,
+      "technical": technical_specialist,
+      "general":   general_specialist,
+  }
+
+  classifier_outputs = iter(["BILLING", " technical ", "general", "weird_unknown"])
+
+  def fake_classifier(question):
+      return next(classifier_outputs)
+
+  # define run_router(question) below
+
+  questions = [
+      "Refund my subscription",
+      "Site is throwing 500s",
+      "What hours are you open?",
+      "totally off topic",
+  ]
+  for q in questions:
+      r = run_router(q)
+      print(f"category={r['category']} tools={r['tools_used']} answer={r['answer']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    category=billing tools=1 answer=refunded
+    category=technical tools=2 answer=restarted
+    category=general tools=0 answer=hours: 9-5
+    category=general tools=0 answer=fallback answer
+  normalize: collapse-trailing-newline
+solution: |
+  def billing_specialist(q):
+      return {"answer": "refunded", "tools_used": 1}
+
+  def technical_specialist(q):
+      return {"answer": "restarted", "tools_used": 2}
+
+  def general_specialist(q):
+      if "open" in q or "hour" in q:
+          return {"answer": "hours: 9-5", "tools_used": 0}
+      return {"answer": "fallback answer", "tools_used": 0}
+
+  SPECIALISTS = {
+      "billing":   billing_specialist,
+      "technical": technical_specialist,
+      "general":   general_specialist,
+  }
+
+  classifier_outputs = iter(["BILLING", " technical ", "general", "weird_unknown"])
+
+  def fake_classifier(question):
+      return next(classifier_outputs)
+
+  def run_router(question):
+      raw = fake_classifier(question)
+      category = raw.strip().lower()
+      if category not in SPECIALISTS:
+          category = "general"
+      result = SPECIALISTS[category](question)
+      return {
+          "category": category,
+          "answer": result["answer"],
+          "tools_used": result["tools_used"],
+      }
+
+  questions = [
+      "Refund my subscription",
+      "Site is throwing 500s",
+      "What hours are you open?",
+      "totally off topic",
+  ]
+  for q in questions:
+      r = run_router(q)
+      print(f"category={r['category']} tools={r['tools_used']} answer={r['answer']}")
+passThreshold: 0.66

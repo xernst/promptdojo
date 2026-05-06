@@ -26,7 +26,268 @@
         }
       ],
       "xpTotal": 1
+    },
+    {
+      "slug": "prompt-caching-correctly",
+      "title": "Prompt caching correctly — the variable input goes LAST",
+      "estMinutes": 12,
+      "prerequisites": [
+        "orientation"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "production-tradeoffs/prompt-caching-correctly/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 120,
+          "concept": "prompt-caching-cost-economics",
+          "body": "# Caching only works if you put the variable input LAST\n\nPrompt caching is the single most-leveraged cost optimization for\nagent workloads, and the most-mis-implemented. The math is simple:\na 5-minute prompt cache reads at 0.1× the input price. If your\nagent's system prompt + tools + examples are 8000 tokens and the\nuser input is 200 tokens, every call after the first reads 8000\ncached tokens for the price of 800 fresh ones — **a ~10× cost\nreduction on the stable portion.**\n\nThat's the math. The bug is that many production agents *destroy\ntheir own cache on every call* by putting variable content at the\nstart of the prompt.\n\n## Why position matters\n\nThe cache is a *prefix* match. The model API hashes your messages\nin order. The cache hits on the longest common prefix between this\ncall and the previous one.\n\nSo if your prompt is:\n\n```\n[user question — varies] + [system context — stable]\n```\n\nthe prefix is `user question`, which varies, which means **no\nprefix is shared between calls**. Cache hit rate: 0. Cost: full\ninput price every call. The cache *exists* but never fires.\n\nThe fix is to invert:\n\n```\n[system + tools + examples — stable] + [user question — varies]\n```\n\nNow the prefix is your stable content. The cache fires on every\ncall after the first. Cost drops by ~10× on the stable portion.\n\nThis is the bug step 6 fixes. It's so common Anthropic's caching\ndocs lead with it: *\"Place static content (tool definitions, system\ninstructions, examples) at the beginning of your prompt.\"*\n\n## The four cache breakpoints\n\nAnthropic's caching API lets you mark up to **4 cache breakpoints**\nper request, using `cache_control: {\"type\": \"ephemeral\"}` on a\ncontent block. Common pattern:\n\n```python\n{\n    \"system\": [\n        {\"type\": \"text\", \"text\": LONG_SYSTEM_PROMPT,\n         \"cache_control\": {\"type\": \"ephemeral\"}},\n    ],\n    \"tools\": [...,\n              {\"type\": \"tool\", ..., \"cache_control\": {\"type\": \"ephemeral\"}}],\n    \"messages\": [\n        {\"role\": \"user\", \"content\": [\n            {\"type\": \"text\", \"text\": FEW_SHOT_EXAMPLES,\n             \"cache_control\": {\"type\": \"ephemeral\"}},\n            {\"type\": \"text\", \"text\": user_question},\n        ]},\n    ],\n}\n```\n\nThree breakpoints: end of system prompt, end of tools, end of\nfew-shot examples. Each marks \"everything up to here is stable;\ncache it.\" The variable user question lives *after* the last\nbreakpoint, so it doesn't bust the prefix.\n\n## The TTL gotcha (March 2026 change)\n\n**Anthropic dropped the default cache TTL from 1 hour to 5 minutes\nin March 2026.** If your code was written before that and assumes\nthe longer window, your cache hit rate quietly tanked. The fix is\nto pass the TTL explicitly:\n\n```python\n\"cache_control\": {\"type\": \"ephemeral\", \"ttl\": \"1h\"}\n```\n\nThe 1-hour cache costs 2× input rate to write (vs 1.25× for the\n5-minute one) but doesn't expire mid-conversation. For agents that\nloop for more than 5 minutes per session, the 1-hour TTL is\nstrictly cheaper.\n\nThis is the bug step 7 fixes — code that worked in February 2026\nand started silently overspending in March 2026.\n\n## What everyone calls it\n\n| Provider | Primitive |\n|---|---|\n| **Anthropic** | `cache_control: {\"type\": \"ephemeral\", \"ttl\": \"5m\"\\|\"1h\"}` — explicit per-block |\n| **OpenAI** | Automatic prompt caching (no opt-in) on inputs >1024 tokens; `previous_response_id` for server-side state in Responses API |\n| **Vercel AI SDK** | `providerOptions.anthropic.cacheControl` (passes through to Anthropic) |\n| **Google Gemini** | `cached_content` with explicit `ttl` parameter |\n\nSame primitive across providers; different ergonomics. Anthropic's\nis the most explicit; OpenAI's is the most automatic.\n\n## What you'll build\n\nA `cost_estimate(stable_tokens, variable_tokens, calls, cached)`\nthat computes cost for both cached and uncached agent runs. Then\nthe bug fix for variable-at-start (cache buster). Then the bug fix\nfor the missing explicit TTL.",
+          "cta": "Got it",
+          "code": "# the cache pricing math, deterministic.\n# Anthropic: 1.25× input price to WRITE the cache (5-min TTL),\n#            0.1×  input price to READ from the cache.\n\nINPUT_RATE      = 3.0   # mock: $3 per 1M tokens\nCACHE_WRITE_X   = 1.25  # 1.25× input rate\nCACHE_READ_X    = 0.1   # 0.1× input rate\n\ndef cost_uncached(tokens, calls):\n    return INPUT_RATE * tokens * calls / 1_000_000\n\ndef cost_cached(stable_tokens, variable_tokens, calls):\n    # first call writes the cache; subsequent calls read it.\n    write_cost  = INPUT_RATE * CACHE_WRITE_X * stable_tokens / 1_000_000\n    read_cost   = INPUT_RATE * CACHE_READ_X  * stable_tokens * (calls - 1) / 1_000_000\n    var_cost    = INPUT_RATE * variable_tokens * calls / 1_000_000\n    return write_cost + read_cost + var_cost\n\nSTABLE = 8000   # system prompt + tools + examples — same every call\nVAR    = 200    # the user's question — different every call\nCALLS  = 100\n\nprint(f\"uncached:   ${cost_uncached(STABLE + VAR, CALLS):.2f}\")\nprint(f\"cached:     ${cost_cached(STABLE, VAR, CALLS):.2f}\")\nprint(f\"saved:      ${cost_uncached(STABLE + VAR, CALLS) - cost_cached(STABLE, VAR, CALLS):.2f}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "production-tradeoffs/prompt-caching-correctly/s02-02-which-piece-caches",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Cache eligibility = \"is this byte-identical to last call within the TTL window?\" System prompts, tool definitions, examples — all stable across many calls. Only the user input varies.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 55,
+          "concept": "cache-eligible-content",
+          "prompt": "Caching works on STABLE prefixes — content that is identical\nacross calls. Which TWO pieces above are NOT cache-eligible\n(they vary per call, so they can't be shared)?\n",
+          "options": [
+            {
+              "id": "only_b",
+              "label": "B only — the user's question is the only thing that varies"
+            },
+            {
+              "id": "b_and_d",
+              "label": "B (user question) and D (few-shot — swapped weekly)",
+              "explain": "D changes weekly, but the cache TTL is 5 min or 1 hour. Within a single TTL window, D is constant — so it IS cacheable. Caching ≠ permanent."
+            },
+            {
+              "id": "a_and_c",
+              "label": "A (system prompt) and C (tools)",
+              "explain": "Stable content is exactly what you WANT to cache. Marking these as variable defeats the optimization entirely."
+            },
+            {
+              "id": "a_and_b",
+              "label": "A and B",
+              "explain": "A is stable — the canonical thing to cache. B is the only one that varies."
+            }
+          ],
+          "answerIds": [
+            "only_b"
+          ],
+          "shuffle": false,
+          "code": "pieces = {\n    \"A\": \"The system prompt — same on every call.\",\n    \"B\": \"The user's question — different every call.\",\n    \"C\": \"Tool definitions — same on every call.\",\n    \"D\": \"A few-shot examples block — same across the day, swapped weekly.\",\n}\nfor k, v in pieces.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "production-tradeoffs/prompt-caching-correctly/s03-03-the-cache-breakpoints",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "four-cache-breakpoints",
+          "body": "# Four breakpoints, variable last\n\nAnthropic's prompt caching API lets you place up to **4 cache\nbreakpoints** per request. Each breakpoint says \"everything up to\nthis point is stable; cache it as a prefix.\" The model API hashes\nthe prefix and reuses it on subsequent calls.\n\nThe canonical layout for an agent:\n\n| Breakpoint | What's before it | Why cache here |\n|---|---|---|\n| 1 | System prompt | Almost never changes. Highest hit rate. |\n| 2 | Tool definitions | Stable across deploys; ~500–2000 tokens. |\n| 3 | Few-shot examples | Stable for a session or a release. |\n| 4 | (often unused) | Optional — for multi-turn conversation history. |\n\nThen the variable content (user question) goes AFTER the last\nbreakpoint. The cache fires on the stable prefix; the variable\nsuffix is paid full-price every call.\n\n## Why 4 and not unlimited\n\nEach breakpoint costs API overhead. 4 is enough to cache the four\nbig stable layers in a typical agent (system, tools, examples,\nhistory). More than 4 buys you nothing because most prompts don't\nhave 5 distinct stable layers.\n\nA common waste: putting `cache_control` on every text block. The\nAPI silently uses only the *last 4*. The early ones are no-ops.\n\n## The TTL economics\n\nTwo TTL options, very different prices:\n\n| TTL | Write cost | Read cost | Use when |\n|---|---|---|---|\n| `5m` (default) | 1.25× input | 0.1× input | Sub-5-minute sessions; high call volume per session |\n| `1h` | 2× input | 0.1× input | Long-running agents; sessions over 5 min |\n\nThe 1-hour cache costs 60% more to *write* but doesn't expire\nmid-conversation. For an agent loop that takes 10 minutes per\nsession, the 5-minute cache fires once at the start, expires\nmid-session, and you pay full input price for the second half.\nUse 1h.\n\nThe default-default trap: prior to March 2026 the default TTL was\n1 hour. Anthropic changed it to 5 minutes. Code that omits `ttl`\nnow silently uses 5m and quietly overspends on long sessions.\n**Always set `ttl` explicitly.**\n\n## The cache-busting bug, illustrated\n\n```python\n# WRONG — variable input first, breaks cache prefix.\nmessages = [{\"role\": \"user\", \"content\": [\n    {\"type\": \"text\", \"text\": user_question},                # varies → no prefix shared\n    {\"type\": \"text\", \"text\": LONG_FEW_SHOT_EXAMPLES,\n     \"cache_control\": {\"type\": \"ephemeral\"}},               # too late; never cached\n]}]\n\n# RIGHT — stable first, variable last.\nmessages = [{\"role\": \"user\", \"content\": [\n    {\"type\": \"text\", \"text\": LONG_FEW_SHOT_EXAMPLES,\n     \"cache_control\": {\"type\": \"ephemeral\"}},               # stable; cached as prefix\n    {\"type\": \"text\", \"text\": user_question},                # varies; full price (correctly)\n]}]\n```\n\nThis is the bug. Once you see it, you spot it immediately. Before\nyou've seen it, you'll ship it.\n\n## What we're NOT covering\n\nOpenAI's automatic caching kicks in on prompts >1024 tokens with\nno opt-in. The trade-off: less control, no per-block breakpoints.\nFor most use cases it Just Works; for fine-grained control you'd\nuse Anthropic. Vercel's AI SDK passes through to whichever provider\nyou're targeting. Google Gemini has its own `cached_content` API\nwith similar shape. The principle (stable prefix, variable suffix)\nis universal.",
+          "cta": "Got it",
+          "code": "# the canonical Anthropic cache layout — 4 breakpoints, variable last.\n\nrequest = {\n    \"system\": [\n        {\"type\": \"text\", \"text\": \"You are a helpful assistant.\",\n         \"cache_control\": {\"type\": \"ephemeral\"}},          # breakpoint 1\n    ],\n    \"tools\": [\n        {\"name\": \"search\", \"description\": \"...\", \"input_schema\": {}},\n        {\"name\": \"read\",   \"description\": \"...\", \"input_schema\": {},\n         \"cache_control\": {\"type\": \"ephemeral\"}},          # breakpoint 2\n    ],\n    \"messages\": [\n        {\"role\": \"user\", \"content\": [\n            {\"type\": \"text\", \"text\": \"[FEW SHOT EXAMPLES]\",\n             \"cache_control\": {\"type\": \"ephemeral\"}},      # breakpoint 3\n            {\"type\": \"text\", \"text\": \"[USER QUESTION HERE]\"}, # variable, NO cache_control\n        ]},\n    ],\n}\n\n# count breakpoints\nbreakpoints = 0\nfor block in request[\"system\"]:\n    if \"cache_control\" in block: breakpoints += 1\nfor tool in request[\"tools\"]:\n    if \"cache_control\" in tool: breakpoints += 1\nfor msg in request[\"messages\"]:\n    for block in msg[\"content\"]:\n        if \"cache_control\" in block: breakpoints += 1\n\nprint(f\"breakpoints: {breakpoints} of 4 max\")\n",
+          "runnable": true
+        },
+        {
+          "type": "predict",
+          "id": "production-tradeoffs/prompt-caching-correctly/s04-04-predict-the-savings",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Uncached: 3 * (8000 + 200) * 100 / 1M = 2.46. Cached: write(0.03) + read(0.2376) + var(0.06) = 0.33.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Cached total: $0.33 vs uncached $2.46. Net savings: ~$2.13, an 87% cost reduction on this workload.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 80,
+          "concept": "cache-vs-uncached-cost",
+          "code": "# the math, simplified. ignore output tokens; focus on the input savings.\n\nINPUT_RATE      = 3.0   # $3 per 1M input tokens\nCACHE_WRITE_X   = 1.25\nCACHE_READ_X    = 0.1\n\nSTABLE = 8000\nVAR    = 200\nCALLS  = 100\n\ndef cost_uncached():\n    return INPUT_RATE * (STABLE + VAR) * CALLS / 1_000_000\n\ndef cost_cached():\n    write = INPUT_RATE * CACHE_WRITE_X * STABLE / 1_000_000\n    read  = INPUT_RATE * CACHE_READ_X  * STABLE * (CALLS - 1) / 1_000_000\n    var   = INPUT_RATE * VAR * CALLS / 1_000_000\n    return write + read + var\n\nprint(f\"uncached: ${cost_uncached():.2f}\")\nprint(f\"cached:   ${cost_cached():.2f}\")\n",
+          "prompt": "Read the editor. The same agent, 100 calls. Stable content per\ncall: 8000 tokens. Variable content: 200 tokens. Compute the\nuncached cost first. The cached cost should be much lower because\nreads are 0.1× input rate.\n\nWhat two lines does the script print (rounded to 2 decimals)?\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "uncached: $2.46\ncached:   $0.33\n",
+            "normalize": "collapse-trailing-newline"
+          }
+        },
+        {
+          "type": "fill",
+          "id": "production-tradeoffs/prompt-caching-correctly/s05-05-fill-the-cache-control",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Two keys: `type` (always `\"ephemeral\"`) and `ttl` (`\"5m\"` or `\"1h\"`). For long-running agents, `1h` is strictly cheaper despite the higher write cost.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`{\"type\": \"ephemeral\", \"ttl\": \"1h\"}` — type fixed, ttl explicit. Never rely on the default — it changed once, it can change again.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 65,
+          "concept": "cache-control-with-explicit-ttl",
+          "prompt": "You're marking the system prompt as cacheable. The Anthropic\ndefault TTL changed from 1 hour to 5 minutes in March 2026, so\nalways pass `ttl` explicitly. Fill in the `cache_control` value\nfor a 1-hour cache.\n\nExpected output:\n```\n{'type': 'ephemeral', 'ttl': '1h'}\n```\n",
+          "code": "system_block = {\n    \"type\": \"text\",\n    \"text\": \"You are a helpful assistant.\",\n    \"cache_control\": ___,\n}\nprint(system_block[\"cache_control\"])\n",
+          "blanks": [
+            {
+              "id": "cache_control",
+              "accept": [
+                "{\"type\": \"ephemeral\", \"ttl\": \"1h\"}",
+                "{'type': 'ephemeral', 'ttl': '1h'}"
+              ],
+              "caseSensitive": false,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "id": "production-tradeoffs/prompt-caching-correctly/s06-06-fix-the-cache-buster",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Swap the order: stable EXAMPLES (with cache_control) goes first; variable user_question goes last (no cache_control).",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Reorder the content list so EXAMPLES (cached) is at index 0 and user_question is at index 1:\n\n```python\n\"content\": [\n    {\"type\": \"text\", \"text\": EXAMPLES,\n     \"cache_control\": {\"type\": \"ephemeral\", \"ttl\": \"5m\"}},\n    {\"type\": \"text\", \"text\": user_question},\n],\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "variable-input-must-be-last",
+          "brokenCode": "user_question = \"What's the capital of France?\"\nEXAMPLES = \"Q: capital of Germany? A: Berlin\\nQ: capital of Japan? A: Tokyo\"\n\n# bug: variable input first; cache prefix never matches across calls.\nmessage = {\n    \"role\": \"user\",\n    \"content\": [\n        {\"type\": \"text\", \"text\": user_question},\n        {\"type\": \"text\", \"text\": EXAMPLES,\n         \"cache_control\": {\"type\": \"ephemeral\", \"ttl\": \"5m\"}},\n    ],\n}\n\nfor block in message[\"content\"]:\n    print(f\"first block: text? {block['type'] == 'text'}, cached? {'cache_control' in block}\")\n    break\nprint(f\"second block: text? {message['content'][1]['type'] == 'text'}, cached? {'cache_control' in message['content'][1]}\")\n",
+          "prompt": "This message has the user's question (variable) BEFORE the\nfew-shot examples (stable). The cache prefix tries to match\nstarting from the user's question — which differs every call —\nso the cache *never fires*. Hit rate: 0%.\n\nFix the message so the stable few-shot examples come FIRST (with\n`cache_control`), then the user's question comes last with no\ncache_control. Now the prefix is stable and cache fires on every\ncall after the first.\n\nExpected output:\n```\nfirst block: text? True, cached? True\nsecond block: text? True, cached? False\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "first block: text? True, cached? True\nsecond block: text? True, cached? False\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            7,
+            8,
+            9,
+            10
+          ],
+          "revealAfter": 5
+        },
+        {
+          "type": "fix",
+          "id": "production-tradeoffs/prompt-caching-correctly/s07-07-fix-the-ttl-default",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Add `\"ttl\": \"1h\"` to the cache_control dict.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Change line 5 to:\n\n```python\n\"cache_control\": {\"type\": \"ephemeral\", \"ttl\": \"1h\"},\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 95,
+          "concept": "explicit-ttl",
+          "brokenCode": "system_block = {\n    \"type\": \"text\",\n    \"text\": \"You are a helpful assistant.\",\n    # bug: no explicit ttl — defaults to 5m post-March 2026.\n    \"cache_control\": {\"type\": \"ephemeral\"},\n}\n\nttl = system_block[\"cache_control\"].get(\"ttl\", \"default-5m-since-2026-03\")\nprint(f\"ttl: {ttl}\")\n",
+          "prompt": "This code was written before March 2026, when Anthropic's default\ncache TTL was 1 hour. The dev shipped without `ttl`, relying on\nthe default. Anthropic dropped the default to 5 minutes — code\nusing the default now burns cache writes 12× more often than\nintended.\n\nFix the cache_control to pass `ttl: \"1h\"` explicitly so the cache\nTTL is locked at 1 hour regardless of provider default changes.\n\nExpected output:\n```\nttl: 1h\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "ttl: 1h",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            5
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "write",
+          "id": "production-tradeoffs/prompt-caching-correctly/s08-08-write-the-cost-estimator",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Two branches. Uncached: one formula. Cached: three sub-formulas (write, read, variable) summed. Round each return to 2 decimal places.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Cache write fires once at calls=1. Cache reads fire (calls - 1) times. Variable tokens are paid full-price every call regardless of cache state.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "cost-with-and-without-cache",
+          "prompt": "Write `estimate_cost(stable_tokens, variable_tokens, calls, cached, input_rate)` that:\n\n- Returns the total cost in dollars (a float, rounded to 2 places).\n- When `cached=False`: `input_rate * (stable_tokens + variable_tokens) * calls / 1_000_000`.\n- When `cached=True`:\n  - Cache write (one-time): `input_rate * 1.25 * stable_tokens / 1_000_000`\n  - Cache reads (calls - 1 of them): `input_rate * 0.1 * stable_tokens * (calls - 1) / 1_000_000`\n  - Variable tokens (full price every call): `input_rate * variable_tokens * calls / 1_000_000`\n  - Sum them.\n\nTwo cases run for you. Expected output:\n```\nuncached: 2.46\ncached: 0.33\nsavings: 2.13\n```\n",
+          "starter": "STABLE = 8000\nVAR    = 200\nCALLS  = 100\nRATE   = 3.0  # $3 per 1M input tokens\n\n# define estimate_cost(stable_tokens, variable_tokens, calls, cached, input_rate) below\n\nuncached = estimate_cost(STABLE, VAR, CALLS, cached=False, input_rate=RATE)\ncached   = estimate_cost(STABLE, VAR, CALLS, cached=True,  input_rate=RATE)\n\nprint(f\"uncached: {uncached}\")\nprint(f\"cached: {cached}\")\nprint(f\"savings: {round(uncached - cached, 2)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "uncached: 2.46\ncached: 0.33\nsavings: 2.13\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "STABLE = 8000\nVAR    = 200\nCALLS  = 100\nRATE   = 3.0\n\ndef estimate_cost(stable_tokens, variable_tokens, calls, cached, input_rate):\n    if not cached:\n        total = input_rate * (stable_tokens + variable_tokens) * calls / 1_000_000\n        return round(total, 2)\n    write_cost = input_rate * 1.25 * stable_tokens / 1_000_000\n    read_cost  = input_rate * 0.1  * stable_tokens * (calls - 1) / 1_000_000\n    var_cost   = input_rate * variable_tokens * calls / 1_000_000\n    return round(write_cost + read_cost + var_cost, 2)\n\nuncached = estimate_cost(STABLE, VAR, CALLS, cached=False, input_rate=RATE)\ncached   = estimate_cost(STABLE, VAR, CALLS, cached=True,  input_rate=RATE)\n\nprint(f\"uncached: {uncached}\")\nprint(f\"cached: {cached}\")\nprint(f\"savings: {round(uncached - cached, 2)}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "production-tradeoffs/prompt-caching-correctly/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 220,
+          "concept": "cache-strategy-decision",
+          "prompt": "Final drill. Build a cache strategy decision helper. Write\n`recommend_strategy(stable_tokens, variable_tokens, calls, session_minutes, input_rate)` that:\n\n- Computes uncached cost, 5m-cached cost, and 1h-cached cost.\n  - 5m-cached writes 1.25× input rate; 1h-cached writes 2× input rate.\n  - Both read at 0.1× input rate.\n  - 5m cache: if `session_minutes > 5`, the cache expires\n    mid-session — the second half of calls re-write the cache.\n    Approximation: half the calls write, half read.\n  - 1h cache: write once, read for all subsequent calls.\n- Returns a dict\n  `{\"uncached\": <cost>, \"cached_5m\": <cost>, \"cached_1h\": <cost>, \"winner\": <strategy with lowest cost>}`.\n- All costs rounded to 2 places.\n\nTwo scenarios run for you. Expected output:\n```\nshort session (1 min): cached_5m=0.33 cached_1h=0.35 winner=cached_5m\nlong session (30 min): cached_5m=0.36 cached_1h=0.35 winner=cached_1h\n```\n",
+          "starter": "# define recommend_strategy(stable_tokens, variable_tokens, calls, session_minutes, input_rate) below\n\nshort = recommend_strategy(8000, 200, 100, session_minutes=1,  input_rate=3.0)\nlong_ = recommend_strategy(8000, 200, 100, session_minutes=30, input_rate=3.0)\n\nprint(f\"short session (1 min): cached_5m={short['cached_5m']} cached_1h={short['cached_1h']} winner={short['winner']}\")\nprint(f\"long session (30 min): cached_5m={long_['cached_5m']} cached_1h={long_['cached_1h']} winner={long_['winner']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "short session (1 min): cached_5m=0.33 cached_1h=0.35 winner=cached_5m\nlong session (30 min): cached_5m=0.36 cached_1h=0.35 winner=cached_1h\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "def recommend_strategy(stable_tokens, variable_tokens, calls, session_minutes, input_rate):\n    uncached = input_rate * (stable_tokens + variable_tokens) * calls / 1_000_000\n\n    var_cost = input_rate * variable_tokens * calls / 1_000_000\n\n    # 5m cache strategy\n    if session_minutes <= 5:\n        write_5m = input_rate * 1.25 * stable_tokens / 1_000_000\n        read_5m  = input_rate * 0.1  * stable_tokens * (calls - 1) / 1_000_000\n    else:\n        # cache expires mid-session: assume half the calls write, half read.\n        half = calls // 2\n        write_5m = input_rate * 1.25 * stable_tokens * 2 / 1_000_000  # write twice\n        read_5m  = input_rate * 0.1  * stable_tokens * (calls - 2) / 1_000_000\n    cached_5m = write_5m + read_5m + var_cost\n\n    # 1h cache strategy\n    write_1h = input_rate * 2.0 * stable_tokens / 1_000_000\n    read_1h  = input_rate * 0.1 * stable_tokens * (calls - 1) / 1_000_000\n    cached_1h = write_1h + read_1h + var_cost\n\n    strategies = {\n        \"uncached\": round(uncached, 2),\n        \"cached_5m\": round(cached_5m, 2),\n        \"cached_1h\": round(cached_1h, 2),\n    }\n    winner = min(strategies, key=lambda k: strategies[k])\n    return {**strategies, \"winner\": winner}\n\nshort = recommend_strategy(8000, 200, 100, session_minutes=1,  input_rate=3.0)\nlong_ = recommend_strategy(8000, 200, 100, session_minutes=30, input_rate=3.0)\n\nprint(f\"short session (1 min): cached_5m={short['cached_5m']} cached_1h={short['cached_1h']} winner={short['winner']}\")\nprint(f\"long session (30 min): cached_5m={long_['cached_5m']} cached_1h={long_['cached_1h']} winner={long_['winner']}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 32
     }
   ],
-  "xpTotal": 1
+  "xpTotal": 33
 }

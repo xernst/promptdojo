@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>parked mockup C — glass nav pill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink-950: #14140f; --ink-900: #1a1a14; --ink-800: #25241f; --ink-700: #36352f;
+    --ink-500: #6b6a62; --ink-400: #9c9c93; --ink-300: #d4d3cd; --ink-100: #fafaf7;
+    --green-400: #34d399; --green-500: #2aa06a; --green-700: #186b46;
+    --display: 'Fraunces', serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ink-950); color: var(--ink-100); font-family: var(--display); }
+  body { padding: 32px; }
+
+  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 2200px; margin: 0 auto; }
+  .panel {
+    background: var(--ink-950); border: 1px solid var(--ink-800);
+    overflow: hidden; position: relative; min-height: 700px;
+  }
+  .panel .badge {
+    position: absolute; top: 12px; left: 12px; z-index: 10;
+    font-family: var(--mono); font-size: 10px; font-weight: 800;
+    letter-spacing: 0.4em; text-transform: uppercase;
+    padding: 4px 10px;
+  }
+  .panel .badge.before { background: var(--ink-800); color: var(--ink-300); }
+  .panel .badge.after  { background: var(--green-500); color: var(--ink-950); }
+
+  /* shared body */
+  .body { padding-top: 56px; min-height: 700px; position: relative; }
+  .h1 {
+    font-family: var(--display); font-weight: 900;
+    font-variation-settings: 'opsz' 144;
+    font-size: 84px; line-height: 0.92; letter-spacing: -0.045em;
+    margin: 0; padding: 80px 64px 40px;
+  }
+  .h1 em { font-style: italic; color: var(--green-500); }
+  .lede {
+    padding: 0 64px;
+    font-family: var(--display); font-size: 17px; line-height: 1.45;
+    max-width: 50ch; color: var(--ink-300);
+  }
+
+  .pill { border: 1px solid; padding: 4px 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; font-size: 10px; }
+  .pill.muted { color: var(--ink-400); border-color: var(--ink-800); }
+  .pill.green { color: var(--green-400); border-color: var(--green-700); background: rgba(42,160,106,0.05); }
+
+  /* === BEFORE: full-bleed sticky bar === */
+  .sticky-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    background: rgba(20, 20, 15, 0.95);
+    border-bottom: 1px solid var(--ink-800);
+    backdrop-filter: blur(8px);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 24px;
+    font-family: var(--mono); font-size: 11px;
+  }
+  .sticky-bar .left { display: flex; gap: 16px; align-items: center; }
+  .sticky-bar .wm { font-weight: 800; letter-spacing: -0.015em; font-size: 13px; }
+  .sticky-bar .wm .caret { color: var(--green-500); margin-right: 6px; }
+  .sticky-bar .right { display: flex; gap: 8px; align-items: center; }
+
+  /* === AFTER: floating glass pill === */
+  .glass-pill {
+    position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 24px;
+    padding: 10px 20px;
+    background: rgba(26, 26, 20, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+    font-family: var(--mono); font-size: 11px;
+    z-index: 10;
+  }
+  .glass-pill .wm { font-weight: 800; letter-spacing: -0.015em; font-size: 12px; }
+  .glass-pill .wm .caret { color: var(--green-500); margin-right: 6px; }
+  .glass-pill .sep { width: 1px; height: 14px; background: rgba(255,255,255,0.1); }
+  .glass-pill a {
+    color: var(--ink-400); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    text-decoration: none; font-size: 10px;
+  }
+  .glass-pill a.active { color: var(--green-400); }
+  .glass-pill a:hover { color: var(--ink-100); }
+  .glass-pill .cta {
+    margin-left: 12px;
+    background: var(--green-500); color: var(--ink-950);
+    padding: 6px 14px; border-radius: 14px;
+    font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; font-size: 10px;
+  }
+
+  .panel-title {
+    text-align: center; font-family: var(--mono); font-size: 12px;
+    letter-spacing: 0.4em; text-transform: uppercase; color: var(--ink-400);
+    padding: 24px 0 16px; font-weight: 800;
+  }
+</style>
+</head>
+<body>
+
+<div style="text-align:center; padding-bottom:24px;">
+  <div style="font-family: var(--mono); font-size: 11px; color: var(--green-500); letter-spacing: 0.4em; text-transform: uppercase; font-weight: 800;">parked mockup · panel C</div>
+  <div style="font-family: var(--display); font-weight: 900; font-size: 36px; letter-spacing: -0.03em; margin-top: 8px;">site nav — full-bleed bar vs floating glass pill</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ═══════════════════ BEFORE ═══════════════════ -->
+  <div class="panel">
+    <div class="badge before">current · live now</div>
+    <div class="body">
+      <div class="sticky-bar">
+        <div class="left">
+          <span class="wm"><span class="caret">❯</span>promptdojo</span>
+        </div>
+        <div class="right">
+          <a style="color: var(--ink-500); text-decoration: none;">view source · committed 2h ago</a>
+          <span class="pill muted">[ login to save ]</span>
+          <span class="pill muted">[ follow @tfispython on x ]</span>
+        </div>
+      </div>
+
+      <h1 class="h1">ai writes this.<br><em>it's wrong.</em></h1>
+      <p class="lede">a python school for the version of you that lives in cursor. 25 chapters · 624 interactive steps · runs in your browser.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ AFTER (PARKED) ═══════════════════ -->
+  <div class="panel">
+    <div class="badge after">parked · proposed</div>
+    <div class="body">
+      <div class="glass-pill">
+        <span class="wm"><span class="caret">❯</span>promptdojo</span>
+        <span class="sep"></span>
+        <a class="active">course</a>
+        <a>about</a>
+        <a>changelog</a>
+        <span class="sep"></span>
+        <a>github</a>
+        <span class="cta">follow @tfispython</span>
+      </div>
+
+      <h1 class="h1">ai writes this.<br><em>it's wrong.</em></h1>
+      <p class="lede">a python school for the version of you that lives in cursor. 25 chapters · 624 interactive steps · runs in your browser.</p>
+    </div>
+  </div>
+</div>
+
+<div class="panel-title">what changed</div>
+
+<div class="wrap" style="grid-template-columns: 1fr; max-width: 980px;">
+  <div style="background: var(--ink-900); border: 1px solid var(--ink-800); padding: 28px 36px; font-family: var(--mono); font-size: 13px; line-height: 1.7; color: var(--ink-300);">
+    <div style="display: grid; grid-template-columns: auto 1fr; gap: 18px 24px;">
+      <span style="color: var(--green-400); font-weight: 800;">geometry</span><span>full-bleed border-bottom bar → centered floating pill with 24px radius. less visual real-estate, more "intentional" reading frame.</span>
+      <span style="color: var(--green-400); font-weight: 800;">section anchors</span><span>becomes a real navigation surface — `course` / `about` / `changelog` / `github` as section anchor links (not separate routes).</span>
+      <span style="color: var(--green-400); font-weight: 800;">single-cta</span><span>follow-on-x demoted from horizontal pill to a green chip inside the nav. always visible, never the loudest thing.</span>
+      <span style="color: var(--green-400); font-weight: 800;">backdrop</span><span>smoked-glass blur (not cartesian's frosted-white). dark-first. saturates content behind it.</span>
+      <span style="color: var(--coral); font-weight: 800;">cost</span><span>~5h dev + IA decisions. parked because it requires consolidating /about and /changelog into anchor sections on /, which is a multi-route refactor.</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C1 — current sticky bar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink-950:#14140f; --ink-900:#1a1a14; --ink-800:#25241f; --ink-700:#36352f;
+    --ink-500:#6b6a62; --ink-400:#9c9c93; --ink-300:#d4d3cd; --ink-100:#fafaf7;
+    --green-400:#34d399; --green-500:#2aa06a; --green-700:#186b46;
+    --display:'Fraunces',serif; --mono:'JetBrains Mono',monospace;
+  }
+  *,*::before,*::after { box-sizing:border-box; }
+  html, body { margin:0; padding:0; background:var(--ink-950); color:var(--ink-100); font-family:var(--display); }
+  body { width:1920px; height:1080px; overflow:hidden; }
+  .label-tag {
+    position:fixed; top:16px; right:16px; z-index:50;
+    font-family:var(--mono); font-size:11px; font-weight:800; letter-spacing:0.4em; text-transform:uppercase;
+    background:var(--ink-800); color:var(--ink-300); padding:6px 14px;
+  }
+  .sticky-bar {
+    background:rgba(20,20,15,0.95);
+    border-bottom:1px solid var(--ink-800);
+    backdrop-filter:blur(8px);
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 56px;
+    font-family:var(--mono); font-size:11px;
+  }
+  .wm { font-weight:800; font-size:14px; color:var(--ink-100); letter-spacing:-0.015em; }
+  .wm .caret { color:var(--green-500); margin-right:6px; }
+  .wm .underscore { display:inline-block; width:10px; height:3px; margin-left:4px; vertical-align:4px; background:var(--green-500); }
+  .right { display:flex; gap:14px; align-items:center; color:var(--ink-500); }
+  .pill { border:1px solid var(--ink-800); padding:6px 14px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; font-size:11px; color:var(--ink-400); }
+  main { padding:120px 120px; max-width:1640px; margin:0 auto; }
+  .eyebrow {
+    font-family:var(--mono); color:var(--green-500); font-weight:800;
+    font-size:14px; letter-spacing:0.4em; text-transform:uppercase;
+    margin-bottom:24px;
+  }
+  .h1 {
+    font-family:var(--display); font-weight:900;
+    font-variation-settings:'opsz' 144;
+    font-size:160px; line-height:0.92; letter-spacing:-0.045em;
+    margin:0;
+  }
+  .h1 em { font-style:italic; color:var(--green-500); }
+  .lede {
+    font-family:var(--display); font-size:24px; line-height:1.45;
+    margin:36px 0 0; max-width:60ch; color:var(--ink-300);
+  }
+</style>
+</head>
+<body>
+<span class="label-tag">current · live now</span>
+
+<div class="sticky-bar">
+  <span class="wm"><span class="caret">❯</span>promptdojo<span class="underscore"></span></span>
+  <span class="right">
+    <span>view source · committed 2h ago</span>
+    <span class="pill">[ login to save ]</span>
+    <span class="pill">[ follow @tfispython on x ]</span>
+  </span>
+</div>
+
+<main>
+  <div class="eyebrow">chapter 07 · mutation and state</div>
+  <h1 class="h1">ai writes this.<br><em>it&rsquo;s wrong.</em></h1>
+  <p class="lede">a python school for the version of you that lives in cursor. 25 chapters · 624 interactive steps · runs in your browser.</p>
+</main>
+</body>
+</html>

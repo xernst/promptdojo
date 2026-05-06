@@ -1,0 +1,47 @@
+xp: 3
+estSeconds: 65
+concept: rubric-judge-binary-verdict
+prompt: |
+  The judge is a function `judge_rubric(question, answer, rubric)`
+  that returns a dict like `{"passed": True, "critique": "..."}`.
+  Your code needs to read the verdict and branch on the binary
+  `passed` field — never on a numeric score.
+
+  Fill in the missing condition so the loop prints `pass` for
+  passing cases and `fail` for failing ones.
+
+  Expected output:
+  ```
+  pass
+  fail
+  ```
+code: |
+  def judge_rubric(question, answer, rubric):
+      if "Paris" in answer:
+          return {"passed": True,  "critique": "Names Paris."}
+      return {"passed": False, "critique": "Does not name Paris."}
+
+  cases = [
+      ("Paris."),
+      ("Lyon, I think."),
+  ]
+  rubric = "Reward correct city name."
+  for answer in cases:
+      verdict = judge_rubric("capital of France?", answer, rubric)
+      if ___:
+          print("pass")
+      else:
+          print("fail")
+blanks:
+  - id: pass_check
+    accept:
+      - 'verdict["passed"]'
+      - "verdict['passed']"
+      - 'verdict.get("passed")'
+      - "verdict.get('passed')"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'The verdict dict has a `"passed"` key whose value is `True` or `False`. Read that field directly — no comparison against a number.'
+  - level: 2
+    body: '`verdict["passed"]` — the boolean is the whole answer. No `>= 4` threshold, no `== "PASS"` string compare.'

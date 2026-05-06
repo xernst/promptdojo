@@ -1,0 +1,15 @@
+slug: read-the-trace-not-the-chat
+title: "Read the trace, not the chat — find the broken turn before reading the user's complaint"
+estMinutes: 11
+prerequisites:
+  - orientation
+order:
+  - 01-intro.read.md
+  - 02-where-to-look-first.mc.yaml
+  - 03-the-four-failure-classes.read.md
+  - 04-predict-the-bad-turn.predict.yaml
+  - 05-fill-the-find-bad-turn.fill.yaml
+  - 06-fix-the-fix-the-symptom.fix.yaml
+  - 07-fix-the-blame-the-model.fix.yaml
+  - 08-write-the-trace-summary.write.yaml
+  - 09-checkpoint.checkpoint.yaml

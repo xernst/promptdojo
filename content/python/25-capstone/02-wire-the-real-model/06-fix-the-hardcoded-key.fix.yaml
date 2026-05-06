@@ -1,0 +1,41 @@
+xp: 4
+estSeconds: 90
+concept: hardcoded-key-removal
+prompt: |
+  Cursor wrote this for "just one quick test." The key is hardcoded
+  as a Python literal. If you commit and push, the key is in your
+  git history forever — even after you delete the line, even after
+  you `git push --force` (the rotation API logs prove it).
+
+  Fix the code to load the key from the environment via `os.getenv`.
+  In this demo the env var is set for you.
+
+  Expected output:
+  ```
+  key starts with: sk-ant
+  ```
+brokenCode: |
+  import os
+  os.environ["ANTHROPIC_API_KEY"] = "sk-ant-prod-real-key-do-not-commit"
+
+  # bug: hardcoded key in source. ends up in git history forever.
+  api_key = "sk-ant-prod-real-key-do-not-commit"
+
+  print(f"key starts with: {api_key[:6]}")
+bugLines:
+  - 5
+grader:
+  kind: stdout-equality
+  expected: "key starts with: sk-ant"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Replace the hardcoded string with `os.getenv("ANTHROPIC_API_KEY")`. Same first 6 characters land in stdout, but the key never appears in source.'
+  - level: 2
+    body: |
+      Change line 5 to:
+
+      ```python
+      api_key = os.getenv("ANTHROPIC_API_KEY")
+      ```
+revealAfter: 4

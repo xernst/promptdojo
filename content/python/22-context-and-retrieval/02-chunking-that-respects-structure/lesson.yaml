@@ -1,0 +1,15 @@
+slug: chunking-that-respects-structure
+title: "Chunking that respects structure — don't shred your own documents"
+estMinutes: 12
+prerequisites:
+  - orientation
+order:
+  - 01-intro.read.md
+  - 02-which-content-shape-breaks.mc.yaml
+  - 03-the-recursive-splitter.read.md
+  - 04-predict-the-shred.predict.yaml
+  - 05-fill-the-separator-list.fill.yaml
+  - 06-fix-the-mid-sentence-cut.fix.yaml
+  - 07-fix-the-missing-overlap.fix.yaml
+  - 08-write-the-recursive-splitter.write.yaml
+  - 09-checkpoint.checkpoint.yaml

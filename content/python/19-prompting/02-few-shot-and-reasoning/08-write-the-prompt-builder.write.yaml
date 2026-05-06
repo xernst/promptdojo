@@ -1,0 +1,118 @@
+xp: 5
+estSeconds: 200
+concept: model-aware-prompt-builder
+prompt: |
+  Write `build_prompt(task, examples, query, model)` that:
+
+  - Always opens with the task line + a blank line.
+  - If `examples` is non-empty, appends each as
+    `"Input: <input>\nOutput: <output>\n\n"`.
+  - Appends the query as `"Input: <query>\nOutput:"`.
+  - If `model` is NOT in `REASONING_MODELS`, prepends a CoT line
+    (`"Think step by step.\n\n"`) BEFORE the examples — but ONLY if
+    the task involves reasoning (we'll signal this with
+    `task.startswith("Solve")`). If the task is classification (the
+    `Classify` prefix in our test), skip CoT regardless of model.
+  - Returns the prompt string.
+
+  Two cases run for you. Expected output:
+  ```
+  --- classify on haiku (no CoT, has examples) ---
+  Classify sentiment.
+
+  Input: great
+  Output: positive
+
+  Input: bad
+  Output: negative
+
+  Input: okay
+  Output:
+  ---
+  --- math on o3 (no CoT — reasoning model handles it) ---
+  Solve: what is 17 * 23?
+
+  Input: 17 * 23
+  Output:
+  ```
+starter: |
+  REASONING_MODELS = {"o3", "o1", "claude-sonnet-4-6-thinking"}
+
+  # define build_prompt(task, examples, query, model) below
+
+  classify_prompt = build_prompt(
+      task="Classify sentiment.",
+      examples=[{"input": "great", "output": "positive"}, {"input": "bad", "output": "negative"}],
+      query="okay",
+      model="claude-haiku",
+  )
+  print("--- classify on haiku (no CoT, has examples) ---")
+  print(classify_prompt)
+  print("---")
+
+  math_prompt = build_prompt(
+      task="Solve: what is 17 * 23?",
+      examples=[],
+      query="17 * 23",
+      model="o3",
+  )
+  print("--- math on o3 (no CoT — reasoning model handles it) ---")
+  print(math_prompt)
+grader:
+  kind: stdout-equality
+  expected: |
+    --- classify on haiku (no CoT, has examples) ---
+    Classify sentiment.
+
+    Input: great
+    Output: positive
+
+    Input: bad
+    Output: negative
+
+    Input: okay
+    Output:
+    ---
+    --- math on o3 (no CoT — reasoning model handles it) ---
+    Solve: what is 17 * 23?
+
+    Input: 17 * 23
+    Output:
+  normalize: collapse-trailing-newline
+solution: |
+  REASONING_MODELS = {"o3", "o1", "claude-sonnet-4-6-thinking"}
+
+  def build_prompt(task, examples, query, model):
+      parts = [f"{task}\n\n"]
+      needs_cot = task.startswith("Solve") and model not in REASONING_MODELS
+      if needs_cot:
+          parts.append("Think step by step.\n\n")
+      for ex in examples:
+          parts.append(f"Input: {ex['input']}\nOutput: {ex['output']}\n\n")
+      parts.append(f"Input: {query}\nOutput:")
+      return "".join(parts)
+
+  classify_prompt = build_prompt(
+      task="Classify sentiment.",
+      examples=[{"input": "great", "output": "positive"}, {"input": "bad", "output": "negative"}],
+      query="okay",
+      model="claude-haiku",
+  )
+  print("--- classify on haiku (no CoT, has examples) ---")
+  print(classify_prompt)
+  print("---")
+
+  math_prompt = build_prompt(
+      task="Solve: what is 17 * 23?",
+      examples=[],
+      query="17 * 23",
+      model="o3",
+  )
+  print("--- math on o3 (no CoT — reasoning model handles it) ---")
+  print(math_prompt)
+hint:
+  - level: 1
+    body: 'Build the prompt as a list of parts and join. CoT only fires when both: (a) task is solve-type, (b) model is non-reasoning. Examples are unconditional on examples-non-empty. Query template always at the end.'
+  - level: 2
+    body: |
+      Two key conditions: `task.startswith("Solve") and model not in REASONING_MODELS` for CoT. Iterate examples regardless of model class. Always end with `f"Input: {query}\nOutput:"`.

@@ -1,0 +1,15 @@
+slug: validation-with-pydantic
+title: "Validation with Pydantic — when `assert isinstance` isn't enough"
+estMinutes: 12
+prerequisites:
+  - getting-json-back
+order:
+  - 01-intro.read.md
+  - 02-when-pydantic-helps.mc.yaml
+  - 03-validation-error-shape.read.md
+  - 04-predict-the-error.predict.yaml
+  - 05-fill-the-basemodel.fill.yaml
+  - 06-fix-the-broad-except.fix.yaml
+  - 07-fix-the-optional-trap.fix.yaml
+  - 08-write-the-validator.write.yaml
+  - 09-checkpoint.checkpoint.yaml

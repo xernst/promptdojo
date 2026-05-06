@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>parked mockup A — hero refresh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink-950: #14140f; --ink-900: #1a1a14; --ink-800: #25241f; --ink-700: #36352f;
+    --ink-500: #6b6a62; --ink-400: #9c9c93; --ink-300: #d4d3cd; --ink-100: #fafaf7;
+    --green-300: #6ee7b7; --green-400: #34d399; --green-500: #2aa06a; --green-700: #186b46;
+    --coral: #e4573c;
+    --display: 'Fraunces', serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ink-950); color: var(--ink-100); font-family: var(--display); }
+  body { padding: 32px; min-height: 100vh; }
+
+  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 2200px; margin: 0 auto; }
+  .panel {
+    background: var(--ink-950); border: 1px solid var(--ink-800);
+    overflow: hidden; position: relative;
+  }
+  .panel .badge {
+    position: absolute; top: 12px; left: 12px; z-index: 10;
+    font-family: var(--mono); font-size: 10px; font-weight: 800;
+    letter-spacing: 0.4em; text-transform: uppercase;
+    padding: 4px 10px;
+  }
+  .panel .badge.before { background: var(--ink-800); color: var(--ink-300); }
+  .panel .badge.after  { background: var(--green-500); color: var(--ink-950); }
+  .panel .body { padding: 56px 48px 40px; min-height: 720px; display: flex; flex-direction: column; }
+
+  /* Shared elements */
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 36px; padding-bottom: 16px;
+    font-family: var(--mono); font-size: 11px; color: var(--ink-400);
+    letter-spacing: 0.06em;
+  }
+  .wm { font-family: var(--mono); font-weight: 800; font-size: 14px; letter-spacing: -0.015em; }
+  .wm .caret { color: var(--green-500); margin-right: 6px; }
+  .wm .underscore { display: inline-block; width: 10px; height: 3px; margin-left: 4px; vertical-align: 4px; background: var(--green-500); }
+
+  .pill {
+    border: 1px solid;
+    padding: 4px 12px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 10px;
+  }
+  .pill.muted { color: var(--ink-400); border-color: var(--ink-800); }
+  .pill.green { color: var(--green-400); border-color: var(--green-700); background: rgba(42,160,106,0.05); }
+
+  .eyebrow {
+    font-family: var(--mono); color: var(--green-500); font-weight: 800;
+    font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .h1 {
+    font-family: var(--display); font-weight: 900;
+    font-variation-settings: 'opsz' 144, 'SOFT' 0;
+    font-size: 84px; line-height: 0.92; letter-spacing: -0.045em;
+    margin: 0;
+  }
+  .h1 em { font-style: italic; font-variation-settings: 'opsz' 144, 'wght' 800; color: var(--green-500); }
+
+  .lede {
+    font-family: var(--display); font-size: 17px; line-height: 1.45;
+    margin: 18px 0 24px; max-width: 50ch; color: var(--ink-300);
+    font-variation-settings: 'opsz' 14;
+  }
+
+  .ctas { display: flex; gap: 10px; align-items: center; margin-bottom: 28px; }
+  .btn {
+    font-family: var(--mono); font-size: 11px; font-weight: 800;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 10px 18px; border: 1px solid; cursor: pointer;
+  }
+  .btn-primary { background: var(--green-500); color: var(--ink-950); border-color: var(--green-500); }
+  .btn-ghost   { background: transparent; color: var(--ink-300); border-color: var(--ink-700); }
+  .btn-link    { background: transparent; color: var(--ink-500); border: 0; padding: 6px 0; text-decoration: underline; text-underline-offset: 4px; }
+
+  /* === LEFT: BEFORE === */
+  .stat-strip {
+    display: flex; gap: 32px; padding: 16px 0; margin-top: auto;
+    border-top: 1px solid var(--ink-800);
+    font-family: var(--mono); font-size: 11px; color: var(--ink-400);
+  }
+  .stat-strip .stat .num { color: var(--green-400); font-weight: 800; }
+  .stat-strip .stat .lbl { display: block; margin-top: 2px; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-500); }
+
+  /* === RIGHT: AFTER (parked) === */
+  .stat-strip-fat {
+    display: flex; gap: 56px; padding: 24px 0; margin-top: auto;
+    border-top: 1px solid var(--ink-800);
+  }
+  .stat-strip-fat .stat .num {
+    font-family: var(--display); font-weight: 900;
+    font-variation-settings: 'opsz' 144;
+    font-size: 56px; line-height: 1; letter-spacing: -0.04em;
+    color: var(--ink-100);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-strip-fat .stat .lbl {
+    display: block; margin-top: 6px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--ink-500);
+  }
+
+  .anti-feature-vertical {
+    margin-top: 22px; padding: 18px 0;
+    font-family: var(--mono); font-size: 12px;
+    border-top: 1px solid var(--ink-800);
+    border-bottom: 1px solid var(--ink-800);
+  }
+  .anti-feature-vertical .row { display: flex; align-items: baseline; padding: 4px 0; }
+  .anti-feature-vertical .x { color: var(--coral); font-weight: 800; margin-right: 12px; min-width: 14px; }
+  .anti-feature-vertical .plus { color: var(--green-500); font-weight: 800; margin-right: 12px; min-width: 14px; }
+  .anti-feature-vertical .label { color: var(--ink-300); }
+  .anti-feature-vertical .green-row .label { color: var(--green-400); }
+
+  .closer {
+    margin-top: 16px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--ink-500);
+  }
+  .closer em { font-style: normal; color: var(--green-400); }
+
+  /* labels */
+  .panel-title {
+    text-align: center; font-family: var(--mono); font-size: 12px;
+    letter-spacing: 0.4em; text-transform: uppercase; color: var(--ink-400);
+    padding: 24px 0 16px; font-weight: 800;
+  }
+</style>
+</head>
+<body>
+
+<div style="text-align:center; padding-bottom:24px;">
+  <div style="font-family: var(--mono); font-size: 11px; color: var(--green-500); letter-spacing: 0.4em; text-transform: uppercase; font-weight: 800;">parked mockup · panel A</div>
+  <div style="font-family: var(--display); font-weight: 900; font-size: 36px; letter-spacing: -0.03em; margin-top: 8px;">hero refresh — current vs parked</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ═══════════════════ BEFORE ═══════════════════ -->
+  <div class="panel">
+    <div class="badge before">current · live now</div>
+    <div class="body">
+      <div class="topbar">
+        <span class="wm"><span class="caret">❯</span>promptdojo<span class="underscore"></span></span>
+        <span style="display: flex; gap: 8px;">
+          <span class="pill muted">[ login to save ]</span>
+          <span class="pill muted">[ follow @tfispython ]</span>
+        </span>
+      </div>
+
+      <div class="eyebrow">chapter 07 · mutation and state</div>
+      <h1 class="h1">ai writes this.<br><em>it's wrong.</em></h1>
+      <p class="lede">a python school for the version of you that lives in cursor. 25 chapters · 624 interactive steps · runs in your browser. login to save progress.</p>
+
+      <div class="ctas">
+        <a class="btn btn-primary">start the course →</a>
+        <a class="btn btn-ghost">read the manifesto</a>
+      </div>
+
+      <div class="stat-strip">
+        <div class="stat"><span class="num">25</span> chapters <span class="lbl">phases</span></div>
+        <div class="stat"><span class="num">624</span> steps <span class="lbl">interactive</span></div>
+        <div class="stat"><span class="num">$0</span> forever <span class="lbl">no upsell</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ AFTER (PARKED) ═══════════════════ -->
+  <div class="panel">
+    <div class="badge after">parked · proposed</div>
+    <div class="body">
+      <div class="topbar">
+        <span class="wm"><span class="caret">❯</span>promptdojo<span class="underscore"></span></span>
+        <span class="pill green">[ follow @tfispython on x ]</span>
+      </div>
+
+      <div class="eyebrow">last revised 2026-05-06 · open source</div>
+      <h1 class="h1">ai writes this.<br><em>it's wrong.</em></h1>
+      <p class="lede">a python school for the version of you that lives in cursor. learn to read what the model wrote, find where it lied, and ship the fix in five lines.</p>
+
+      <div class="ctas">
+        <a class="btn btn-primary">start chapter 1 →</a>
+        <a class="btn btn-link">or pick your chapter ↓</a>
+      </div>
+
+      <div class="stat-strip-fat">
+        <div class="stat"><div class="num">25</div><div class="lbl">chapters</div></div>
+        <div class="stat"><div class="num">5</div><div class="lbl">phases</div></div>
+        <div class="stat"><div class="num">624</div><div class="lbl">runnable steps</div></div>
+        <div class="stat"><div class="num">$0</div><div class="lbl">forever</div></div>
+      </div>
+
+      <div class="anti-feature-vertical">
+        <div class="row"><span class="x">×</span><span class="label">no signup. ever.</span></div>
+        <div class="row"><span class="x">×</span><span class="label">no streaks. no nag.</span></div>
+        <div class="row"><span class="x">×</span><span class="label">no premium tier.</span></div>
+        <div class="row"><span class="x">×</span><span class="label">no certificates to print.</span></div>
+        <div class="row"><span class="x">×</span><span class="label">no email list to dodge.</span></div>
+        <div class="row"><span class="x">×</span><span class="label">no ai-generated chapters.</span></div>
+        <div class="row green-row"><span class="plus">+</span><span class="label">open source. mit, do whatever.</span></div>
+        <div class="row green-row"><span class="plus">+</span><span class="label">$0. forever.</span></div>
+      </div>
+
+      <div class="closer">+ pull requests welcome.</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel-title">what changed</div>
+
+<div class="wrap" style="grid-template-columns: 1fr; max-width: 980px;">
+  <div style="background: var(--ink-900); border: 1px solid var(--ink-800); padding: 28px 36px; font-family: var(--mono); font-size: 13px; line-height: 1.7; color: var(--ink-300);">
+    <div style="display: grid; grid-template-columns: auto 1fr; gap: 18px 24px;">
+      <span style="color: var(--green-400); font-weight: 800;">single-cta</span><span>two pills shrink to one — `[ follow on x ]` is the load-bearing ask. start-cta promoted to text-link below the headline.</span>
+      <span style="color: var(--green-400); font-weight: 800;">fat numerals</span><span>statstrip switches from inline mono to display-serif large numbers, cartesian-style. `624 steps` becomes a screenshot.</span>
+      <span style="color: var(--green-400); font-weight: 800;">anti-litany</span><span>4 horizontal tokens grow to 8 vertical lines + 2 green yes-rows + 1 closer. visible meme block.</span>
+      <span style="color: var(--green-400); font-weight: 800;">copy swaps</span><span>`interactive steps` → `runnable steps`. eyebrow becomes `last revised <date>`. lede sharpened.</span>
+      <span style="color: var(--coral); font-weight: 800;">cost</span><span>~3h dev. half a screenshot's worth of compositional change. parked because it touches site copy + cta hierarchy.</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

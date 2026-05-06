@@ -1,0 +1,40 @@
+xp: 3
+estSeconds: 75
+concept: eval-suite-output
+code: |
+  # tiny eval suite. three cases, each a (question, expected_substring).
+  # the agent returns a fixed answer per question.
+
+  AGENT_ANSWERS = {
+      "capital of France?":   "Paris is the capital of France.",
+      "capital of Germany?":  "Berlin is the capital, sort of probably.",
+      "capital of Japan?":    "I think it might be Kyoto.",
+  }
+
+  def run_agent(question):
+      return {"answer": AGENT_ANSWERS[question]}
+
+  cases = [
+      ("capital of France?",  "Paris"),
+      ("capital of Germany?", "Berlin"),
+      ("capital of Japan?",   "Tokyo"),
+  ]
+
+  passed = 0
+  for question, expected in cases:
+      result = run_agent(question)
+      if expected in result["answer"]:
+          passed += 1
+  print(f"{passed} / {len(cases)} passed")
+prompt: |
+  The agent's canned answers are above. Each case checks whether the
+  expected substring is in the agent's answer. The third case will
+  fail (agent says "Kyoto" instead of "Tokyo"). What does the suite
+  print?
+grader:
+  kind: stdout-equality
+  expected: "2 / 3 passed"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Case 1: "Paris" in "Paris is..." → True. Case 2: "Berlin" in "Berlin is..." → True. Case 3: "Tokyo" in "I think it might be Kyoto." → False. Two pass, one fails.'

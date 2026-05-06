@@ -1,0 +1,39 @@
+xp: 3
+estSeconds: 80
+concept: format-lock-from-examples
+code: |
+  # the model is trained to follow few-shot format. "format lock-in"
+  # is the feature; it's also the trap when examples don't match the
+  # real query format.
+
+  EXAMPLES = [
+      {"input": "great product", "output": "positive"},
+      {"input": "broke quickly", "output": "negative"},
+  ]
+
+  query = "decent overall, took a while to ship though"
+
+  prompt = "Classify sentiment.\n\n"
+  for ex in EXAMPLES:
+      prompt += f"Input: {ex['input']}\nOutput: {ex['output']}\n\n"
+  prompt += f"Input: {query}\nOutput:"
+
+  # the model will COMPLETE this prompt. given the format, it will
+  # emit a single label word: "positive", "negative", or "neutral".
+  print(f"prompt ends with: {prompt[-30:]!r}")
+  print(f"expected output shape: single label word")
+prompt: |
+  Read the editor. The few-shot examples lock the model into a
+  specific output format — single label words. The prompt ends
+  with `"Output:"` followed by no value, so the model fills in.
+
+  What does the second printed line say about expected output?
+grader:
+  kind: stdout-equality
+  expected: |
+    prompt ends with: 'a while to ship though\nOutput:'
+    expected output shape: single label word
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Last 30 chars of the prompt include the tail of the query line and the bare "Output:" prefix. The script then literally prints `"expected output shape: single label word"`.'

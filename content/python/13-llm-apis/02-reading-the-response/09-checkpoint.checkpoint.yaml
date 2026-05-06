@@ -1,0 +1,124 @@
+xp: 8
+estSeconds: 220
+concept: full-response-aggregator
+prompt: |
+  Final drill. Build a session-level aggregator across multiple
+  responses. Write `summarize_session(responses)` that:
+
+  - For each response in the list, calls `parse_response(r)` (provided).
+  - Aggregates across all responses:
+    - `total_text`: all `text` fields joined with `" | "` (skip empty texts).
+    - `tool_call_count`: total number of tool_use blocks across all responses.
+    - `total_tokens`: sum of `tokens` across all responses.
+    - `final_stop`: the `stop_reason` of the LAST response.
+  - Returns the aggregate dict.
+
+  Two sessions run. Expected output:
+  ```
+  agent session: text='Searching... | Found Tokyo ramen guide.' tools=1 tokens=180 final=end_turn
+  truncated session: text='Starting...' tools=0 tokens=1024 final=max_tokens
+  ```
+starter: |
+  def parse_response(response):
+      text_parts = [b["text"] for b in response["content"] if b["type"] == "text"]
+      tool_uses = [{"id": b["id"], "name": b["name"], "input": b["input"]}
+                   for b in response["content"] if b["type"] == "tool_use"]
+      return {
+          "text": " ".join(text_parts),
+          "tool_uses": tool_uses,
+          "stop_reason": response["stop_reason"],
+          "tokens": response["usage"]["input_tokens"] + response["usage"]["output_tokens"],
+      }
+
+  agent_session = [
+      {
+          "stop_reason": "tool_use",
+          "content": [
+              {"type": "text", "text": "Searching..."},
+              {"type": "tool_use", "id": "t1", "name": "search", "input": {"q": "ramen"}},
+          ],
+          "usage": {"input_tokens": 60, "output_tokens": 20},
+      },
+      {
+          "stop_reason": "end_turn",
+          "content": [{"type": "text", "text": "Found Tokyo ramen guide."}],
+          "usage": {"input_tokens": 90, "output_tokens": 10},
+      },
+  ]
+
+  truncated_session = [
+      {
+          "stop_reason": "max_tokens",
+          "content": [{"type": "text", "text": "Starting..."}],
+          "usage": {"input_tokens": 1000, "output_tokens": 24},
+      },
+  ]
+
+  # define summarize_session(responses) below
+
+  for label, session in [("agent session", agent_session), ("truncated session", truncated_session)]:
+      s = summarize_session(session)
+      print(f"{label}: text={s['total_text']!r} tools={s['tool_call_count']} tokens={s['total_tokens']} final={s['final_stop']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    agent session: text='Searching... | Found Tokyo ramen guide.' tools=1 tokens=180 final=end_turn
+    truncated session: text='Starting...' tools=0 tokens=1024 final=max_tokens
+  normalize: collapse-trailing-newline
+solution: |
+  def parse_response(response):
+      text_parts = [b["text"] for b in response["content"] if b["type"] == "text"]
+      tool_uses = [{"id": b["id"], "name": b["name"], "input": b["input"]}
+                   for b in response["content"] if b["type"] == "tool_use"]
+      return {
+          "text": " ".join(text_parts),
+          "tool_uses": tool_uses,
+          "stop_reason": response["stop_reason"],
+          "tokens": response["usage"]["input_tokens"] + response["usage"]["output_tokens"],
+      }
+
+  agent_session = [
+      {
+          "stop_reason": "tool_use",
+          "content": [
+              {"type": "text", "text": "Searching..."},
+              {"type": "tool_use", "id": "t1", "name": "search", "input": {"q": "ramen"}},
+          ],
+          "usage": {"input_tokens": 60, "output_tokens": 20},
+      },
+      {
+          "stop_reason": "end_turn",
+          "content": [{"type": "text", "text": "Found Tokyo ramen guide."}],
+          "usage": {"input_tokens": 90, "output_tokens": 10},
+      },
+  ]
+
+  truncated_session = [
+      {
+          "stop_reason": "max_tokens",
+          "content": [{"type": "text", "text": "Starting..."}],
+          "usage": {"input_tokens": 1000, "output_tokens": 24},
+      },
+  ]
+
+  def summarize_session(responses):
+      texts = []
+      tool_call_count = 0
+      total_tokens = 0
+      for r in responses:
+          parsed = parse_response(r)
+          if parsed["text"]:
+              texts.append(parsed["text"])
+          tool_call_count += len(parsed["tool_uses"])
+          total_tokens += parsed["tokens"]
+      return {
+          "total_text": " | ".join(texts),
+          "tool_call_count": tool_call_count,
+          "total_tokens": total_tokens,
+          "final_stop": responses[-1]["stop_reason"],
+      }
+
+  for label, session in [("agent session", agent_session), ("truncated session", truncated_session)]:
+      s = summarize_session(session)
+      print(f"{label}: text={s['total_text']!r} tools={s['tool_call_count']} tokens={s['total_tokens']} final={s['final_stop']}")
+passThreshold: 0.66

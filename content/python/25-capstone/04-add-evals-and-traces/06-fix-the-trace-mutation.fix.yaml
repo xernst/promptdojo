@@ -1,0 +1,51 @@
+xp: 4
+estSeconds: 95
+concept: append-only-trace-deepcopy
+prompt: |
+  The loop is reusing one `record` dict across all turns and mutating
+  it in place. Each iteration overwrites the previous record's
+  fields, then appends the SAME object reference to the trace. By
+  the end, every entry in `trace` is the same dict — the last turn's
+  values, repeated.
+
+  Fix the loop so each turn gets its OWN dict (build a fresh one
+  inside the loop), so the trace is a faithful timeline.
+
+  Expected output:
+  ```
+  [{'turn': 1, 'stop_reason': 'tool_use'}, {'turn': 2, 'stop_reason': 'end_turn'}]
+  ```
+brokenCode: |
+  trace = []
+  record = {}  # bug: one record, reused across turns
+
+  responses = [
+      {"stop_reason": "tool_use"},
+      {"stop_reason": "end_turn"},
+  ]
+
+  for i, response in enumerate(responses):
+      record["turn"] = i + 1
+      record["stop_reason"] = response["stop_reason"]
+      trace.append(record)
+
+  print(trace)
+bugLines:
+  - 2
+grader:
+  kind: stdout-equality
+  expected: "[{'turn': 1, 'stop_reason': 'tool_use'}, {'turn': 2, 'stop_reason': 'end_turn'}]"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Move the `record = {}` line INSIDE the loop, so each turn allocates a fresh dict. Then append the fresh dict.'
+  - level: 2
+    body: |
+      Restructure the loop body:
+
+      ```python
+      for i, response in enumerate(responses):
+          record = {"turn": i + 1, "stop_reason": response["stop_reason"]}
+          trace.append(record)
+      ```
+revealAfter: 5

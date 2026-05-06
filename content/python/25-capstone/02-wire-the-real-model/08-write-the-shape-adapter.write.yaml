@@ -1,0 +1,136 @@
+xp: 5
+estSeconds: 200
+concept: sdk-shape-adapter
+prompt: |
+  Write `extract_text_and_tools(response)` that takes a response
+  object (real `anthropic.types.Message` OR a `MockMessage` with
+  matching attribute access) and returns a tuple `(text_parts, tool_calls)`:
+
+  - `text_parts` is a list of strings, one per text block in
+    `response.content`, in order.
+  - `tool_calls` is a list of dicts, one per tool_use block, each
+    shaped `{"id": ..., "name": ..., "input": ...}`.
+
+  Iterate `response.content`, branch on `block.type`, build both
+  lists. Skip blocks whose type is neither `"text"` nor `"tool_use"`
+  (forward-compat for `thinking` blocks — they exist but you don't
+  need them here).
+
+  The script will run two cases. Expected output:
+  ```
+  text=['Let me look that up.'] tools=[{'id': 'toolu_01', 'name': 'search', 'input': {'q': 'ramen'}}]
+  text=['Found a 2026 guide.', 'Hope this helps!'] tools=[]
+  ```
+starter: |
+  class MockTextBlock:
+      def __init__(self, text):
+          self.type = "text"
+          self.text = text
+
+  class MockToolUseBlock:
+      def __init__(self, id, name, input):
+          self.type = "tool_use"
+          self.id = id
+          self.name = name
+          self.input = input
+
+  class MockMessage:
+      def __init__(self, stop_reason, content):
+          self.stop_reason = stop_reason
+          self.content = content
+
+  # define extract_text_and_tools(response) below
+
+  case_1 = MockMessage(
+      stop_reason="tool_use",
+      content=[
+          MockTextBlock("Let me look that up."),
+          MockToolUseBlock(id="toolu_01", name="search", input={"q": "ramen"}),
+      ],
+  )
+  case_2 = MockMessage(
+      stop_reason="end_turn",
+      content=[
+          MockTextBlock("Found a 2026 guide."),
+          MockTextBlock("Hope this helps!"),
+      ],
+  )
+
+  text, tools = extract_text_and_tools(case_1)
+  print(f"text={text} tools={tools}")
+  text, tools = extract_text_and_tools(case_2)
+  print(f"text={text} tools={tools}")
+grader:
+  kind: stdout-equality
+  expected: |
+    text=['Let me look that up.'] tools=[{'id': 'toolu_01', 'name': 'search', 'input': {'q': 'ramen'}}]
+    text=['Found a 2026 guide.', 'Hope this helps!'] tools=[]
+  normalize: collapse-trailing-newline
+solution: |
+  class MockTextBlock:
+      def __init__(self, text):
+          self.type = "text"
+          self.text = text
+
+  class MockToolUseBlock:
+      def __init__(self, id, name, input):
+          self.type = "tool_use"
+          self.id = id
+          self.name = name
+          self.input = input
+
+  class MockMessage:
+      def __init__(self, stop_reason, content):
+          self.stop_reason = stop_reason
+          self.content = content
+
+  def extract_text_and_tools(response):
+      text_parts = []
+      tool_calls = []
+      for block in response.content:
+          if block.type == "text":
+              text_parts.append(block.text)
+          elif block.type == "tool_use":
+              tool_calls.append({
+                  "id": block.id,
+                  "name": block.name,
+                  "input": block.input,
+              })
+          # other block types (e.g., thinking) — skipped silently
+      return text_parts, tool_calls
+
+  case_1 = MockMessage(
+      stop_reason="tool_use",
+      content=[
+          MockTextBlock("Let me look that up."),
+          MockToolUseBlock(id="toolu_01", name="search", input={"q": "ramen"}),
+      ],
+  )
+  case_2 = MockMessage(
+      stop_reason="end_turn",
+      content=[
+          MockTextBlock("Found a 2026 guide."),
+          MockTextBlock("Hope this helps!"),
+      ],
+  )
+
+  text, tools = extract_text_and_tools(case_1)
+  print(f"text={text} tools={tools}")
+  text, tools = extract_text_and_tools(case_2)
+  print(f"text={text} tools={tools}")
+hint:
+  - level: 1
+    body: 'Initialize two empty lists. Iterate `response.content`. Branch on `block.type`: append `.text` to one list for text blocks; append a dict for tool_use blocks. Return both lists as a tuple.'
+  - level: 2
+    body: |
+      ```python
+      def extract_text_and_tools(response):
+          text_parts = []
+          tool_calls = []
+          for block in response.content:
+              if block.type == "text":
+                  text_parts.append(block.text)
+              elif block.type == "tool_use":
+                  tool_calls.append({"id": block.id, "name": block.name, "input": block.input})
+          return text_parts, tool_calls
+      ```

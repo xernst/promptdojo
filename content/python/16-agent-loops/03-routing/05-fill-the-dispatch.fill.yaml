@@ -1,0 +1,34 @@
+xp: 3
+estSeconds: 60
+concept: route-table-lookup
+prompt: |
+  The router classifies the question and is about to dispatch to the
+  matching specialist. Fill in the missing expression so the right
+  handler runs.
+
+  Expected output:
+  ```
+  TECH -> server is on fire
+  ```
+code: |
+  ROUTES = {
+      "billing":   lambda q: f"BILL -> {q}",
+      "technical": lambda q: f"TECH -> {q}",
+      "general":   lambda q: f"GEN  -> {q}",
+  }
+
+  category = "technical"
+  question = "server is on fire"
+
+  result = ___
+  print(result)
+blanks:
+  - id: dispatch
+    accept:
+      - "ROUTES[category](question)"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Two pieces: look up the handler with `ROUTES[category]`, then call it with `question`.'
+  - level: 2
+    body: '`ROUTES[category](question)` — registry lookup, then call with the user input.'

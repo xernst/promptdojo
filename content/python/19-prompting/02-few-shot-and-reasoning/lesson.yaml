@@ -1,0 +1,15 @@
+slug: few-shot-and-reasoning
+title: "Few-shot and reasoning — examples that work, and the CoT trap on reasoning models"
+estMinutes: 12
+prerequisites:
+  - the-prompt-craft
+order:
+  - 01-intro.read.md
+  - 02-when-few-shot-helps.mc.yaml
+  - 03-the-cot-trap.read.md
+  - 04-predict-the-format-lock.predict.yaml
+  - 05-fill-the-example-format.fill.yaml
+  - 06-fix-the-cot-on-reasoning.fix.yaml
+  - 07-fix-the-format-mismatch.fix.yaml
+  - 08-write-the-prompt-builder.write.yaml
+  - 09-checkpoint.checkpoint.yaml

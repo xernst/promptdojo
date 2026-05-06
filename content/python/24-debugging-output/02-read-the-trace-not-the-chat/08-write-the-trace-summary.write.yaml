@@ -1,0 +1,86 @@
+xp: 5
+estSeconds: 200
+concept: trace-summary-for-bug-ticket
+prompt: |
+  Write `summarize_trace(trace)` that produces a one-line bug-ticket
+  summary. The function:
+
+  - Takes a trace (list of turn dicts).
+  - Returns a string formatted exactly:
+    `"<N> turns, <M> tools, <V> validation_errors, final stop=<stop_reason>"`.
+    Where:
+    - `<N>` is the number of turns.
+    - `<M>` is the total number of tool calls across all turns
+      (sum of `len(t["tools_called"])`).
+    - `<V>` is the total `validation_errors` summed across turns.
+    - `<stop_reason>` is `trace[-1]["stop_reason"]`.
+
+  Three traces run for you. Expected output:
+  ```
+  4 turns, 3 tools, 0 validation_errors, final stop=end_turn
+  3 turns, 2 tools, 1 validation_errors, final stop=end_turn
+  2 turns, 0 tools, 0 validation_errors, final stop=max_tokens
+  ```
+starter: |
+  trace_a = [
+      {"turn": 1, "stop_reason": "tool_use", "tools_called": ["search"],    "validation_errors": 0},
+      {"turn": 2, "stop_reason": "tool_use", "tools_called": ["read_page"], "validation_errors": 0},
+      {"turn": 3, "stop_reason": "tool_use", "tools_called": ["summarize"], "validation_errors": 0},
+      {"turn": 4, "stop_reason": "end_turn", "tools_called": [],            "validation_errors": 0},
+  ]
+
+  trace_b = [
+      {"turn": 1, "stop_reason": "tool_use", "tools_called": ["search"],    "validation_errors": 1},
+      {"turn": 2, "stop_reason": "tool_use", "tools_called": ["search"],    "validation_errors": 0},
+      {"turn": 3, "stop_reason": "end_turn", "tools_called": [],            "validation_errors": 0},
+  ]
+
+  trace_c = [
+      {"turn": 1, "stop_reason": "tool_use",   "tools_called": [],          "validation_errors": 0},
+      {"turn": 2, "stop_reason": "max_tokens", "tools_called": [],          "validation_errors": 0},
+  ]
+
+  # define summarize_trace(trace) below
+
+  for tr in [trace_a, trace_b, trace_c]:
+      print(summarize_trace(tr))
+grader:
+  kind: stdout-equality
+  expected: |
+    4 turns, 3 tools, 0 validation_errors, final stop=end_turn
+    3 turns, 2 tools, 1 validation_errors, final stop=end_turn
+    2 turns, 0 tools, 0 validation_errors, final stop=max_tokens
+  normalize: collapse-trailing-newline
+solution: |
+  trace_a = [
+      {"turn": 1, "stop_reason": "tool_use", "tools_called": ["search"],    "validation_errors": 0},
+      {"turn": 2, "stop_reason": "tool_use", "tools_called": ["read_page"], "validation_errors": 0},
+      {"turn": 3, "stop_reason": "tool_use", "tools_called": ["summarize"], "validation_errors": 0},
+      {"turn": 4, "stop_reason": "end_turn", "tools_called": [],            "validation_errors": 0},
+  ]
+
+  trace_b = [
+      {"turn": 1, "stop_reason": "tool_use", "tools_called": ["search"],    "validation_errors": 1},
+      {"turn": 2, "stop_reason": "tool_use", "tools_called": ["search"],    "validation_errors": 0},
+      {"turn": 3, "stop_reason": "end_turn", "tools_called": [],            "validation_errors": 0},
+  ]
+
+  trace_c = [
+      {"turn": 1, "stop_reason": "tool_use",   "tools_called": [],          "validation_errors": 0},
+      {"turn": 2, "stop_reason": "max_tokens", "tools_called": [],          "validation_errors": 0},
+  ]
+
+  def summarize_trace(trace):
+      n_turns = len(trace)
+      n_tools = sum(len(t["tools_called"]) for t in trace)
+      n_validation = sum(t["validation_errors"] for t in trace)
+      final_stop = trace[-1]["stop_reason"]
+      return f"{n_turns} turns, {n_tools} tools, {n_validation} validation_errors, final stop={final_stop}"
+
+  for tr in [trace_a, trace_b, trace_c]:
+      print(summarize_trace(tr))
+hint:
+  - level: 1
+    body: 'Compute each summary number with a comprehension over `trace`: `len(trace)`, `sum(len(t["tools_called"]) for t in trace)`, `sum(t["validation_errors"] for t in trace)`, `trace[-1]["stop_reason"]`. Then format as the f-string.'
+  - level: 2
+    body: '`f"{n_turns} turns, {n_tools} tools, {n_validation} validation_errors, final stop={final_stop}"` — exact phrasing matters for grading.'
