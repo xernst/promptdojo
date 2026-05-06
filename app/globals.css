@@ -110,3 +110,17 @@ body {
 
 .cm-editor { height: 100%; }
 .cm-scroller { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+/* Brand heartbeat — 1.0 Hz cursor blink. MOTION.md:6-12.
+   steps(1) is intentional — a hard on/off, never a fade. Fades feel like sleep. */
+@keyframes blink-1hz {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.cursor-blink {
+  animation: blink-1hz 1s steps(1) infinite;
+  color: var(--color-ember-500);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-blink { animation: none; opacity: 1; }
+}

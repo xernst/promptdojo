@@ -5,6 +5,7 @@ import { getV2Toc, getV2Chapter } from "@/lib/content-v2";
 import HomeClient from "@/components/v2/HomeClient";
 import StreakWidget from "@/components/StreakWidget";
 import PyodidePreloader from "@/components/PyodidePreloader";
+import Wordmark from "@/components/Wordmark";
 
 export const metadata: Metadata = {
   title: "promptdojo — free interactive python course for ai builders",
@@ -62,10 +63,10 @@ export default async function Home() {
       <PyodidePreloader />
       <header className="mb-12 flex items-end justify-between">
         <div>
-          <div className="text-xs uppercase tracking-[0.2em] text-ember-500">
-            promptdojo
+          <div className="text-[11px] uppercase tracking-[0.42em]">
+            <Wordmark size="text-[11px]" />
           </div>
-          <h1 className="mt-2 font-display text-5xl font-semibold leading-[1.05] tracking-tight text-ink-50 sm:text-6xl">
+          <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.05] tracking-tight text-ink-50 sm:text-6xl">
             python for ai-first builders.
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-ink-300">

@@ -335,8 +335,8 @@ const PersistentIDE = forwardRef<PersistentIDEHandle, Props>(function Persistent
           className="flex-1 overflow-auto p-3 font-mono text-[12.5px] leading-relaxed"
         >
           {!hasOutput && !outputExtra && !ranEmpty && !running && (
-            <div className="italic text-ink-600">
-              Run your code to see output here.
+            <div className="font-mono text-sm text-ink-500">
+              [promptdojo:~]$ <span className="cursor-blink">_</span>
             </div>
           )}
           {running && (

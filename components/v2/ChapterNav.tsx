@@ -9,6 +9,7 @@ import {
 } from "@/lib/storage";
 import type { Chapter, ManifestToc } from "@/lib/content/schema";
 import { cn } from "@/lib/utils";
+import Wordmark from "@/components/Wordmark";
 
 export type ChapterNavTree = {
   toc: ManifestToc;
@@ -53,8 +54,8 @@ export default function V2ChapterNav({
     <nav className="flex h-full flex-col overflow-y-auto bg-ink-900">
       <div className="border-b border-ink-800 px-4 py-4">
         <Link href="/" className="block">
-          <div className="font-display text-base text-ember-400">promptdojo</div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">
+          <Wordmark size="text-base" />
+          <div className="mt-1 text-[10px] uppercase tracking-widest text-ink-500 font-mono">
             python for builders
           </div>
         </Link>

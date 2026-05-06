@@ -6,6 +6,7 @@ import { useCallback, useMemo, useState } from "react";
 import { setUserProfile } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import PyodidePreloader from "@/components/PyodidePreloader";
+import Wordmark from "@/components/Wordmark";
 
 // UX §3 — five screens, one schema saved.
 // Voice (Brand §3/§4): dry, adult, no exclamation marks. Skip is a small text
@@ -160,11 +161,8 @@ export default function OnboardingPage() {
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 py-10 sm:py-16">
       <PyodidePreloader />
       <header className="mb-10 flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-xs uppercase tracking-[0.2em] text-ember-500 hover:text-ember-400"
-        >
-          promptdojo
+        <Link href="/" className="block">
+          <Wordmark size="text-base" />
         </Link>
         <div className="flex items-center gap-1.5" aria-label={`step ${step + 1} of 5`}>
           {[0, 1, 2, 3, 4].map((i) => (
