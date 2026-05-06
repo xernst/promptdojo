@@ -93,7 +93,7 @@ export default function BrainDump() {
             rows={3}
           />
           <div className="border-t border-ink-800 px-3 py-2 flex gap-2">
-            <button onClick={add} className="flex-1 rounded bg-ember-600 px-2 py-1 text-xs font-medium text-white hover:bg-ember-500">
+            <button onClick={add} className="flex-1 rounded bg-ember-600 px-2 py-1 text-xs font-medium text-ink-100 hover:bg-ember-500">
               Save
             </button>
             <button onClick={exportToFile} className="rounded border border-ink-700 px-2 py-1 text-xs text-ink-300 hover:bg-ink-800">

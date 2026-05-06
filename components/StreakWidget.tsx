@@ -23,20 +23,20 @@ export default function StreakWidget() {
   if (!s) return null;
 
   return (
-    <div className="flex items-center gap-3 text-xs">
+    <div className="flex items-center gap-3 font-mono text-xs tabular-nums">
       <span
         title={`${s.current}-day streak (longest ${s.longest})`}
-        className="inline-flex items-center gap-1 text-orange-300"
+        className="inline-flex items-center gap-1 text-ember-500"
       >
-        <Flame size={14} className={s.current > 0 ? "fill-orange-400 text-orange-400" : "text-ink-600"} />
+        <Flame size={14} className={s.current > 0 ? "fill-ember-500 text-ember-500" : "text-ink-700"} />
         {s.current}
       </span>
-      <span title={`${s.embers} ember(s) — auto-protect missed days`} className="inline-flex items-center gap-1 text-amber-300">
-        <Sparkles size={14} className={s.embers > 0 ? "text-amber-400" : "text-ink-600"} />
+      <span title={`${s.embers} ember(s) — auto-protect missed days`} className="inline-flex items-center gap-1 text-ember-500">
+        <Sparkles size={14} className={s.embers > 0 ? "text-ember-500" : "text-ink-700"} />
         {s.embers}
       </span>
-      <span title={`${s.frozenFlames} frozen flame(s) — earned per chapter`} className="inline-flex items-center gap-1 text-cyan-300">
-        <Snowflake size={14} className={s.frozenFlames > 0 ? "text-cyan-400" : "text-ink-600"} />
+      <span title={`${s.frozenFlames} frozen flame(s) — earned per chapter`} className="inline-flex items-center gap-1 text-ember-500">
+        <Snowflake size={14} className={s.frozenFlames > 0 ? "text-ember-500" : "text-ink-700"} />
         {s.frozenFlames}
       </span>
       <span title="Total XP earned" className="hidden sm:inline text-ink-400">

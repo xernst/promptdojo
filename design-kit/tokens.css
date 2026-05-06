@@ -1,9 +1,10 @@
 /*
- * Promptdojo design tokens
- * Source of truth: design-kit/tokens.json
+ * READ-ONLY DOCUMENTATION.
+ * Runtime tokens live in app/globals.css @theme {} block.
+ * Edits here do NOT take effect. If you change a value here, also change it there.
  *
- * Import this into app/globals.css or a stylesheet root, OR copy the
- * :root block into Tailwind's @theme inline {} configuration.
+ * Source of truth: app/globals.css (Tailwind 4 @theme block).
+ * design-kit/tokens.json is the spec (V2 may codegen from there).
  */
 
 :root {
@@ -12,7 +13,7 @@
   --ink-900: #18181b;
   --ink-800: #27272a;
   --ink-700: #3f3f46;
-  --ink-500: #71717a;
+  --ink-500: #8a8a93;
   --ink-400: #a1a1aa;
   --ink-300: #d4d4d8;
   --ink-100: #f4f4f5;

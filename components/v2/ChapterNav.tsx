@@ -75,7 +75,7 @@ export default function V2ChapterNav({
                   isActive
                     ? "bg-ink-800 text-ink-100"
                     : chapterDone
-                      ? "text-signal hover:bg-ink-800/50"
+                      ? "text-ember-700 hover:bg-ink-800/50"
                       : "text-ink-400 hover:bg-ink-800/50 hover:text-ink-200",
                 )}
               >
@@ -90,7 +90,7 @@ export default function V2ChapterNav({
                   </span>
                   <span className="truncate">{shortChapterTitle(entry.title)}</span>
                 </span>
-                {chapterDone && <Check size={11} className="shrink-0 text-signal" />}
+                {chapterDone && <Check size={11} className="shrink-0 text-ember-700" />}
               </button>
               {isOpen && detail && (
                 <ChapterDetail
@@ -144,7 +144,7 @@ function ChapterDetail({
                 isActiveLesson
                   ? "text-ember-400"
                   : lessonDone
-                    ? "text-signal hover:text-signal/80"
+                    ? "text-ember-700 hover:text-ember-500"
                     : "text-ink-500 hover:text-ink-200",
               )}
             >
@@ -193,11 +193,11 @@ function StepStatusIcon({
   active: boolean;
 }) {
   if (status === "passed")
-    return <Check size={11} className="text-signal" />;
+    return <Check size={11} className="text-ember-700" />;
   if (active) return <Circle size={9} className="text-ember-500 fill-ember-500" />;
   if (status === "skipped" || status === "failed")
     return <Circle size={9} className="text-ink-500" />;
-  return <Lock size={10} className="text-ink-700" />;
+  return <Lock size={10} className="text-ink-500" />;
 }
 
 function shortChapterTitle(full: string): string {

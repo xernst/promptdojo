@@ -73,8 +73,8 @@ export default function DailyGoalDial({
   const pct = goal > 0 ? Math.min(1, minutes / goal) : 0;
   const banked = reached && minutes > goal;
 
-  // Conic-gradient ring: ember while ramping up, signal at-or-past goal.
-  const fillColor = reached ? "var(--color-signal)" : "var(--color-ember-500)";
+  // Conic-gradient ring: dim ember while ramping up, full ember at-or-past goal.
+  const fillColor = reached ? "var(--color-ember-500)" : "var(--color-ember-700)";
   const ringStyle = {
     background: `conic-gradient(${fillColor} ${pct * 360}deg, var(--color-ink-800) 0deg)`,
   };
@@ -96,7 +96,7 @@ export default function DailyGoalDial({
         style={ringStyle}
       >
         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink-950 text-[10px] font-medium text-ink-200">
-          {reached ? <Sun size={12} className="text-signal" /> : minutes}
+          {reached ? <Sun size={12} className="text-ember-500" /> : minutes}
         </span>
         {banked && (
           <span

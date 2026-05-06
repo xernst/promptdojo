@@ -127,7 +127,7 @@ export default function FillBlankStepView({
                   "rounded border px-2 py-1 font-mono text-sm",
                   "border-ink-700 bg-ink-950 text-ember-300",
                   "focus:border-ember-500 focus:outline-none",
-                  isWrong && "border-rose-500/60",
+                  isWrong && "border-ink-700",
                 )}
                 placeholder="___"
                 autoComplete="off"
@@ -157,7 +157,7 @@ export default function FillBlankStepView({
             aria-live="polite"
             className={cn(
               "inline-flex items-center gap-1.5 text-sm",
-              allCorrect ? "text-signal" : "text-rose-400",
+              allCorrect ? "text-ember-700" : "text-ink-400",
             )}
           >
             {allCorrect ? (

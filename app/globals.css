@@ -2,7 +2,7 @@
 
 @theme {
   --color-background: #0E0F12;
-  --color-foreground: #F7F4ED;
+  --color-foreground: #f4f4f5;
   --color-ink-50: #fafafa;
   --color-ink-100: #f4f4f5;
   --color-ink-200: #e4e4e7;
@@ -28,10 +28,10 @@
   --color-ember-800: #9c3013;
   --color-ember-900: #812a14;
   --color-ember-950: #461306;
-  --color-paper: #F7F4ED;
-  --color-signal: #5BC8AF;
-  --color-slate-custom: #9AA0A8;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Semantic — used once each in canon. --ok in pyodide success, --err in WEDGE bug. */
+  --color-ok: #86efac;
+  --color-err: #ef4444;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-display: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
 }

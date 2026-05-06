@@ -94,8 +94,8 @@ export default function MultipleChoiceStepView({
                   "border-ink-800 bg-ink-900",
                   !submitted && "hover:border-ink-600",
                   isSelected && !submitted && "border-ember-500 bg-ink-800",
-                  showCorrect && "border-signal/60 bg-signal/5 text-signal",
-                  showWrong && "border-rose-500/60 bg-rose-500/5 text-rose-300",
+                  showCorrect && "border-ember-700/60 bg-ember-700/5 text-ember-700",
+                  showWrong && "border-ink-700 bg-ink-800/40 text-ink-400",
                 )}
               >
                 <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded bg-ink-800 text-[10px] text-ink-400">
@@ -131,7 +131,7 @@ export default function MultipleChoiceStepView({
             aria-live="polite"
             className={cn(
               "inline-flex items-center gap-1.5 text-sm",
-              correctSet.has(selected ?? "") ? "text-signal" : "text-rose-400",
+              correctSet.has(selected ?? "") ? "text-ember-700" : "text-ink-400",
             )}
           >
             {correctSet.has(selected ?? "") ? (

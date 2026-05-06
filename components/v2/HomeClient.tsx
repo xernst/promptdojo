@@ -81,7 +81,7 @@ export default function HomeClient({ fallback, chapters }: Props) {
           </div>
         </div>
         <div className="ml-4 shrink-0 rounded-full bg-ember-600 p-3 transition group-hover:bg-ember-500">
-          <ArrowRight size={20} className="text-white" />
+          <ArrowRight size={20} className="text-ink-100" />
         </div>
       </Link>
     );
@@ -111,7 +111,7 @@ export default function HomeClient({ fallback, chapters }: Props) {
         </div>
       </div>
       <div className="ml-4 shrink-0 rounded-full bg-ember-600 p-3 transition group-hover:bg-ember-500">
-        <Play size={20} className="fill-white text-white" />
+        <Play size={20} className="fill-ink-100 text-ink-100" />
       </div>
     </Link>
   );

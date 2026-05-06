@@ -26,7 +26,7 @@ export default function OutputPane({ stdout, stderr, passed, expected, next }: P
           </span>
         )}
         {passed === false && (
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-400">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-err">
             <XCircle size={14} /> Not yet
           </span>
         )}
@@ -41,7 +41,7 @@ export default function OutputPane({ stdout, stderr, passed, expected, next }: P
           <pre className="whitespace-pre-wrap text-ink-200">{stdout}</pre>
         )}
         {stderr && (
-          <pre className="whitespace-pre-wrap text-rose-400 mt-2">{stderr}</pre>
+          <pre className="whitespace-pre-wrap text-err mt-2">{stderr}</pre>
         )}
         {passed === false && expected && !stderr && (
           <div className="mt-3 rounded-md border border-ink-800 bg-ink-900 p-3">

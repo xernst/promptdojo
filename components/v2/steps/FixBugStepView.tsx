@@ -105,8 +105,8 @@ export default function FixBugStepView({
           className={cn(
             "flex items-start gap-2 rounded-md border px-3 py-2 text-sm",
             submitted.passed
-              ? "border-signal/50 bg-signal/5 text-signal"
-              : "border-rose-500/40 bg-rose-500/5 text-rose-300",
+              ? "border-ember-700/50 bg-ember-700/5 text-ember-700"
+              : "border-ink-700 bg-ink-800/40 text-ink-400",
           )}
         >
           {submitted.passed ? (

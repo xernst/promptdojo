@@ -344,7 +344,7 @@ const PersistentIDE = forwardRef<PersistentIDEHandle, Props>(function Persistent
           )}
           {ranEmpty && (
             <div className="text-ink-500">
-              <span className="text-emerald-400">✓</span> Ran with no output.
+              <span className="text-ok">✓</span> Ran with no output.
               <span className="ml-1 text-ink-600">
                 Add a <code className="rounded bg-ink-900 px-1 text-ink-400">print(…)</code> to see something.
               </span>
@@ -352,7 +352,7 @@ const PersistentIDE = forwardRef<PersistentIDEHandle, Props>(function Persistent
           )}
           {stdout && <pre className="whitespace-pre-wrap text-ink-200">{stdout}</pre>}
           {stderr && (
-            <pre className="mt-2 whitespace-pre-wrap text-rose-400">{stderr}</pre>
+            <pre className="mt-2 whitespace-pre-wrap text-err">{stderr}</pre>
           )}
           {outputExtra && <div className="mt-3">{outputExtra}</div>}
         </div>
