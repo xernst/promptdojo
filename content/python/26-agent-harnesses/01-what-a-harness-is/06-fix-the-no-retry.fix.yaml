@@ -1,0 +1,58 @@
+xp: 4
+estSeconds: 100
+concept: retries-around-model-call
+prompt: |
+  The harness's layer-2 code calls the model exactly once. If the
+  call hits a transient 429 (rate limit) or 503 (service
+  unavailable), it raises and the user sees a crash. Production
+  harnesses retry transient failures with exponential backoff.
+
+  Fix `call_with_retries(fn, max_attempts=3)` to retry up to 3
+  times on transient errors (any exception with `transient=True`
+  attribute). Return the first successful result. Re-raise on
+  the final attempt failure.
+
+  Expected output:
+  ```
+  succeeded on attempt 3
+  ```
+brokenCode: |
+  call_count = {"n": 0}
+
+  class TransientError(Exception):
+      transient = True
+
+  def flaky_call():
+      call_count["n"] += 1
+      if call_count["n"] < 3:
+          raise TransientError("503 service unavailable")
+      return "succeeded on attempt 3"
+
+  def call_with_retries(fn, max_attempts=3):
+      # bug: no retry. one attempt, raises on first failure.
+      return fn()
+
+  print(call_with_retries(flaky_call))
+bugLines:
+  - 13
+  - 14
+grader:
+  kind: stdout-equality
+  expected: "succeeded on attempt 3"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Wrap the call in a loop `for attempt in range(max_attempts)`. Try, except TransientError — if not the last attempt, continue. Else re-raise. Else (success) return result.'
+  - level: 2
+    body: |
+      Replace the body of `call_with_retries`:
+
+      ```python
+      for attempt in range(max_attempts):
+          try:
+              return fn()
+          except TransientError:
+              if attempt == max_attempts - 1:
+                  raise
+      ```
+revealAfter: 5

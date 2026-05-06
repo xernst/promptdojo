@@ -1,0 +1,35 @@
+xp: 3
+estSeconds: 80
+concept: classify-harness-code-by-layer
+code: |
+  # five lines from a real harness. each belongs to one layer.
+
+  snippets = {
+      "load_claude_md(root)":               1,
+      "client.messages.create(...)":        2,
+      "for block in response.content:":     3,
+      "TOOLS[name](**args)":                4,
+      "with_retries(call, max_attempts=3)": 2,
+  }
+
+  layer_counts = [0, 0, 0, 0, 0]  # index 1..4 used
+  for code, layer in snippets.items():
+      layer_counts[layer] += 1
+
+  for i in range(1, 5):
+      print(f"layer {i}: {layer_counts[i]}")
+prompt: |
+  Read the editor. Five snippets, classified into the four layers.
+  The script counts how many snippets land in each layer. What
+  does it print?
+grader:
+  kind: stdout-equality
+  expected: |
+    layer 1: 1
+    layer 2: 2
+    layer 3: 1
+    layer 4: 1
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Layer 1 (input prep): `load_claude_md` = 1. Layer 2 (model call + retries): `messages.create` and `with_retries` = 2. Layer 3 (output parsing): `for block in response.content` = 1. Layer 4 (tool dispatch): `TOOLS[name](**args)` = 1.'

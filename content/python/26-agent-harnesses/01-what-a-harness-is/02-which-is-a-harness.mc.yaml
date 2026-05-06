@@ -1,0 +1,34 @@
+xp: 2
+estSeconds: 55
+concept: harness-vs-wrapper
+code: |
+  systems = {
+      "A": "A Python script that calls anthropic.messages.create with a hardcoded prompt and prints the result.",
+      "B": "Cursor — reads open files, runs edits, applies diffs, has tools.",
+      "C": "A web chat UI that sends user input to gpt-4o and renders the response.",
+      "D": "Aider — gathers repo context, calls model, applies file edits, integrates with git.",
+  }
+  for k, v in systems.items():
+      print(f"{k}: {v}")
+prompt: |
+  A "harness" wraps the model API with at least: input prep, model
+  call, output parsing, AND tool dispatch (the model can change the
+  world, not just describe it). Which TWO of the systems above are
+  harnesses?
+options:
+  - id: b_and_d
+    label: "B (Cursor) and D (Aider)"
+  - id: all_four
+    label: "All four — anything that calls a model is a harness"
+    explain: "A and C are wrappers — they call the model and render output, but the model can't change anything. No tool dispatch = not a harness."
+  - id: a_and_b
+    label: "A and B"
+    explain: "A is just a script that calls the API. No tools, no input prep beyond a hardcoded prompt — it's a wrapper, not a harness."
+  - id: c_and_d
+    label: "C and D"
+    explain: "C is a chat UI. The model talks; nothing changes outside the chat window. No tool dispatch."
+answerIds:
+  - b_and_d
+hint:
+  - level: 1
+    body: 'The discriminator is layer 4: tool dispatch. Can the system DO something (edit a file, run a command, search the web) on the model''s behalf? If yes, harness. If no (just chat), wrapper.'

@@ -1,0 +1,114 @@
+xp: 8
+estSeconds: 220
+concept: full-claude-md-audit
+prompt: |
+  Final drill. Audit a real-shape CLAUDE.md against all four
+  properties, plus check for duplicate rules across nested files.
+  Write `audit_config(text, nested_text)` that:
+
+  - Splits both `text` (root) and `nested_text` (leaf) into rules
+    (lines starting with `- `).
+  - Counts: `root_rules`, `leaf_rules`, `duplicate_rules` (rules
+    that appear identically in both).
+  - Counts fluff phrases (same list as step 8) across both files
+    combined.
+  - Returns
+    `{"root_rules": int, "leaf_rules": int, "duplicate_rules": int, "fluff_count": int, "advice": str}`
+    where `advice` is:
+    - `"good"` if `duplicate_rules == 0` AND `fluff_count == 0`
+    - `"prune duplicates"` if `duplicate_rules > 0`
+    - `"cut fluff"` if `fluff_count > 0` (only when no duplicates)
+    - if BOTH issues, return `"prune duplicates"` first (higher priority).
+
+  Two cases run. Expected output:
+  ```
+  case 1: root=4 leaf=2 dup=1 fluff=0 advice=prune duplicates
+  case 2: root=3 leaf=2 dup=0 fluff=2 advice=cut fluff
+  ```
+starter: |
+  ROOT_1 = """
+  - Use pnpm, not npm.
+  - Tests live in tests/.
+  - No console.log in committed code.
+  - TypeScript strict, prefer unknown.
+  """
+
+  LEAF_1 = """
+  - css-in-js: prefer Tailwind classes.
+  - No console.log in committed code.
+  """
+
+  ROOT_2 = """
+  - Use pnpm, not npm.
+  - Tests live in tests/.
+  - Write clean code.
+  """
+
+  LEAF_2 = """
+  - css-in-js: prefer Tailwind classes.
+  - Be helpful.
+  """
+
+  # define audit_config(text, nested_text) below
+
+  for label, root, leaf in [("case 1", ROOT_1, LEAF_1), ("case 2", ROOT_2, LEAF_2)]:
+      r = audit_config(root, leaf)
+      print(f"{label}: root={r['root_rules']} leaf={r['leaf_rules']} dup={r['duplicate_rules']} fluff={r['fluff_count']} advice={r['advice']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    case 1: root=4 leaf=2 dup=1 fluff=0 advice=prune duplicates
+    case 2: root=3 leaf=2 dup=0 fluff=2 advice=cut fluff
+  normalize: collapse-trailing-newline
+solution: |
+  ROOT_1 = """
+  - Use pnpm, not npm.
+  - Tests live in tests/.
+  - No console.log in committed code.
+  - TypeScript strict, prefer unknown.
+  """
+
+  LEAF_1 = """
+  - css-in-js: prefer Tailwind classes.
+  - No console.log in committed code.
+  """
+
+  ROOT_2 = """
+  - Use pnpm, not npm.
+  - Tests live in tests/.
+  - Write clean code.
+  """
+
+  LEAF_2 = """
+  - css-in-js: prefer Tailwind classes.
+  - Be helpful.
+  """
+
+  FLUFF_PHRASES = ("clean code", "be helpful", "good code", "write good", "high quality", "best practices")
+
+  def audit_config(text, nested_text):
+      def extract_rules(t):
+          return [l.lstrip()[2:] for l in t.split("\n") if l.lstrip().startswith("- ")]
+      root = extract_rules(text)
+      leaf = extract_rules(nested_text)
+      duplicates = sum(1 for r in leaf if r in root)
+      combined = root + leaf
+      fluff_count = sum(1 for r in combined if any(p in r.lower() for p in FLUFF_PHRASES))
+      if duplicates > 0:
+          advice = "prune duplicates"
+      elif fluff_count > 0:
+          advice = "cut fluff"
+      else:
+          advice = "good"
+      return {
+          "root_rules": len(root),
+          "leaf_rules": len(leaf),
+          "duplicate_rules": duplicates,
+          "fluff_count": fluff_count,
+          "advice": advice,
+      }
+
+  for label, root, leaf in [("case 1", ROOT_1, LEAF_1), ("case 2", ROOT_2, LEAF_2)]:
+      r = audit_config(root, leaf)
+      print(f"{label}: root={r['root_rules']} leaf={r['leaf_rules']} dup={r['duplicate_rules']} fluff={r['fluff_count']} advice={r['advice']}")
+passThreshold: 0.66

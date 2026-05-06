@@ -1,0 +1,123 @@
+xp: 5
+estSeconds: 200
+concept: claude-md-validator
+prompt: |
+  Write `score_claude_md(text)` that scores a CLAUDE.md against
+  the four properties from step 3. The function:
+
+  - Returns a dict with keys: `lines`, `rules`, `links`, `fluff_count`,
+    `score` (0-4).
+  - `lines` = total line count (split on `\n`, count non-empty lines).
+  - `rules` = count of lines starting with `- ` (bullet rules).
+  - `links` = count of lines with `.md`, `.yaml`, `.json`, or `.toml`
+    in them (rough heuristic for "links to a real file").
+  - `fluff_count` = count of lines containing any of these phrases
+    (case-insensitive): `"clean code"`, `"be helpful"`, `"good
+    code"`, `"write good"`, `"high quality"`, `"best practices"`.
+  - `score` = sum of these checks (each adds 1):
+    - `lines <= 80` (terse) → +1
+    - `rules >= 5` (actionable bullets present) → +1
+    - `links >= 1` (links instead of duplicating) → +1
+    - `fluff_count == 0` (no fluff) → +1
+
+  Two cases run for you. Expected output:
+  ```
+  good file: lines=15 rules=10 links=2 fluff=0 score=4
+  bad file:  lines=3 rules=2 links=0 fluff=2 score=1
+  ```
+starter: |
+  GOOD = """
+  # Project conventions
+
+  ## Stack
+  - pnpm (not npm). Lockfile: pnpm-lock.yaml.
+  - Next.js 16, React 19, Tailwind v4.
+  - TypeScript strict; prefer `unknown` over `any`.
+
+  ## Folder layout
+  - app/ — Next.js routes
+  - components/ — shared UI
+  - lib/ — utilities (no React)
+
+  ## Forbidden
+  - Don't modify v1/ — frozen.
+  - Don't add new global state.
+
+  ## Where to look
+  - Auth flow: docs/auth.md
+  - Build pipeline: scripts/build.mjs
+  """
+
+  BAD = """
+  # Project conventions
+  - Write clean code.
+  - Be helpful.
+  """
+
+  # define score_claude_md(text) below
+
+  good = score_claude_md(GOOD)
+  bad = score_claude_md(BAD)
+  print(f"good file: lines={good['lines']} rules={good['rules']} links={good['links']} fluff={good['fluff_count']} score={good['score']}")
+  print(f"bad file:  lines={bad['lines']} rules={bad['rules']} links={bad['links']} fluff={bad['fluff_count']} score={bad['score']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    good file: lines=15 rules=10 links=2 fluff=0 score=4
+    bad file:  lines=3 rules=2 links=0 fluff=2 score=1
+  normalize: collapse-trailing-newline
+solution: |
+  GOOD = """
+  # Project conventions
+
+  ## Stack
+  - pnpm (not npm). Lockfile: pnpm-lock.yaml.
+  - Next.js 16, React 19, Tailwind v4.
+  - TypeScript strict; prefer `unknown` over `any`.
+
+  ## Folder layout
+  - app/ — Next.js routes
+  - components/ — shared UI
+  - lib/ — utilities (no React)
+
+  ## Forbidden
+  - Don't modify v1/ — frozen.
+  - Don't add new global state.
+
+  ## Where to look
+  - Auth flow: docs/auth.md
+  - Build pipeline: scripts/build.mjs
+  """
+
+  BAD = """
+  # Project conventions
+  - Write clean code.
+  - Be helpful.
+  """
+
+  FLUFF_PHRASES = ("clean code", "be helpful", "good code", "write good", "high quality", "best practices")
+  LINK_EXTS = (".md", ".yaml", ".json", ".toml")
+
+  def score_claude_md(text):
+      lines_list = [l for l in text.split("\n") if l.strip()]
+      lines = len(lines_list)
+      rules = sum(1 for l in lines_list if l.lstrip().startswith("- "))
+      links = sum(1 for l in lines_list if any(ext in l for ext in LINK_EXTS))
+      fluff_count = sum(1 for l in lines_list if any(p in l.lower() for p in FLUFF_PHRASES))
+      score = (
+          (1 if lines <= 80 else 0)
+          + (1 if rules >= 5 else 0)
+          + (1 if links >= 1 else 0)
+          + (1 if fluff_count == 0 else 0)
+      )
+      return {"lines": lines, "rules": rules, "links": links, "fluff_count": fluff_count, "score": score}
+
+  good = score_claude_md(GOOD)
+  bad = score_claude_md(BAD)
+  print(f"good file: lines={good['lines']} rules={good['rules']} links={good['links']} fluff={good['fluff_count']} score={good['score']}")
+  print(f"bad file:  lines={bad['lines']} rules={bad['rules']} links={bad['links']} fluff={bad['fluff_count']} score={bad['score']}")
+hint:
+  - level: 1
+    body: 'Split the text into lines, filter to non-empty. Count: total lines, lines starting with `- ` (rules), lines with file extensions (links), lines with fluff phrases. Sum the four threshold checks.'
+  - level: 2
+    body: 'Use `any(p in l.lower() for p in FLUFF_PHRASES)` for case-insensitive fluff detection. Use `any(ext in l for ext in LINK_EXTS)` for links.'

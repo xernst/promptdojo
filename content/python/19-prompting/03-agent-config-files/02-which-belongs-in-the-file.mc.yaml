@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 55
+concept: rule-vs-fluff
+code: |
+  candidates = {
+      "A": "Use `pnpm`, not `npm`. Lockfile is pnpm-lock.yaml.",
+      "B": "Write clean, maintainable code that's easy to read.",
+      "C": "API routes live in app/api/. Components live in components/.",
+      "D": "Be helpful, accurate, and friendly to users.",
+  }
+  for k, v in candidates.items():
+      print(f"{k}: {v}")
+prompt: |
+  Four candidate lines for a CLAUDE.md. Two are *project-specific
+  rules the model can't infer*. Two are *general advice the model
+  already knows or can't act on*. Which TWO belong in the file?
+options:
+  - id: a_and_c
+    label: "A (pnpm convention) and C (folder layout)"
+  - id: b_and_d
+    label: "B (clean code) and D (be helpful)"
+    explain: "Both are advice every model already follows by default. Putting them in CLAUDE.md eats tokens with no behavioral change."
+  - id: a_and_b
+    label: "A and B"
+    explain: "B is fluff. The model already aims for clean code; restating it doesn't change behavior."
+  - id: c_and_d
+    label: "C and D"
+    explain: "D is fluff. C earns its slot; D doesn't."
+answerIds:
+  - a_and_c
+hint:
+  - level: 1
+    body: 'A rule earns its slot when it tells the model something it CAN''T figure out from the codebase or its training. Generic advice ("be helpful," "write clean code") is already baked into every model — restating it is wasted tokens.'

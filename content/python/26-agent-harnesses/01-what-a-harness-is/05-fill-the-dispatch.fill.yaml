@@ -1,0 +1,33 @@
+xp: 3
+estSeconds: 65
+concept: tool-registry-dispatch
+prompt: |
+  The harness has a tool registry (a dict) and a `tool_use` block
+  from the model. Fill in the dispatch line: look up the tool by
+  name and call it with the input dict unpacked.
+
+  Expected output:
+  ```
+  results for tokyo
+  ```
+code: |
+  TOOLS = {
+      "search": lambda q: f"results for {q}",
+      "read":   lambda path: f"<contents of {path}>",
+  }
+
+  tool_use = {"name": "search", "input": {"q": "tokyo"}}
+
+  result = ___
+  print(result)
+blanks:
+  - id: dispatch
+    accept:
+      - 'TOOLS[tool_use["name"]](**tool_use["input"])'
+      - "TOOLS[tool_use['name']](**tool_use['input'])"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Two pieces: registry lookup `TOOLS[name]`, then call with `**input` to unpack the dict as keyword arguments.'
+  - level: 2
+    body: '`TOOLS[tool_use["name"]](**tool_use["input"])` — the canonical layer-4 dispatch.'

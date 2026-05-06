@@ -1,0 +1,113 @@
+xp: 5
+estSeconds: 200
+concept: minimal-four-layer-harness
+prompt: |
+  Write `mini_harness(user_input, tools, fake_model, max_iters)`
+  that implements the four layers in under 50 lines:
+
+  - **Layer 1**: build `messages = [{"role": "user", "content": user_input}]`.
+  - Loop up to `max_iters` times:
+    - **Layer 2**: call `fake_model(messages)` (returns a dict
+      with `stop_reason` and `content`).
+    - **Layer 3**: filter `content` for text blocks (`type=="text"`)
+      and tool_use blocks (`type=="tool_use"`).
+    - If `stop_reason == "end_turn"`: return
+      `{"text": <text joined with " ">, "iters": <iter count>, "tool_calls": <total tool runs across all iters>}`.
+    - **Layer 4**: for each tool_use block, dispatch
+      `tools[block["name"]](**block["input"])`. Track total tool
+      runs. Append assistant + user(tool_results) turns.
+  - On cap: return `{"text": "capped", "iters": max_iters, "tool_calls": <count>}`.
+
+  Two cases run for you. Expected output:
+  ```
+  text='Tokyo guide.' iters=2 tool_calls=1
+  text='capped' iters=2 tool_calls=2
+  ```
+starter: |
+  TOOLS = {"search": lambda q: f"hits for {q}"}
+
+  good_responses = iter([
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "t1", "name": "search", "input": {"q": "ramen"}}]},
+      {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Tokyo guide."}]},
+  ])
+
+  bad_responses = iter([
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "b1", "name": "search", "input": {"q": "x"}}]},
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "b2", "name": "search", "input": {"q": "y"}}]},
+  ])
+
+  current = {"iter": good_responses}
+  def fake_model(messages):
+      return next(current["iter"])
+
+  # define mini_harness(user_input, tools, fake_model, max_iters) below
+
+  current["iter"] = good_responses
+  r = mini_harness("find ramen", TOOLS, fake_model, 5)
+  print(f"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']}")
+
+  current["iter"] = bad_responses
+  r = mini_harness("loop forever", TOOLS, fake_model, 2)
+  print(f"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    text='Tokyo guide.' iters=2 tool_calls=1
+    text='capped' iters=2 tool_calls=2
+  normalize: collapse-trailing-newline
+solution: |
+  TOOLS = {"search": lambda q: f"hits for {q}"}
+
+  good_responses = iter([
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "t1", "name": "search", "input": {"q": "ramen"}}]},
+      {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Tokyo guide."}]},
+  ])
+
+  bad_responses = iter([
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "b1", "name": "search", "input": {"q": "x"}}]},
+      {"stop_reason": "tool_use", "content": [{"type": "tool_use", "id": "b2", "name": "search", "input": {"q": "y"}}]},
+  ])
+
+  current = {"iter": good_responses}
+  def fake_model(messages):
+      return next(current["iter"])
+
+  def mini_harness(user_input, tools, fake_model, max_iters):
+      messages = [{"role": "user", "content": user_input}]
+      tool_calls_total = 0
+
+      for i in range(1, max_iters + 1):
+          response = fake_model(messages)
+          text_blocks = [b for b in response["content"] if b["type"] == "text"]
+          tool_blocks = [b for b in response["content"] if b["type"] == "tool_use"]
+
+          if response["stop_reason"] == "end_turn":
+              return {
+                  "text": " ".join(b["text"] for b in text_blocks),
+                  "iters": i,
+                  "tool_calls": tool_calls_total,
+              }
+
+          tool_results = []
+          for block in tool_blocks:
+              output = tools[block["name"]](**block["input"])
+              tool_calls_total += 1
+              tool_results.append({"type": "tool_result", "tool_use_id": block["id"], "content": output})
+
+          messages.append({"role": "assistant", "content": response["content"]})
+          messages.append({"role": "user", "content": tool_results})
+
+      return {"text": "capped", "iters": max_iters, "tool_calls": tool_calls_total}
+
+  current["iter"] = good_responses
+  r = mini_harness("find ramen", TOOLS, fake_model, 5)
+  print(f"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']}")
+
+  current["iter"] = bad_responses
+  r = mini_harness("loop forever", TOOLS, fake_model, 2)
+  print(f"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']}")
+hint:
+  - level: 1
+    body: 'Same loop shape as previous chapter agent loops, with explicit layer comments. Layer 1: build messages. Loop: layer 2 (call), layer 3 (split content into text/tool_use), branch on stop_reason. On tool_use: layer 4 (dispatch each, append assistant + user turns).'
+  - level: 2
+    body: 'Three counters/buckets: messages list, tool_calls_total int, iter index from `range(1, max_iters + 1)`. End_turn returns the joined text and stats. Cap returns the literal "capped".'

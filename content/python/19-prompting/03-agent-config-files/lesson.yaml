@@ -1,0 +1,16 @@
+slug: agent-config-files
+title: "CLAUDE.md, AGENTS.md, .cursor/rules — the system prompt your agent reads every session"
+estMinutes: 12
+prerequisites:
+  - the-prompt-craft
+  - few-shot-and-reasoning
+order:
+  - 01-intro.read.md
+  - 02-which-belongs-in-the-file.mc.yaml
+  - 03-anatomy-of-a-good-file.read.md
+  - 04-predict-which-rule-fires.predict.yaml
+  - 05-fill-the-rule-block.fill.yaml
+  - 06-fix-the-too-vague.fix.yaml
+  - 07-fix-the-stale-pointer.fix.yaml
+  - 08-write-a-claude-md.write.yaml
+  - 09-checkpoint.checkpoint.yaml

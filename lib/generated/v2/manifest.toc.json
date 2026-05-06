@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "generatedAt": "2026-05-06T18:15:21.848Z",
+  "generatedAt": "2026-05-06T18:27:23.486Z",
   "chapters": [
     {
       "number": 1,
@@ -187,10 +187,10 @@
       "slug": "prompting",
       "title": "Prompting Cursor and Claude Code effectively",
       "blurb": "The difference between a one-shot AI session and a four-hour debugging spiral is almost always the first prompt. Learn the structure that gets you usable code.",
-      "lessonCount": 1,
-      "stepCount": 9,
-      "estMinutes": 9,
-      "xpTotal": 31
+      "lessonCount": 3,
+      "stepCount": 27,
+      "estMinutes": 33,
+      "xpTotal": 95
     },
     {
       "number": 20,
@@ -251,6 +251,16 @@
       "stepCount": 48,
       "estMinutes": 66,
       "xpTotal": 173
+    },
+    {
+      "number": 26,
+      "slug": "agent-harnesses",
+      "title": "Agent harnesses — the layer between you and the raw API",
+      "blurb": "Claude Code, Cursor, Aider, Codex CLI — they're all the same four layers wrapped around the same model API. Learn what those layers are, what each adds, and what you'd build yourself if you had to.",
+      "lessonCount": 1,
+      "stepCount": 9,
+      "estMinutes": 12,
+      "xpTotal": 32
     }
   ]
 }

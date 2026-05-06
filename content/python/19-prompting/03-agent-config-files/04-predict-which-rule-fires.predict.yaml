@@ -1,0 +1,38 @@
+xp: 3
+estSeconds: 80
+concept: nested-rule-resolution
+code: |
+  # three CLAUDE.md files merged top-down. specific overrides general.
+
+  ROOT = ["use pnpm, not npm", "tests live in tests/", "no console.log in committed code"]
+  WEB  = ["css-in-js: prefer Tailwind classes", "no console.log in committed code"]  # restated
+  API  = ["fastify, not express", "no globals — use closures"]
+
+  def merge_rules(*levels):
+      seen = set()
+      merged = []
+      for level in levels:
+          for rule in level:
+              if rule not in seen:
+                  seen.add(rule)
+                  merged.append(rule)
+      return merged
+
+  for_web_file = merge_rules(ROOT, WEB)
+  for_api_file = merge_rules(ROOT, API)
+  print(f"editing apps/web/Page.tsx → {len(for_web_file)} rules")
+  print(f"editing apps/api/route.ts → {len(for_api_file)} rules")
+prompt: |
+  Read the editor. The agent merges ROOT + the leaf-applicable
+  rules, dedup'd. WEB has 2 rules but one ("no console.log...") is
+  already in ROOT so it doesn't double-count. API has 2 fresh
+  rules. What does the script print?
+grader:
+  kind: stdout-equality
+  expected: |
+    editing apps/web/Page.tsx → 4 rules
+    editing apps/api/route.ts → 5 rules
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'For web: ROOT(3) + WEB(2) - 1 dup = 4. For api: ROOT(3) + API(2) - 0 dups = 5.'

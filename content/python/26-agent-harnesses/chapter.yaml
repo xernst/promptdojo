@@ -1,0 +1,6 @@
+number: 26
+slug: agent-harnesses
+title: "Agent harnesses — the layer between you and the raw API"
+blurb: "Claude Code, Cursor, Aider, Codex CLI — they're all the same four layers wrapped around the same model API. Learn what those layers are, what each adds, and what you'd build yourself if you had to."
+lessons:
+  - 01-what-a-harness-is

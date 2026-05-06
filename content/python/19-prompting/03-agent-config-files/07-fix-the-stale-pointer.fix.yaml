@@ -1,0 +1,57 @@
+xp: 4
+estSeconds: 95
+concept: prune-stale-references
+prompt: |
+  The CLAUDE.md "Where to look" section points at `docs/v1-auth.md`
+  — but the v1 directory was deleted six months ago. The model
+  follows the link, gets a 404 / file-not-found, and has to
+  improvise. That's worse than having no link at all (the model
+  improvises confidently and ships wrong assumptions).
+
+  Fix the references list: drop the stale pointer entirely. Don't
+  replace it — if there's no current doc, having no entry is
+  better than a broken one.
+
+  Expected output:
+  ```
+  refs after prune: 2
+  - Auth flow: docs/auth.md
+  - Database schema: docs/db-schema.md
+  ```
+brokenCode: |
+  import os
+
+  refs = [
+      ("Auth flow", "docs/auth.md"),
+      ("Database schema", "docs/db-schema.md"),
+      # bug: v1-auth.md was deleted in the v1 cleanup. stale pointer.
+      ("Legacy auth", "docs/v1-auth.md"),
+  ]
+
+  # mock the file system: only the first two paths exist.
+  EXISTS = {"docs/auth.md", "docs/db-schema.md"}
+
+  pruned = refs  # no pruning yet
+  print(f"refs after prune: {len(pruned)}")
+  for label, path in pruned:
+      print(f"- {label}: {path}")
+bugLines:
+  - 13
+grader:
+  kind: stdout-equality
+  expected: |
+    refs after prune: 2
+    - Auth flow: docs/auth.md
+    - Database schema: docs/db-schema.md
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Filter `refs` to keep only entries whose `path` is in the `EXISTS` set. List comprehension.'
+  - level: 2
+    body: |
+      Change line 13 to:
+
+      ```python
+      pruned = [(label, path) for label, path in refs if path in EXISTS]
+      ```
+revealAfter: 4

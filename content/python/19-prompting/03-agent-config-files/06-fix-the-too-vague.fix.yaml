@@ -1,0 +1,54 @@
+xp: 4
+estSeconds: 90
+concept: vague-rule-to-actionable
+prompt: |
+  The current CLAUDE.md has the rule "Write maintainable code." It's
+  vague — the model can't operationalize it. A reviewer can't mark
+  it pass/fail. It's fluff.
+
+  Rewrite the rule as something specific the model CAN follow:
+  `"Functions over 50 lines: split. Files over 400 lines: split."`
+
+  The script counts how many rules pass the "actionable" check
+  (defined here as: contains a numeric threshold OR a forbidden/required
+  verb like "use", "don't", "prefer").
+
+  Expected output:
+  ```
+  actionable: 3 / 3
+  ```
+brokenCode: |
+  rules = [
+      "Use pnpm, not npm.",
+      "Don't add new global state.",
+      # bug: vague — no threshold, no concrete verb.
+      "Write maintainable code.",
+  ]
+
+  ACTION_VERBS = ("use", "don't", "do not", "prefer", "never", "must")
+
+  def is_actionable(rule):
+      lower = rule.lower()
+      has_verb = any(v in lower for v in ACTION_VERBS)
+      has_number = any(c.isdigit() for c in rule)
+      return has_verb or has_number
+
+  passing = sum(1 for r in rules if is_actionable(r))
+  print(f"actionable: {passing} / {len(rules)}")
+bugLines:
+  - 5
+grader:
+  kind: stdout-equality
+  expected: "actionable: 3 / 3"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Replace the vague rule with a specific one. Either include an action verb (`Use`, `Don''t`, `Prefer`) or a numeric threshold. Example: `"Functions over 50 lines: split. Files over 400 lines: split."`'
+  - level: 2
+    body: |
+      Change line 5 to:
+
+      ```python
+      "Functions over 50 lines: split. Files over 400 lines: split.",
+      ```
+revealAfter: 4

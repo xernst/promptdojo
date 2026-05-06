@@ -1,0 +1,263 @@
+{
+  "number": 26,
+  "slug": "agent-harnesses",
+  "title": "Agent harnesses — the layer between you and the raw API",
+  "blurb": "Claude Code, Cursor, Aider, Codex CLI — they're all the same four layers wrapped around the same model API. Learn what those layers are, what each adds, and what you'd build yourself if you had to.",
+  "overview": "## The thirty lines you've already written, productized\n\nEvery coding agent you use — Claude Code, Cursor, Aider, Continue, Cline, Codex CLI, OpenCode — is the same shape underneath. A user types something, the harness loads context (config files, recent edits, git state, open buffers), calls the model, parses the response, runs any tools the model asked for, sends results back, repeats. Chapter 16 had you write that loop. This chapter asks: what does Claude Code add on top, and could you build it yourself?\n\nThe answer to \"could you build it yourself\" turns out to be yes — minimum viable harnesses are around 200 lines of Python. The interesting questions are which of the *additions* are load-bearing (you need them) versus which are sugar (your particular workflow doesn't).\n\n## The four layers every harness has\n\n1. **Input prep** — load the config files (CLAUDE.md, AGENTS.md), gather context (recent diffs, open files, project structure), construct the messages list. This is where most production harnesses spend the most code, because \"good context\" is what separates Cursor's experience from a raw API call.\n2. **Model call** — the actual `messages.create(...)`. Boring, but harnesses differ on prompt-cache strategy, retry logic, streaming, and provider routing (some support multiple providers).\n3. **Output parsing** — read `content` blocks, dispatch tool_use, accumulate text. Chapter 13 lesson 02 covered the primitive; harnesses wrap it with display logic and incremental rendering.\n4. **Tool dispatch** — run the model's requested tools. Bash, file edits, web searches, git operations. The tool registry is what makes a harness *agentic* — the model can change the world, not just describe it.\n\nDifferent harnesses emphasize different layers. Aider's strength is layer 1 (it's exceptional at gathering relevant context from a codebase). Cursor's strength is layer 4 (its tool palette and edit-application UX). Claude Code's strength is the *config layer* on top — CLAUDE.md hierarchy, hooks, slash commands.\n\n## Why this chapter matters\n\nThree reasons to learn what's in a harness:\n\n- **You'll build one eventually.** Whatever you ship that uses LLMs will at some point need its own harness, even if narrow. The four layers are a checklist for what to build.\n- **You'll choose between them more wisely.** Knowing what each tool optimizes lets you pick the right one for the task instead of using \"whichever you opened first.\"\n- **You'll debug them when they fail.** Harnesses are leaky abstractions; production failures usually happen *between* layers (context loaded badly, tool dispatched wrong, parsing missed a block). Knowing the layer model is how you triage.\n\n## What AI specifically gets wrong\n\n- **Building a \"harness\" that's actually just a wrapper around `messages.create`.** A harness without a tool registry is a chat client. Useful, but not what people mean.\n- **Hardcoding the tool registry inside the loop.** When you want to add a tool, you edit the loop instead of registering one. Three tools later, the loop is unreadable.\n- **Skipping retries.** Real provider APIs 429, 503, hit rate limits. A harness without retries crashes on transient errors and the user blames the model.\n- **Loading the world into context \"just in case.\"** Some harnesses dump everything in the project as context. Token bill explodes. The fix is *retrieval, not stuffing* — gather only what the current task needs.\n\n## What you'll be able to do at the end\n\nBy the end of this chapter you'll have:\n\n- Written a minimal harness — input prep, model call, output parsing, tool dispatch — in under 200 lines.\n- Read Cursor's, Claude Code's, and Aider's docs and identified which layer each one optimizes.\n- Spotted the four common harness bugs by reading code.\n- Decided which tools to use for which tasks based on layer-level strengths, not feature lists.\n\nAfter this chapter, the difference between \"I use an AI coding tool\" and \"I understand what I'm using\" stops mattering. They're the same sentence.\n",
+  "lessons": [
+    {
+      "slug": "what-a-harness-is",
+      "title": "What a harness is — the four layers under every coding agent",
+      "estMinutes": 12,
+      "prerequisites": [],
+      "steps": [
+        {
+          "type": "read",
+          "id": "agent-harnesses/what-a-harness-is/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 130,
+          "concept": "harness-vs-raw-call",
+          "body": "# A harness is everything between you and `messages.create`\n\nYou type \"fix the bug in this file.\" Claude Code reads CLAUDE.md,\nopens the file, gathers your recent commits, builds a system\nprompt, calls Claude, reads back tool_use blocks, runs the\nedits, shows you a diff, asks for approval, applies. Then it\nrecords what happened to a trace.\n\nThe model call in the middle is one line of code. **Everything\nelse is the harness.**\n\nThis is true for every coding agent you've used:\n\n| Agent | What it adds on top of the raw API |\n|---|---|\n| **Claude Code** | CLAUDE.md hierarchy, hooks, slash commands, MCP integration, session-resume |\n| **Cursor** | tab autocomplete, edit-application diff UI, multi-file context, codebase index |\n| **Aider** | git-aware context, repo map, in-place edit-application |\n| **Continue** | VS Code integration, custom rules, multi-provider routing |\n| **Cline** | step-by-step plan mode, terminal integration, browser automation |\n| **Codex CLI** | AGENTS.md hierarchy, sandboxed execution, MCP support |\n\nAll of them, underneath, are the same four layers wrapped around a\n`messages.create` (or equivalent).\n\n## Why \"harness\" is the right name\n\nThe word comes from machine learning research — a \"test harness\"\nruns models against fixed inputs to measure outputs. The agent\nsense is similar: code that wraps a model so it can DO things, not\njust describe them.\n\nThe narrower term \"agent\" usually means the *loop* (chapter 16). A\nharness is the loop PLUS the input prep, output rendering, tool\nregistry, configuration, and observability layers. Loop is a\nfunction. Harness is a product.\n\n## What this lesson is NOT\n\n- Not a tutorial on which harness to install.\n- Not a deep dive on Cursor/Aider/Claude Code internals.\n- Not a guide to building a competitive product harness.\n\nWhat it IS: the four layers that show up in every harness, the\nlanguage to talk about them, and the four bugs that show up when\nthose layers are mis-built.\n\n## What you'll build\n\nA minimal harness in <70 lines: input prep + model call + output\nparsing + tool dispatch, wired through with a deterministic mock\nmodel so it runs in Pyodide. Then bug fixes for the two most\ncommon harness bugs: missing retries (transient errors crash the\nloop) and hardcoded tool registry (can't add tools without\nediting the loop).\n\nThe harness you'll build is the harness underneath every product\nyou've used. Once you've built it once, you can read any\nharness's source and recognize the same shape inside.",
+          "cta": "Got it",
+          "code": "# the same model call, two ways. one's a \"raw API call.\" one's a \"harness.\"\n# the difference is what's wrapped around it.\n\ndef raw_call(prompt):\n    # imagine: client.messages.create(model=..., messages=[{\"role\": \"user\", \"content\": prompt}])\n    return f\"[model says something about: {prompt}]\"\n\ndef harness(user_input, config, tools, history):\n    # 1. INPUT PREP: load config, build messages from history + new input\n    messages = list(history) + [{\"role\": \"user\", \"content\": user_input}]\n\n    # 2. MODEL CALL: with retries, prompt cache, provider routing\n    response = raw_call(user_input)\n\n    # 3. OUTPUT PARSING: separate text from tool_use blocks\n    text_parts = [response]  # mock: response is just text\n    tool_calls = []          # mock: no tools called this turn\n\n    # 4. TOOL DISPATCH: run any tool the model asked for\n    for call in tool_calls:\n        tools[call[\"name\"]](**call[\"input\"])\n\n    # update history, return\n    history.append({\"role\": \"assistant\", \"content\": response})\n    return \" \".join(text_parts), history\n\ntext, _ = harness(\"hi\", config={}, tools={}, history=[])\nprint(f\"raw:     {raw_call('hi')}\")\nprint(f\"harness: {text}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "agent-harnesses/what-a-harness-is/s02-02-which-is-a-harness",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The discriminator is layer 4: tool dispatch. Can the system DO something (edit a file, run a command, search the web) on the model's behalf? If yes, harness. If no (just chat), wrapper.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 55,
+          "concept": "harness-vs-wrapper",
+          "prompt": "A \"harness\" wraps the model API with at least: input prep, model\ncall, output parsing, AND tool dispatch (the model can change the\nworld, not just describe it). Which TWO of the systems above are\nharnesses?\n",
+          "options": [
+            {
+              "id": "b_and_d",
+              "label": "B (Cursor) and D (Aider)"
+            },
+            {
+              "id": "all_four",
+              "label": "All four — anything that calls a model is a harness",
+              "explain": "A and C are wrappers — they call the model and render output, but the model can't change anything. No tool dispatch = not a harness."
+            },
+            {
+              "id": "a_and_b",
+              "label": "A and B",
+              "explain": "A is just a script that calls the API. No tools, no input prep beyond a hardcoded prompt — it's a wrapper, not a harness."
+            },
+            {
+              "id": "c_and_d",
+              "label": "C and D",
+              "explain": "C is a chat UI. The model talks; nothing changes outside the chat window. No tool dispatch."
+            }
+          ],
+          "answerIds": [
+            "b_and_d"
+          ],
+          "shuffle": false,
+          "code": "systems = {\n    \"A\": \"A Python script that calls anthropic.messages.create with a hardcoded prompt and prints the result.\",\n    \"B\": \"Cursor — reads open files, runs edits, applies diffs, has tools.\",\n    \"C\": \"A web chat UI that sends user input to gpt-4o and renders the response.\",\n    \"D\": \"Aider — gathers repo context, calls model, applies file edits, integrates with git.\",\n}\nfor k, v in systems.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "agent-harnesses/what-a-harness-is/s03-03-the-four-layers",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 110,
+          "concept": "four-harness-layers",
+          "body": "# Four layers, in order, every time\n\nA harness is the same four layers wrapped around the model API.\nThe order matters; the responsibilities are distinct.\n\n## Layer 1 — Input prep\n\nWhat the harness does **before** calling the model:\n\n- Load the config file (CLAUDE.md, AGENTS.md, .cursor/rules) and\n  merge it into the system prompt.\n- Gather context: open files, recent diffs, project structure, git\n  state, search results from a relevant-files index.\n- Build the `messages` list: prior turns + this turn.\n- Set up tool definitions to send alongside.\n\nThis is where most production harnesses spend the most code,\nbecause *what* the model sees determines *what* it does. Cursor's\ncodebase index, Aider's repo map, Claude Code's hooks — all\nlayer-1 features.\n\n## Layer 2 — Model call\n\nThe actual API call:\n\n```python\nresponse = client.messages.create(\n    model=\"claude-sonnet-4-6\",\n    system=system_prompt,\n    messages=messages,\n    tools=tool_definitions,\n    max_tokens=4096,\n)\n```\n\nBoring code. But harnesses differ on:\n\n- **Retries**: transient 429/503 errors. Without retries, the\n  harness crashes on every rate-limit hit. (Step 6 fixes this.)\n- **Streaming**: read tokens as they arrive vs wait for full\n  response. UX-critical for chat-style interfaces.\n- **Prompt caching**: chapter 23 covered this — write once, read\n  many times.\n- **Provider routing**: some harnesses (Continue, AI Gateway)\n  let you swap providers. Most pin to one.\n\n## Layer 3 — Output parsing\n\nWhat the harness does after the response arrives:\n\n- Iterate `response.content`, branch on `block.type`.\n- Accumulate text blocks for display.\n- Collect tool_use blocks for dispatch.\n- Read `stop_reason` to drive loop continuation.\n- Read `usage` to track tokens and cost.\n\nChapter 13 lesson 02 covered the primitive. Harnesses wrap it\nwith display logic — Cursor's incremental edit application,\nAider's diff rendering, Claude Code's progress indicators.\n\n## Layer 4 — Tool dispatch\n\nFor each tool_use block:\n\n- Look up the function in a tool registry.\n- Validate the input (chapter 25 lesson 03 — Pydantic).\n- Run the tool with the validated args.\n- Format the result as a `tool_result` block.\n- Append back to messages and loop.\n\nThis is what makes a harness *agentic*. Without layer 4, the\nmodel can talk but can't change anything. The tool registry is\nthe contract: which tools the harness exposes to the model.\n\nCommon bugs at layer 4:\n\n- **Hardcoded registry** inside the loop — every new tool means\n  editing the loop. (Step 7 fixes this.)\n- **Missing validation** — tool runs with garbage input, crashes\n  deep in the stack.\n- **Errors swallowed silently** — tool throws, harness logs and\n  continues, model thinks the tool succeeded.\n\n## How the layers compose\n\n```python\ndef harness(user_input, config, tool_registry, history):\n    # LAYER 1: input prep\n    messages = build_messages(history, user_input, config)\n    tools = build_tool_defs(tool_registry)\n\n    for iteration in range(MAX_ITERATIONS):\n        # LAYER 2: model call (with retries)\n        response = call_with_retries(messages, tools)\n\n        # LAYER 3: output parsing\n        text_parts, tool_calls, stop_reason = parse_response(response)\n\n        if stop_reason == \"end_turn\":\n            return \" \".join(text_parts), history\n\n        # LAYER 4: tool dispatch\n        tool_results = []\n        for call in tool_calls:\n            output = dispatch(call, tool_registry)\n            tool_results.append({\"tool_use_id\": call.id, \"content\": output})\n\n        messages.append({\"role\": \"assistant\", \"content\": response.content})\n        messages.append({\"role\": \"user\", \"content\": tool_results})\n\n    return \"iteration cap hit\", history\n```\n\nAbout 30 lines of structure. Every harness you've used is built\non this skeleton. The differences are in what each layer adds.\n\n## Where each harness invests\n\n| Harness | Strongest layer |\n|---|---|\n| **Aider** | 1 (repo-map context gathering) |\n| **Cursor** | 4 (edit application, tool palette UX) |\n| **Claude Code** | 1 + 4 (CLAUDE.md hierarchy + comprehensive tool set, hooks) |\n| **Continue** | 2 (multi-provider routing) |\n| **Cline** | 4 (browser tools, terminal, plan mode) |\n\nPicking a harness for a task is mostly a layer-strength match.\n\"I need codebase awareness\" → Aider. \"I need a slick edit\nexperience\" → Cursor. \"I need to wire MCP servers\" → Claude Code\nor Codex.",
+          "cta": "Got it",
+          "code": "# the four layers, named and ordered.\n\nLAYERS = [\n    \"1. input prep      — load config, gather context, build messages\",\n    \"2. model call       — messages.create with retries, cache, routing\",\n    \"3. output parsing   — separate text from tool_use, accumulate\",\n    \"4. tool dispatch    — run requested tools, append results, loop\",\n]\nfor layer in LAYERS:\n    print(layer)\n",
+          "runnable": true
+        },
+        {
+          "type": "predict",
+          "id": "agent-harnesses/what-a-harness-is/s04-04-predict-the-layer",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Layer 1 (input prep): `load_claude_md` = 1. Layer 2 (model call + retries): `messages.create` and `with_retries` = 2. Layer 3 (output parsing): `for block in response.content` = 1. Layer 4 (tool dispatch): `TOOLS[name](**args)` = 1.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 80,
+          "concept": "classify-harness-code-by-layer",
+          "code": "# five lines from a real harness. each belongs to one layer.\n\nsnippets = {\n    \"load_claude_md(root)\":               1,\n    \"client.messages.create(...)\":        2,\n    \"for block in response.content:\":     3,\n    \"TOOLS[name](**args)\":                4,\n    \"with_retries(call, max_attempts=3)\": 2,\n}\n\nlayer_counts = [0, 0, 0, 0, 0]  # index 1..4 used\nfor code, layer in snippets.items():\n    layer_counts[layer] += 1\n\nfor i in range(1, 5):\n    print(f\"layer {i}: {layer_counts[i]}\")\n",
+          "prompt": "Read the editor. Five snippets, classified into the four layers.\nThe script counts how many snippets land in each layer. What\ndoes it print?\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "layer 1: 1\nlayer 2: 2\nlayer 3: 1\nlayer 4: 1\n",
+            "normalize": "collapse-trailing-newline"
+          }
+        },
+        {
+          "type": "fill",
+          "id": "agent-harnesses/what-a-harness-is/s05-05-fill-the-dispatch",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Two pieces: registry lookup `TOOLS[name]`, then call with `**input` to unpack the dict as keyword arguments.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`TOOLS[tool_use[\"name\"]](**tool_use[\"input\"])` — the canonical layer-4 dispatch.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 65,
+          "concept": "tool-registry-dispatch",
+          "prompt": "The harness has a tool registry (a dict) and a `tool_use` block\nfrom the model. Fill in the dispatch line: look up the tool by\nname and call it with the input dict unpacked.\n\nExpected output:\n```\nresults for tokyo\n```\n",
+          "code": "TOOLS = {\n    \"search\": lambda q: f\"results for {q}\",\n    \"read\":   lambda path: f\"<contents of {path}>\",\n}\n\ntool_use = {\"name\": \"search\", \"input\": {\"q\": \"tokyo\"}}\n\nresult = ___\nprint(result)\n",
+          "blanks": [
+            {
+              "id": "dispatch",
+              "accept": [
+                "TOOLS[tool_use[\"name\"]](**tool_use[\"input\"])",
+                "TOOLS[tool_use['name']](**tool_use['input'])"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "id": "agent-harnesses/what-a-harness-is/s06-06-fix-the-no-retry",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Wrap the call in a loop `for attempt in range(max_attempts)`. Try, except TransientError — if not the last attempt, continue. Else re-raise. Else (success) return result.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Replace the body of `call_with_retries`:\n\n```python\nfor attempt in range(max_attempts):\n    try:\n        return fn()\n    except TransientError:\n        if attempt == max_attempts - 1:\n            raise\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "retries-around-model-call",
+          "brokenCode": "call_count = {\"n\": 0}\n\nclass TransientError(Exception):\n    transient = True\n\ndef flaky_call():\n    call_count[\"n\"] += 1\n    if call_count[\"n\"] < 3:\n        raise TransientError(\"503 service unavailable\")\n    return \"succeeded on attempt 3\"\n\ndef call_with_retries(fn, max_attempts=3):\n    # bug: no retry. one attempt, raises on first failure.\n    return fn()\n\nprint(call_with_retries(flaky_call))\n",
+          "prompt": "The harness's layer-2 code calls the model exactly once. If the\ncall hits a transient 429 (rate limit) or 503 (service\nunavailable), it raises and the user sees a crash. Production\nharnesses retry transient failures with exponential backoff.\n\nFix `call_with_retries(fn, max_attempts=3)` to retry up to 3\ntimes on transient errors (any exception with `transient=True`\nattribute). Return the first successful result. Re-raise on\nthe final attempt failure.\n\nExpected output:\n```\nsucceeded on attempt 3\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "succeeded on attempt 3",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            13,
+            14
+          ],
+          "revealAfter": 5
+        },
+        {
+          "type": "fix",
+          "id": "agent-harnesses/what-a-harness-is/s07-07-fix-the-hardcoded-registry",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Add a `tools` parameter to `dispatch`, drop the hardcoded TOOLS dict, change the lookup to use the parameter, and pass `external_tools` from the call site.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\ndef dispatch(tool_use, tools):\n    return tools[tool_use[\"name\"]](**tool_use[\"input\"])\n\nresult = dispatch({\"name\": \"search\", \"input\": {\"q\": \"tokyo\"}}, external_tools)\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "inject-tool-registry",
+          "brokenCode": "def dispatch(tool_use):\n    # bug: tools hardcoded INSIDE the function. adding tools = edits to this body.\n    TOOLS = {\n        \"search\": lambda q: f\"hits for {q}\",\n    }\n    return TOOLS[tool_use[\"name\"]](**tool_use[\"input\"])\n\nexternal_tools = {\n    \"search\": lambda q: f\"hits for {q}\",\n}\n\nresult = dispatch({\"name\": \"search\", \"input\": {\"q\": \"tokyo\"}})\nprint(result)\n",
+          "prompt": "The harness has the tool registry hardcoded INSIDE the loop.\nAdding a new tool means editing the loop function — not a\nmodule-level dict. After three new tools, the loop body is\nunreadable.\n\nFix `dispatch(tool_use, tools)` to take the registry as an\nargument instead of hardcoding it. Then pass the registry in\nfrom outside.\n\nExpected output:\n```\nhits for tokyo\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "hits for tokyo",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            1,
+            7
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "write",
+          "id": "agent-harnesses/what-a-harness-is/s08-08-write-mini-harness",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Same loop shape as previous chapter agent loops, with explicit layer comments. Layer 1: build messages. Loop: layer 2 (call), layer 3 (split content into text/tool_use), branch on stop_reason. On tool_use: layer 4 (dispatch each, append assistant + user turns).",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Three counters/buckets: messages list, tool_calls_total int, iter index from `range(1, max_iters + 1)`. End_turn returns the joined text and stats. Cap returns the literal \"capped\".",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "minimal-four-layer-harness",
+          "prompt": "Write `mini_harness(user_input, tools, fake_model, max_iters)`\nthat implements the four layers in under 50 lines:\n\n- **Layer 1**: build `messages = [{\"role\": \"user\", \"content\": user_input}]`.\n- Loop up to `max_iters` times:\n  - **Layer 2**: call `fake_model(messages)` (returns a dict\n    with `stop_reason` and `content`).\n  - **Layer 3**: filter `content` for text blocks (`type==\"text\"`)\n    and tool_use blocks (`type==\"tool_use\"`).\n  - If `stop_reason == \"end_turn\"`: return\n    `{\"text\": <text joined with \" \">, \"iters\": <iter count>, \"tool_calls\": <total tool runs across all iters>}`.\n  - **Layer 4**: for each tool_use block, dispatch\n    `tools[block[\"name\"]](**block[\"input\"])`. Track total tool\n    runs. Append assistant + user(tool_results) turns.\n- On cap: return `{\"text\": \"capped\", \"iters\": max_iters, \"tool_calls\": <count>}`.\n\nTwo cases run for you. Expected output:\n```\ntext='Tokyo guide.' iters=2 tool_calls=1\ntext='capped' iters=2 tool_calls=2\n```\n",
+          "starter": "TOOLS = {\"search\": lambda q: f\"hits for {q}\"}\n\ngood_responses = iter([\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"t1\", \"name\": \"search\", \"input\": {\"q\": \"ramen\"}}]},\n    {\"stop_reason\": \"end_turn\", \"content\": [{\"type\": \"text\", \"text\": \"Tokyo guide.\"}]},\n])\n\nbad_responses = iter([\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"b1\", \"name\": \"search\", \"input\": {\"q\": \"x\"}}]},\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"b2\", \"name\": \"search\", \"input\": {\"q\": \"y\"}}]},\n])\n\ncurrent = {\"iter\": good_responses}\ndef fake_model(messages):\n    return next(current[\"iter\"])\n\n# define mini_harness(user_input, tools, fake_model, max_iters) below\n\ncurrent[\"iter\"] = good_responses\nr = mini_harness(\"find ramen\", TOOLS, fake_model, 5)\nprint(f\"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']}\")\n\ncurrent[\"iter\"] = bad_responses\nr = mini_harness(\"loop forever\", TOOLS, fake_model, 2)\nprint(f\"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "text='Tokyo guide.' iters=2 tool_calls=1\ntext='capped' iters=2 tool_calls=2\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "TOOLS = {\"search\": lambda q: f\"hits for {q}\"}\n\ngood_responses = iter([\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"t1\", \"name\": \"search\", \"input\": {\"q\": \"ramen\"}}]},\n    {\"stop_reason\": \"end_turn\", \"content\": [{\"type\": \"text\", \"text\": \"Tokyo guide.\"}]},\n])\n\nbad_responses = iter([\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"b1\", \"name\": \"search\", \"input\": {\"q\": \"x\"}}]},\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"b2\", \"name\": \"search\", \"input\": {\"q\": \"y\"}}]},\n])\n\ncurrent = {\"iter\": good_responses}\ndef fake_model(messages):\n    return next(current[\"iter\"])\n\ndef mini_harness(user_input, tools, fake_model, max_iters):\n    messages = [{\"role\": \"user\", \"content\": user_input}]\n    tool_calls_total = 0\n\n    for i in range(1, max_iters + 1):\n        response = fake_model(messages)\n        text_blocks = [b for b in response[\"content\"] if b[\"type\"] == \"text\"]\n        tool_blocks = [b for b in response[\"content\"] if b[\"type\"] == \"tool_use\"]\n\n        if response[\"stop_reason\"] == \"end_turn\":\n            return {\n                \"text\": \" \".join(b[\"text\"] for b in text_blocks),\n                \"iters\": i,\n                \"tool_calls\": tool_calls_total,\n            }\n\n        tool_results = []\n        for block in tool_blocks:\n            output = tools[block[\"name\"]](**block[\"input\"])\n            tool_calls_total += 1\n            tool_results.append({\"type\": \"tool_result\", \"tool_use_id\": block[\"id\"], \"content\": output})\n\n        messages.append({\"role\": \"assistant\", \"content\": response[\"content\"]})\n        messages.append({\"role\": \"user\", \"content\": tool_results})\n\n    return {\"text\": \"capped\", \"iters\": max_iters, \"tool_calls\": tool_calls_total}\n\ncurrent[\"iter\"] = good_responses\nr = mini_harness(\"find ramen\", TOOLS, fake_model, 5)\nprint(f\"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']}\")\n\ncurrent[\"iter\"] = bad_responses\nr = mini_harness(\"loop forever\", TOOLS, fake_model, 2)\nprint(f\"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "agent-harnesses/what-a-harness-is/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 220,
+          "concept": "harness-with-all-four-layers",
+          "prompt": "Final drill. Build a harness with all four layers measurable.\nWrite `harness(user_input, tools, fake_model, config, max_iters)`\nthat:\n\n- **Layer 1**: build messages — start with `system` from config\n  (the `system` key), then user turn.\n- Loop up to `max_iters`. **Layer 2**: call `fake_model(messages)`\n  via `with_retries` (provided — retries on `TransientError`).\n  **Layer 3**: filter content into text + tool_use blocks; track\n  `tokens_used` from `response.get(\"usage\", 0)`. On `end_turn`:\n  return a result dict including layer counters.\n  **Layer 4**: dispatch each tool_use block; track\n  `tool_calls_total`.\n- Returns\n  `{\"text\": str, \"iters\": int, \"tool_calls\": int, \"tokens\": int, \"system_used\": bool}`.\n- `system_used` is True iff the config's `system` key was loaded\n  into messages[0].\n\nTwo cases run. Expected output:\n```\ntext='Found ramen.' iters=2 tool_calls=1 tokens=130 system_used=True\ntext='capped' iters=2 tool_calls=2 tokens=180 system_used=False\n```\n",
+          "starter": "class TransientError(Exception):\n    transient = True\n\ndef with_retries(fn, max_attempts=3):\n    for attempt in range(max_attempts):\n        try:\n            return fn()\n        except TransientError:\n            if attempt == max_attempts - 1:\n                raise\n    raise RuntimeError(\"unreachable\")\n\nTOOLS = {\"search\": lambda q: f\"hits for {q}\"}\n\ngood_responses = iter([\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"t1\", \"name\": \"search\", \"input\": {\"q\": \"ramen\"}}], \"usage\": 60},\n    {\"stop_reason\": \"end_turn\", \"content\": [{\"type\": \"text\", \"text\": \"Found ramen.\"}], \"usage\": 70},\n])\n\nbad_responses = iter([\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"b1\", \"name\": \"search\", \"input\": {\"q\": \"x\"}}], \"usage\": 80},\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"b2\", \"name\": \"search\", \"input\": {\"q\": \"y\"}}], \"usage\": 100},\n])\n\ncurrent = {\"iter\": good_responses}\ndef fake_model(messages):\n    return next(current[\"iter\"])\n\n# define harness(user_input, tools, fake_model, config, max_iters) below\n\ncurrent[\"iter\"] = good_responses\nr = harness(\"find ramen\", TOOLS, fake_model, config={\"system\": \"be terse\"}, max_iters=5)\nprint(f\"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']} tokens={r['tokens']} system_used={r['system_used']}\")\n\ncurrent[\"iter\"] = bad_responses\nr = harness(\"loop\", TOOLS, fake_model, config={}, max_iters=2)\nprint(f\"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']} tokens={r['tokens']} system_used={r['system_used']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "text='Found ramen.' iters=2 tool_calls=1 tokens=130 system_used=True\ntext='capped' iters=2 tool_calls=2 tokens=180 system_used=False\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "class TransientError(Exception):\n    transient = True\n\ndef with_retries(fn, max_attempts=3):\n    for attempt in range(max_attempts):\n        try:\n            return fn()\n        except TransientError:\n            if attempt == max_attempts - 1:\n                raise\n    raise RuntimeError(\"unreachable\")\n\nTOOLS = {\"search\": lambda q: f\"hits for {q}\"}\n\ngood_responses = iter([\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"t1\", \"name\": \"search\", \"input\": {\"q\": \"ramen\"}}], \"usage\": 60},\n    {\"stop_reason\": \"end_turn\", \"content\": [{\"type\": \"text\", \"text\": \"Found ramen.\"}], \"usage\": 70},\n])\n\nbad_responses = iter([\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"b1\", \"name\": \"search\", \"input\": {\"q\": \"x\"}}], \"usage\": 80},\n    {\"stop_reason\": \"tool_use\", \"content\": [{\"type\": \"tool_use\", \"id\": \"b2\", \"name\": \"search\", \"input\": {\"q\": \"y\"}}], \"usage\": 100},\n])\n\ncurrent = {\"iter\": good_responses}\ndef fake_model(messages):\n    return next(current[\"iter\"])\n\ndef harness(user_input, tools, fake_model, config, max_iters):\n    messages = []\n    system_used = False\n    if \"system\" in config:\n        messages.append({\"role\": \"system\", \"content\": config[\"system\"]})\n        system_used = True\n    messages.append({\"role\": \"user\", \"content\": user_input})\n\n    tool_calls_total = 0\n    tokens_used = 0\n\n    for i in range(1, max_iters + 1):\n        response = with_retries(lambda: fake_model(messages))\n        tokens_used += response.get(\"usage\", 0)\n\n        text_blocks = [b for b in response[\"content\"] if b[\"type\"] == \"text\"]\n        tool_blocks = [b for b in response[\"content\"] if b[\"type\"] == \"tool_use\"]\n\n        if response[\"stop_reason\"] == \"end_turn\":\n            return {\n                \"text\": \" \".join(b[\"text\"] for b in text_blocks),\n                \"iters\": i,\n                \"tool_calls\": tool_calls_total,\n                \"tokens\": tokens_used,\n                \"system_used\": system_used,\n            }\n\n        tool_results = []\n        for block in tool_blocks:\n            output = tools[block[\"name\"]](**block[\"input\"])\n            tool_calls_total += 1\n            tool_results.append({\"type\": \"tool_result\", \"tool_use_id\": block[\"id\"], \"content\": output})\n\n        messages.append({\"role\": \"assistant\", \"content\": response[\"content\"]})\n        messages.append({\"role\": \"user\", \"content\": tool_results})\n\n    return {\n        \"text\": \"capped\",\n        \"iters\": max_iters,\n        \"tool_calls\": tool_calls_total,\n        \"tokens\": tokens_used,\n        \"system_used\": system_used,\n    }\n\ncurrent[\"iter\"] = good_responses\nr = harness(\"find ramen\", TOOLS, fake_model, config={\"system\": \"be terse\"}, max_iters=5)\nprint(f\"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']} tokens={r['tokens']} system_used={r['system_used']}\")\n\ncurrent[\"iter\"] = bad_responses\nr = harness(\"loop\", TOOLS, fake_model, config={}, max_iters=2)\nprint(f\"text={r['text']!r} iters={r['iters']} tool_calls={r['tool_calls']} tokens={r['tokens']} system_used={r['system_used']}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 32
+    }
+  ],
+  "xpTotal": 32
+}

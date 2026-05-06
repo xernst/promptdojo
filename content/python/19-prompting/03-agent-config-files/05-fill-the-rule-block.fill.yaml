@@ -1,0 +1,36 @@
+xp: 3
+estSeconds: 60
+concept: link-not-duplicate
+prompt: |
+  You're writing a CLAUDE.md "Where to look" section. Three pieces
+  of information the model will need: auth flow (in `docs/auth.md`),
+  database schema (in `docs/db-schema.md`), API contract (in
+  `openapi.yaml`). Format each as a one-line bullet pointing at
+  the file, NOT duplicating its contents.
+
+  Expected output:
+  ```
+  - Auth flow: docs/auth.md
+  - Database schema: docs/db-schema.md
+  - API contract: openapi.yaml
+  ```
+code: |
+  refs = [
+      ("Auth flow", "docs/auth.md"),
+      ("Database schema", "docs/db-schema.md"),
+      ("API contract", "openapi.yaml"),
+  ]
+
+  block = ___
+  print(block)
+blanks:
+  - id: link_block
+    accept:
+      - '"\n".join(f"- {label}: {path}" for label, path in refs)'
+      - "'\\n'.join(f'- {label}: {path}' for label, path in refs)"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Use `"\n".join(...)` over a generator. Each line is `f"- {label}: {path}"`.'
+  - level: 2
+    body: '`"\n".join(f"- {label}: {path}" for label, path in refs)` — bullets pointing at files, no duplicated content.'

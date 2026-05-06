@@ -1,0 +1,14 @@
+slug: what-a-harness-is
+title: "What a harness is — the four layers under every coding agent"
+estMinutes: 12
+prerequisites: []
+order:
+  - 01-intro.read.md
+  - 02-which-is-a-harness.mc.yaml
+  - 03-the-four-layers.read.md
+  - 04-predict-the-layer.predict.yaml
+  - 05-fill-the-dispatch.fill.yaml
+  - 06-fix-the-no-retry.fix.yaml
+  - 07-fix-the-hardcoded-registry.fix.yaml
+  - 08-write-mini-harness.write.yaml
+  - 09-checkpoint.checkpoint.yaml

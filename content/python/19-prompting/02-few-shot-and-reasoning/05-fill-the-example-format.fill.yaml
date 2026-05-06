@@ -25,8 +25,7 @@ code: |
 blanks:
   - id: example_block
     accept:
-      - '"".join(f"Input: {e[\"input\"]}\nOutput: {e[\"output\"]}\n\n" for e in examples)'
-      - '"".join(f"Input: {e['input']}\nOutput: {e['output']}\n\n" for e in examples)'
+      - "\"\".join(f\"Input: {e['input']}\\nOutput: {e['output']}\\n\\n\" for e in examples)"
     caseSensitive: true
 hint:
   - level: 1

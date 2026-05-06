@@ -1,0 +1,50 @@
+xp: 4
+estSeconds: 100
+concept: inject-tool-registry
+prompt: |
+  The harness has the tool registry hardcoded INSIDE the loop.
+  Adding a new tool means editing the loop function — not a
+  module-level dict. After three new tools, the loop body is
+  unreadable.
+
+  Fix `dispatch(tool_use, tools)` to take the registry as an
+  argument instead of hardcoding it. Then pass the registry in
+  from outside.
+
+  Expected output:
+  ```
+  hits for tokyo
+  ```
+brokenCode: |
+  def dispatch(tool_use):
+      # bug: tools hardcoded INSIDE the function. adding tools = edits to this body.
+      TOOLS = {
+          "search": lambda q: f"hits for {q}",
+      }
+      return TOOLS[tool_use["name"]](**tool_use["input"])
+
+  external_tools = {
+      "search": lambda q: f"hits for {q}",
+  }
+
+  result = dispatch({"name": "search", "input": {"q": "tokyo"}})
+  print(result)
+bugLines:
+  - 1
+  - 7
+grader:
+  kind: stdout-equality
+  expected: "hits for tokyo"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Add a `tools` parameter to `dispatch`, drop the hardcoded TOOLS dict, change the lookup to use the parameter, and pass `external_tools` from the call site.'
+  - level: 2
+    body: |
+      ```python
+      def dispatch(tool_use, tools):
+          return tools[tool_use["name"]](**tool_use["input"])
+
+      result = dispatch({"name": "search", "input": {"q": "tokyo"}}, external_tools)
+      ```
+revealAfter: 4
