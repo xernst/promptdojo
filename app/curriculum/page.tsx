@@ -63,14 +63,12 @@ export default async function Curriculum() {
   );
 
   const totalSteps = chapters.reduce((a, c) => a + c.stepCount, 0);
-  const totalHours = (chapters.reduce((a, c) => a + c.estMinutes, 0) / 60)
-    .toFixed(0);
 
   return (
     <main id="main" className="mx-auto max-w-6xl px-6 py-10 sm:py-16">
       <div className="t-eyebrow">the whole course</div>
       <h1 className="t-section mt-3">
-        {chapters.length} chapters · {totalSteps} steps · ~{totalHours} hours
+        {chapters.length} chapters · {totalSteps} runnable steps · 8–15h
       </h1>
       <StatStrip className="mt-6" />
       <PhaseBandedRail
