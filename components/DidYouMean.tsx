@@ -13,7 +13,7 @@ const KNOWN_PATHS = [
   "/about",
   "/curriculum",
   "/changelog",
-  "/start",
+  "/onboarding",
   "/lesson/resume",
 ];
 

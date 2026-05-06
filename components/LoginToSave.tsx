@@ -42,8 +42,13 @@ function writeProgress(payload: unknown) {
 
 function isProgressEmpty(payload: unknown): boolean {
   if (!payload || typeof payload !== "object") return true;
-  const obj = payload as { lessons?: Record<string, unknown> };
-  return !obj.lessons || Object.keys(obj.lessons).length === 0;
+  const obj = payload as {
+    lessons?: Record<string, unknown>;
+    steps?: Record<string, unknown>;
+  };
+  const lessonCount = obj.lessons ? Object.keys(obj.lessons).length : 0;
+  const stepCount = obj.steps ? Object.keys(obj.steps).length : 0;
+  return lessonCount === 0 && stepCount === 0;
 }
 
 function isValidEmail(s: string): boolean {

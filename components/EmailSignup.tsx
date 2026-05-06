@@ -1,16 +1,40 @@
 "use client";
 
-// Email signup form for the landing page. Server-side via the
-// subscribeEmail action; no client-side API key exposure.
-// Matches existing dojo-card / dojo-btn-* design tokens.
+// Email signup form for the landing page. POSTs to /api/subscribe
+// (Cloudflare Pages Function); BEEHIIV_API_KEY stays server-side.
+//
+// Replaces the prior server-action implementation, which doesn't work
+// under `output: "export"`.
 
-import { useActionState } from "react";
-import { subscribeEmail, type SubscribeResult } from "@/app/actions/subscribe";
+import { useState } from "react";
 
-const initialState: SubscribeResult | null = null;
+type SubscribeResult =
+  | { ok: true; message: string }
+  | { ok: false; error: string };
 
 export default function EmailSignup() {
-  const [state, action, pending] = useActionState(subscribeEmail, initialState);
+  const [email, setEmail] = useState("");
+  const [pending, setPending] = useState(false);
+  const [state, setState] = useState<SubscribeResult | null>(null);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (pending) return;
+    setPending(true);
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = (await res.json().catch(() => null)) as SubscribeResult | null;
+      setState(data ?? { ok: false, error: "network hiccup — try again" });
+    } catch {
+      setState({ ok: false, error: "network hiccup — try again" });
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <section className="my-24 flex flex-col items-center border-y border-ink-800 py-16 text-center">
@@ -20,12 +44,12 @@ export default function EmailSignup() {
         this week
       </h2>
       <p className="t-body-sm mt-4 max-w-xl text-ink-400">
-        no spam, no upsell. one email when there's something worth reading.
+        no spam, no upsell. one email when there&apos;s something worth reading.
         unsubscribe in one click.
       </p>
 
       <form
-        action={action}
+        onSubmit={onSubmit}
         className="mt-10 flex w-full max-w-md flex-col gap-3 sm:flex-row"
       >
         <input
@@ -35,6 +59,8 @@ export default function EmailSignup() {
           autoComplete="email"
           placeholder="you@email.com"
           aria-label="email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           disabled={pending || state?.ok === true}
           className="flex-1 rounded-md border border-ink-700 bg-ink-950 px-4 py-3 text-ink-100 placeholder:text-ink-600 focus:border-green-500 focus:outline-none disabled:opacity-50"
         />

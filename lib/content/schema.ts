@@ -153,7 +153,11 @@ export const MultipleChoiceStep = z.object({
       explain: z.string().optional(),  // shown after wrong pick
     }),
   ),
-  answerIds: z.array(z.string()).min(1),
+  // Single-answer only. Multi-answer was permitted in the schema but the
+  // grader (`MultipleChoiceStepView.tsx`) and the radio UI never supported
+  // it — any 2+ answer step would be unwinnable. Narrowed to .length(1) to
+  // turn the latent footgun into an authoring-time error.
+  answerIds: z.array(z.string()).length(1),
   shuffle: z.boolean().default(false),
   // Same UX delta as ReadStep.
   code: z.string().optional(),

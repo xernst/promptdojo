@@ -13,9 +13,7 @@ import FlatHeader from "@/components/SiteHeader/FlatHeader";
 export default function SiteHeader() {
   const pathname = usePathname();
   const onLesson = pathname?.startsWith("/learn/v2") ?? false;
-  const onOnboarding =
-    (pathname?.startsWith("/onboarding") ?? false) ||
-    (pathname?.startsWith("/start") ?? false);
+  const onOnboarding = pathname?.startsWith("/onboarding") ?? false;
 
   if (onOnboarding) return null;
   if (onLesson) return <FlatHeader onLesson />;

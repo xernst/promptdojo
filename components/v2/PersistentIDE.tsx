@@ -181,10 +181,16 @@ const PersistentIDE = forwardRef<PersistentIDEHandle, Props>(function Persistent
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (!runnable) return;
-      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-        event.preventDefault();
-        void handleRun();
-      }
+      if (event.key !== "Enter") return;
+      if (!(event.metaKey || event.ctrlKey)) return;
+      // Only own ⌘↵ when focus is inside the CodeMirror editor. Outside the
+      // editor (Continue button focused, prompt panel scrolled, body focused
+      // after a click), let StepFooter's listener advance the step. Prevents
+      // the IDE running twice + footer firing concurrently.
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest?.(".cm-editor")) return;
+      event.preventDefault();
+      void handleRun();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
