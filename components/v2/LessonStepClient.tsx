@@ -20,7 +20,6 @@ import {
   getStepProgress,
 } from "@/lib/storage";
 import { awardPass, grantFrozenFlame } from "@/lib/streaks";
-import { cn } from "@/lib/utils";
 
 type Props = {
   tree: ChapterNavTree;
@@ -180,11 +179,7 @@ export default function LessonStepClient({
             type="button"
             onClick={handleContinue}
             disabled={!passed && step.type !== "read"}
-            className={cn(
-              "rounded-md px-4 py-1.5 text-sm font-medium transition",
-              "bg-green-500 text-ink-950 hover:bg-green-400",
-              "disabled:cursor-not-allowed disabled:bg-ink-800 disabled:text-ink-500",
-            )}
+            className="dojo-btn-primary"
           >
             {next ? "continue →" : "finish"}
           </button>

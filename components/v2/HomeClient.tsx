@@ -10,7 +10,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Play, ArrowRight } from "lucide-react";
 import { getLastVisitedV2, loadProgressV2 } from "@/lib/storage";
 
 type Fallback = {
@@ -55,34 +54,25 @@ export default function HomeClient({ fallback, chapters }: Props) {
   }, [fallback]);
 
   if (resolved.state === "loading") {
-    return (
-      <div
-        aria-hidden
-        className="h-[124px] rounded-xl border border-ink-800 bg-ink-950"
-      />
-    );
+    return <div aria-hidden className="skeleton h-[124px]" />;
   }
 
   if (resolved.state === "new-user") {
     return (
       <Link
         href="/onboarding"
-        className="group flex items-center justify-between rounded-xl border border-green-700/40 bg-gradient-to-br from-green-950 to-ink-950 p-6 transition hover:border-green-600 hover:from-green-900"
+        className="group dojo-card-highlight flex items-center justify-between"
       >
         <div className="min-w-0">
-          <div className="text-xs uppercase tracking-widest text-green-500">
-            start here
-          </div>
-          <div className="mt-1 text-2xl font-semibold text-ink-50">
-            get started in under a minute
-          </div>
-          <div className="mt-1 text-sm text-ink-500">
+          <div className="t-eyebrow">start here</div>
+          <div className="t-h2 mt-2">get started in under a minute</div>
+          <div className="t-body-sm mt-1">
             five questions, then your first lesson.
           </div>
         </div>
-        <div className="ml-4 shrink-0 rounded-full bg-green-600 p-3 transition group-hover:bg-green-500">
-          <ArrowRight size={20} className="text-ink-100" />
-        </div>
+        <kbd className="ml-4 shrink-0 border border-ink-700 px-2 py-1 font-mono text-xs uppercase tracking-wider text-ink-300">
+          ↵ continue
+        </kbd>
       </Link>
     );
   }
@@ -97,22 +87,18 @@ export default function HomeClient({ fallback, chapters }: Props) {
   return (
     <Link
       href={link}
-      className="group flex items-center justify-between rounded-xl border border-green-700/40 bg-gradient-to-br from-green-950 to-ink-950 p-6 transition hover:border-green-600 hover:from-green-900"
+      className="group dojo-card-highlight flex items-center justify-between"
     >
       <div className="min-w-0">
-        <div className="text-xs uppercase tracking-widest text-green-500">
-          welcome back
-        </div>
-        <div className="mt-1 truncate text-2xl font-semibold text-ink-50">
-          {heading}
-        </div>
-        <div className="mt-1 truncate text-sm text-ink-500">
+        <div className="t-eyebrow">welcome back</div>
+        <div className="t-h2 mt-2 truncate">{heading}</div>
+        <div className="t-body-sm mt-1 truncate">
           pick up where you left off
         </div>
       </div>
-      <div className="ml-4 shrink-0 rounded-full bg-green-600 p-3 transition group-hover:bg-green-500">
-        <Play size={20} className="fill-ink-100 text-ink-100" />
-      </div>
+      <kbd className="ml-4 shrink-0 border border-ink-700 px-2 py-1 font-mono text-xs uppercase tracking-wider text-ink-300">
+        ↵ continue
+      </kbd>
     </Link>
   );
 }

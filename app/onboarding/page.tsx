@@ -202,7 +202,7 @@ function Welcome({ onContinue }: { onContinue: () => void }) {
         <button
           type="button"
           onClick={onContinue}
-          className="rounded-md bg-green-500 px-5 py-2.5 font-medium text-ink-950 transition hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-300"
+          className="dojo-btn-primary"
         >
           start
         </button>
@@ -232,7 +232,7 @@ function GoalScreen({
             type="button"
             onClick={() => onPick(opt.id)}
             className={cn(
-              "rounded-lg border bg-ink-950 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-green-300",
+              "border bg-ink-950 p-4 text-left transition",
               value === opt.id
                 ? "border-green-500 bg-ink-900"
                 : "border-ink-800 hover:border-ink-600 hover:bg-ink-900",
@@ -268,7 +268,7 @@ function LevelScreen({
             type="button"
             onClick={() => onPick(opt.id)}
             className={cn(
-              "rounded-lg border bg-ink-950 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-green-300",
+              "border bg-ink-950 p-4 text-left transition",
               value === opt.id
                 ? "border-green-500 bg-ink-900"
                 : "border-ink-800 hover:border-ink-600 hover:bg-ink-900",
@@ -340,7 +340,7 @@ function PersonalizationScreen({
         <button
           type="button"
           onClick={onContinue}
-          className="rounded-md bg-green-500 px-5 py-2.5 font-medium text-ink-950 transition hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-300"
+          className="dojo-btn-primary"
         >
           continue
         </button>
@@ -376,7 +376,7 @@ function DailyGoalScreen({
             onClick={() => onChange(opt.id)}
             aria-pressed={value === opt.id}
             className={cn(
-              "rounded-lg border bg-ink-950 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-green-300",
+              "border bg-ink-950 p-4 text-left transition",
               value === opt.id
                 ? "border-green-500 bg-ink-900"
                 : "border-ink-800 hover:border-ink-600 hover:bg-ink-900",
@@ -391,7 +391,7 @@ function DailyGoalScreen({
         <button
           type="button"
           onClick={onContinue}
-          className="rounded-md bg-green-500 px-5 py-2.5 font-medium text-ink-950 transition hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-300"
+          className="dojo-btn-primary"
         >
           start lesson 1
         </button>

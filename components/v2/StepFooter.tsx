@@ -30,7 +30,7 @@ export default function StepFooter({
   step,
   earnedXp,
   totalXp,
-  primaryLabel = "Continue",
+  primaryLabel = "continue",
   primaryEnabled = true,
   onPrimary,
   onSkip,
@@ -85,13 +85,13 @@ export default function StepFooter({
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-ink-500">
-            <span>Lesson XP</span>
+            <span>lesson xp</span>
             <span>
               {earnedXp} / {totalXp}
             </span>
           </div>
           <div
-            className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-ink-800"
+            className="mt-1 h-1.5 w-full overflow-hidden bg-ink-800"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={totalXp}
@@ -111,7 +111,7 @@ export default function StepFooter({
               onClick={revealNextHint}
               disabled={remainingHints <= 0}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-xs text-ink-300 transition",
+                "inline-flex items-center gap-1.5 border border-ink-800 bg-ink-950 px-3 py-2 text-xs text-ink-300 transition",
                 remainingHints > 0
                   ? "hover:border-ink-600 hover:text-ink-100"
                   : "cursor-not-allowed opacity-50",
@@ -119,34 +119,29 @@ export default function StepFooter({
               aria-label={remainingHints > 0 ? "Reveal next hint" : "No more hints"}
             >
               <Lightbulb size={14} />
-              <span>Hint{remainingHints > 0 ? ` (${remainingHints})` : ""}</span>
+              <span>hint{remainingHints > 0 ? ` (${remainingHints})` : ""}</span>
             </button>
           )}
           {onSkip && (
             <button
               type="button"
               onClick={onSkip}
-              className="inline-flex items-center gap-1.5 rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-xs text-ink-400 transition hover:border-ink-600 hover:text-ink-200"
+              className="inline-flex items-center gap-1.5 border border-ink-800 bg-ink-950 px-3 py-2 text-xs text-ink-400 transition hover:border-ink-600 hover:text-ink-200"
             >
               <SkipForward size={14} />
-              <span>Skip</span>
+              <span>skip</span>
             </button>
           )}
           <button
             type="button"
             onClick={onPrimary}
             disabled={!primaryEnabled}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-green-300",
-              primaryEnabled
-                ? "bg-green-500 text-ink-950 hover:bg-green-400"
-                : "cursor-not-allowed bg-ink-800 text-ink-500",
-            )}
+            className="dojo-btn-primary"
             aria-keyshortcuts="Meta+Enter Control+Enter"
           >
             <span>{primaryLabel}</span>
             <ArrowRight size={14} />
-            <kbd className="ml-1 hidden rounded border border-ink-950/30 bg-ink-950/20 px-1 font-mono text-[10px] text-ink-950/70 sm:inline">
+            <kbd className="ml-1 hidden border border-ink-950/30 bg-ink-950/20 px-1 font-mono text-[10px] text-ink-950/70 sm:inline">
               ⌘↵
             </kbd>
           </button>

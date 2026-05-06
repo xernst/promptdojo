@@ -84,16 +84,16 @@ export default async function V2ChapterOverviewPage({
         <main className="flex min-h-0 w-full flex-1 flex-col">
           <div className="flex-1 min-h-0 overflow-auto">
             <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
-              <div className="text-xs uppercase tracking-[0.2em] text-green-400">
+              <div className="t-eyebrow">
                 chapter {String(chapter.number).padStart(2, "0")}
               </div>
-              <h1 className="mt-2 font-display text-4xl font-semibold leading-tight tracking-tight text-ink-50 sm:text-5xl">
+              <h1 className="t-section mt-2">
                 {chapter.title.replace(/\s*—.*$/, "").toLowerCase()}
               </h1>
               {chapter.blurb && (
-                <p className="mt-3 text-lg text-ink-300">{chapter.blurb}</p>
+                <p className="t-body mt-3">{chapter.blurb}</p>
               )}
-              <div className="mt-2 font-mono text-[11px] text-ink-500">
+              <div className="t-mono-meta mt-2">
                 {chapter.lessons.length}{" "}
                 {chapter.lessons.length === 1 ? "lesson" : "lessons"} ·{" "}
                 {chapter.lessons.reduce((a, l) => a + l.steps.length, 0)} steps
@@ -113,25 +113,22 @@ export default async function V2ChapterOverviewPage({
                 {firstLesson && (
                   <Link
                     href={`/learn/v2/${chapter.slug}/${firstLesson.slug}/0`}
-                    className="inline-flex items-center gap-2 rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-ink-950 transition hover:bg-green-400"
+                    className="dojo-btn-primary"
                   >
                     start chapter
                     <ArrowRight size={14} />
                   </Link>
                 )}
-                <Link
-                  href="/"
-                  className="text-xs text-ink-500 hover:text-ink-300"
-                >
+                <Link href="/" className="dojo-btn-tertiary">
                   ← back to all chapters
                 </Link>
               </div>
 
               <div className="mt-10">
-                <h2 className="font-mono text-[10px] uppercase tracking-widest text-ink-500">
+                <h2 className="t-eyebrow text-ink-500">
                   lessons in this chapter
                 </h2>
-                <ol className="mt-2 flex flex-col divide-y divide-ink-800 rounded-md border border-ink-800 bg-ink-950">
+                <ol className="mt-2 flex flex-col divide-y divide-ink-800 border border-ink-800 bg-ink-950">
                   {chapter.lessons.map((lesson, idx) => (
                     <li key={lesson.slug}>
                       <Link
@@ -139,12 +136,12 @@ export default async function V2ChapterOverviewPage({
                         className="flex items-center justify-between px-4 py-3 text-sm transition hover:bg-ink-900"
                       >
                         <span className="flex items-center gap-3">
-                          <span className="font-mono text-[10px] text-ink-500">
+                          <span className="t-mono-meta">
                             {String(idx + 1).padStart(2, "0")}
                           </span>
                           <span className="text-ink-200">{lesson.title.toLowerCase()}</span>
                         </span>
-                        <span className="font-mono text-[10px] text-ink-500">
+                        <span className="t-mono-meta">
                           {lesson.steps.length} steps
                         </span>
                       </Link>

@@ -120,30 +120,24 @@ export default function AboutPage() {
     <main className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
       {/* ───────── 1. HERO ─────────────────────────────────────── */}
       <section className="border-b border-ink-800 pb-16">
-        <div className="mb-6 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.4em] text-green-500">
+        <div className="mb-6 inline-flex items-center gap-2 t-eyebrow">
           <span>❯</span>
           <span>what is this?</span>
         </div>
-        <h1 className="font-display text-5xl font-black leading-[1] tracking-[-0.04em] text-ink-100 sm:text-6xl md:text-7xl">
+        <h1 className="t-hero">
           a python school built for the version of you that lives in cursor.
         </h1>
-        <p className="mt-8 max-w-2xl font-display text-xl leading-snug text-ink-300">
+        <p className="t-body mt-8 max-w-2xl">
           promptdojo teaches you the python you need to direct ai agents, read
           what they wrote, and catch what they got wrong.{" "}
           <em className="italic text-ink-100">it&apos;s not a syntax course.</em>{" "}
           it&apos;s a school for the new job: editing the model.
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-3">
-          <Link
-            href="/learn/v2/variables"
-            className="border border-green-500 bg-green-500 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-ink-950 transition hover:bg-green-400"
-          >
+          <Link href="/learn/v2/variables" className="dojo-btn-primary">
             start the course →
           </Link>
-          <Link
-            href="/"
-            className="border border-ink-700 bg-transparent px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-ink-300 transition hover:border-green-500 hover:text-green-400"
-          >
+          <Link href="/" className="dojo-btn-secondary">
             back to home
           </Link>
         </div>
@@ -151,10 +145,8 @@ export default function AboutPage() {
 
       {/* ───────── 2. THE WEDGE ─────────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
-        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.35em] text-green-500">
-          the wedge
-        </div>
-        <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.03em] text-ink-100 sm:text-4xl">
+        <div className="t-eyebrow mb-3">the wedge</div>
+        <h2 className="t-section">
           every other course teaches you what python{" "}
           <em className="italic text-green-400">is</em>.
           <br />
@@ -177,10 +169,8 @@ export default function AboutPage() {
 
       {/* ───────── 3. WHAT'S INSIDE ─────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
-        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.35em] text-green-500">
-          what&apos;s inside
-        </div>
-        <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.03em] text-ink-100 sm:text-4xl">
+        <div className="t-eyebrow mb-3">what&apos;s inside</div>
+        <h2 className="t-section">
           25 chapters. 624 interactive steps. zero install.
         </h2>
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -207,12 +197,8 @@ export default function AboutPage() {
 
       {/* ───────── 4. HOW IT WORKS ──────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
-        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.35em] text-green-500">
-          how it works
-        </div>
-        <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.03em] text-ink-100 sm:text-4xl">
-          read. run. fix. repeat 624 times.
-        </h2>
+        <div className="t-eyebrow mb-3">how it works</div>
+        <h2 className="t-section">read. run. fix. repeat 624 times.</h2>
         <div className="mt-8 grid gap-3 md:grid-cols-3">
           {steps.map((c) => (
             <div key={c.n} className="border border-ink-800 bg-ink-900 p-5">
@@ -232,10 +218,8 @@ export default function AboutPage() {
 
       {/* ───────── 5. NOT CODECADEMY ────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
-        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.35em] text-green-500">
-          why this, not codecademy
-        </div>
-        <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.03em] text-ink-100 sm:text-4xl">
+        <div className="t-eyebrow mb-3">why this, not codecademy</div>
+        <h2 className="t-section">
           the old way assumes you&apos;ll write the code.
           <br />
           you won&apos;t.
@@ -270,9 +254,7 @@ export default function AboutPage() {
 
       {/* ───────── 6. WHO BUILT IT ──────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
-        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.35em] text-green-500">
-          who built it
-        </div>
+        <div className="t-eyebrow mb-3">who built it</div>
         <div className="font-display text-lg leading-relaxed text-ink-300">
           <p>
             i&apos;m josh. i wrote this because i wanted to learn python the
@@ -297,13 +279,9 @@ export default function AboutPage() {
 
       {/* ───────── 7. FREE FOREVER ──────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
-        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.35em] text-green-500">
-          free forever
-        </div>
-        <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.03em] text-ink-100 sm:text-4xl">
-          $0. open source. no upsell. ever.
-        </h2>
-        <p className="mt-6 max-w-2xl font-display text-lg leading-snug text-ink-300">
+        <div className="t-eyebrow mb-3">free forever</div>
+        <h2 className="t-section">$0. open source. no upsell. ever.</h2>
+        <p className="t-body mt-6 max-w-2xl">
           there is no paid tier. no premium chapters. no certificate-store.
           login is optional and only saves your progress across devices —
           it doesn&apos;t unlock anything. the source is on github. fork it.
@@ -314,7 +292,7 @@ export default function AboutPage() {
             href="https://github.com/xernst/promptdojo"
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-ink-700 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-ink-300 transition hover:border-green-500 hover:text-green-400"
+            className="dojo-btn-secondary"
           >
             github →
           </a>
@@ -322,7 +300,7 @@ export default function AboutPage() {
             href="https://x.com/TFisPython"
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-ink-700 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-ink-300 transition hover:border-green-500 hover:text-green-400"
+            className="dojo-btn-secondary"
           >
             @TFisPython on x →
           </a>
@@ -331,12 +309,8 @@ export default function AboutPage() {
 
       {/* ───────── 8. FAQ ───────────────────────────────────────── */}
       <section className="border-b border-ink-800 py-16">
-        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.35em] text-green-500">
-          faq
-        </div>
-        <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.03em] text-ink-100 sm:text-4xl">
-          quick answers.
-        </h2>
+        <div className="t-eyebrow mb-3">faq</div>
+        <h2 className="t-section">quick answers.</h2>
         <dl className="mt-8 space-y-6">
           {faqs.map((f) => (
             <div key={f.q} className="border-l-2 border-ink-800 pl-5">
@@ -353,24 +327,16 @@ export default function AboutPage() {
 
       {/* ───────── 9. CTA + FOOTER ──────────────────────────────── */}
       <section className="py-16">
-        <h2 className="font-display text-4xl font-black leading-tight tracking-[-0.04em] text-ink-100 sm:text-5xl">
-          stop reading. start fixing.
-        </h2>
-        <p className="mt-4 max-w-xl font-display text-lg text-ink-400">
+        <h2 className="t-section">stop reading. start fixing.</h2>
+        <p className="t-body mt-4 max-w-xl">
           chapter 01 is variables. chapter 25 is a working cli agent. the only
           step that matters is the next one.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Link
-            href="/learn/v2/variables"
-            className="border border-green-500 bg-green-500 px-5 py-3 font-mono text-sm font-bold uppercase tracking-wider text-ink-950 transition hover:bg-green-400"
-          >
+          <Link href="/learn/v2/variables" className="dojo-btn-primary">
             start the course →
           </Link>
-          <Link
-            href="/"
-            className="font-mono text-xs uppercase tracking-wider text-ink-500 hover:text-ink-300"
-          >
+          <Link href="/" className="dojo-btn-tertiary">
             ← home
           </Link>
         </div>
