@@ -7,8 +7,15 @@
 // - Welcome-back: if the streak is broken, we never show "you lost X days" —
 //   we show "welcome back, here's where you were."
 
-import type { GlobalProgress, StreakState } from "./types";
-import { FRESH_STREAK, todayISO, updateProgress } from "./storage";
+import type { StreakState } from "./types";
+import type { ProgressV2 } from "./storage";
+import {
+  FRESH_STREAK,
+  loadProgress,
+  loadProgressV2,
+  todayISO,
+  updateProgressV2,
+} from "./storage";
 
 const XP_PER_PASS = 10;
 const XP_PER_EMBER = 30;
@@ -60,13 +67,26 @@ function rollStreak(s: StreakState): StreakState {
   };
 }
 
+/** One-shot bridge: if the v2 streak is fresh but v1 has a streak,
+ *  carry it forward so a returning v1 user doesn't lose their fire.
+ *  Idempotent — second call sees v2 already populated and is a no-op. */
+function seedV2FromV1IfEmpty(p: ProgressV2): ProgressV2 {
+  if (p.streak.totalXp > 0 || p.streak.current > 0) return p;
+  const v1 = loadProgress();
+  if (v1.streak.totalXp === 0 && v1.streak.current === 0) return p;
+  return { ...p, streak: { ...FRESH_STREAK, ...v1.streak } };
+}
+
 /** Award a passed-exercise event. Updates XP, streak, embers. */
-export function awardPass(): GlobalProgress {
-  return updateProgress((p) => {
+export function awardPass(): ProgressV2 {
+  return updateProgressV2((raw) => {
+    const p = seedV2FromV1IfEmpty(raw);
     const today = todayISO();
     const s0 = rollStreak(p.streak);
     const todayXp = (s0.todayDate === today ? s0.todayXp : 0) + XP_PER_PASS;
-    const earnedEmbers = Math.floor(todayXp / XP_PER_EMBER) - Math.floor((todayXp - XP_PER_PASS) / XP_PER_EMBER);
+    const earnedEmbers =
+      Math.floor(todayXp / XP_PER_EMBER) -
+      Math.floor((todayXp - XP_PER_PASS) / XP_PER_EMBER);
     const embers = Math.min(MAX_EMBERS, s0.embers + Math.max(0, earnedEmbers));
     const isNewActivityDay = s0.lastActivityDate !== today;
     let current = s0.current;
@@ -92,8 +112,8 @@ export function awardPass(): GlobalProgress {
 }
 
 /** Grant a frozen flame on chapter completion (max 4 stored). */
-export function grantFrozenFlame(): GlobalProgress {
-  return updateProgress((p) => ({
+export function grantFrozenFlame(): ProgressV2 {
+  return updateProgressV2((p) => ({
     ...p,
     streak: {
       ...p.streak,
@@ -103,7 +123,7 @@ export function grantFrozenFlame(): GlobalProgress {
 }
 
 /** Read-only view: roll forward without persisting. */
-export function viewStreak(p: GlobalProgress): StreakState {
+export function viewStreak(p: ProgressV2): StreakState {
   return rollStreak(p.streak);
 }
 

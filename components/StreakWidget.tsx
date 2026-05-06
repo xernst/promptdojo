@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Flame, Snowflake, Sparkles } from "lucide-react";
-import { loadProgress } from "@/lib/storage";
+import { loadProgressV2, PROGRESS_EVENT_V2 } from "@/lib/storage";
 import { viewStreak } from "@/lib/streaks";
 import type { StreakState } from "@/lib/types";
 
@@ -9,13 +9,13 @@ export default function StreakWidget() {
   const [s, setS] = useState<StreakState | null>(null);
 
   useEffect(() => {
-    const refresh = () => setS(viewStreak(loadProgress()));
+    const refresh = () => setS(viewStreak(loadProgressV2()));
     refresh();
     const onUpdate = () => refresh();
-    window.addEventListener("promptdojo:progress", onUpdate);
+    window.addEventListener(PROGRESS_EVENT_V2, onUpdate);
     window.addEventListener("storage", onUpdate);
     return () => {
-      window.removeEventListener("promptdojo:progress", onUpdate);
+      window.removeEventListener(PROGRESS_EVENT_V2, onUpdate);
       window.removeEventListener("storage", onUpdate);
     };
   }, []);

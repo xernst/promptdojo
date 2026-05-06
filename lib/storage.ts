@@ -3,7 +3,9 @@ import type { GlobalProgress, LessonProgress, StreakState } from "./types";
 import type { StepAttempt, UserProfile } from "./content/schema";
 
 const KEY = "promptdojo:progress:v1";
-const KEY_V2 = "promptdojo:progress:v2";
+export const PROGRESS_KEY_V2 = "promptdojo:progress:v2";
+export const PROGRESS_EVENT_V2 = "promptdojo:progress-v2";
+const KEY_V2 = PROGRESS_KEY_V2;
 
 const FRESH_STREAK: StreakState = {
   lastActivityDate: "",
@@ -212,17 +214,14 @@ export function loadProgressV2(): ProgressV2 {
 export function saveProgressV2(p: ProgressV2) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(KEY_V2, JSON.stringify(p));
-  window.dispatchEvent(new CustomEvent("promptdojo:progress-v2"));
+  window.dispatchEvent(new CustomEvent(PROGRESS_EVENT_V2));
 }
 
 export function updateProgressV2(
   fn: (p: ProgressV2) => ProgressV2,
 ): ProgressV2 {
   const cur = loadProgressV2();
-  // Stamp lastSeenAt on every write — this is the canonical "last seen"
-  // signal the welcome-back resolver reads. Cheap (<1ms localStorage op),
-  // backward-compat (additive optional field).
-  const next = { ...fn(cur), lastSeenAt: new Date().toISOString() };
+  const next = fn(cur);
   saveProgressV2(next);
   return next;
 }
@@ -372,7 +371,11 @@ export function getLessonProgressV2(
 }
 
 export function setLastVisitedV2(visited: LastVisitedV2): ProgressV2 {
-  return updateProgressV2((p) => ({ ...p, lastVisitedV2: visited }));
+  return updateProgressV2((p) => ({
+    ...p,
+    lastVisitedV2: visited,
+    lastSeenAt: new Date().toISOString(),
+  }));
 }
 
 export function getLastVisitedV2(): LastVisitedV2 | undefined {

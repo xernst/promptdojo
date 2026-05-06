@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  PROGRESS_EVENT_V2 as PROGRESS_EVENT,
+  PROGRESS_KEY_V2 as PROGRESS_KEY,
+} from "@/lib/storage";
 
 const EMAIL_KEY = "promptdojo:save-email";
-const PROGRESS_KEY = "promptdojo:progress:v2";
-const PROGRESS_EVENT = "promptdojo:progress-v2";
 const SYNC_DEBOUNCE_MS = 1500;
 
 type Status = "idle" | "saving" | "loading" | "saved" | "loaded" | "error";
