@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getChapters } from "@/lib/content";
 import { getV2Toc, getV2Chapter } from "@/lib/content-v2";
 import HomeClient from "@/components/v2/HomeClient";
 import PhaseBandedRail from "@/components/v2/PhaseBandedRail";
@@ -85,8 +84,6 @@ export default async function Home() {
     totalSteps: c.meta.stepCount,
     lessons: c.lessons,
   }));
-
-  const legacyChapters = getChapters();
 
   return (
     <main id="main" className="mx-auto max-w-6xl px-6 py-10 sm:py-16">
@@ -173,34 +170,6 @@ export default async function Home() {
           stepIdsByChapter={stepIdsByChapter}
         />
       </section>
-
-      <details className="group mt-12 border border-ink-800 bg-ink-950">
-        <summary className="cursor-pointer list-none px-4 py-3 t-mono-meta hover:text-ink-300">
-          <span className="mr-2 inline-block transition group-open:rotate-90">
-            ▸
-          </span>
-          legacy 28-chapter course (old style)
-        </summary>
-        <div className="grid grid-cols-1 gap-2 border-t border-ink-800 p-4 sm:grid-cols-2 lg:grid-cols-3">
-          {legacyChapters.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/learn/${c.slug}`}
-              className="group dojo-card-interactive flex items-center justify-between"
-            >
-              <div>
-                <div className="t-eyebrow text-ink-500">
-                  ch {String(c.number).padStart(2, "0")}
-                </div>
-                <div className="t-h3 mt-1 text-ink-200 group-hover:text-green-300">
-                  {c.title.replace(/^Chapter\s+\d+\s*[—\-]\s*/, "").toLowerCase()}
-                </div>
-              </div>
-              <div className="t-mono-meta">{c.exercises.length} ex</div>
-            </Link>
-          ))}
-        </div>
-      </details>
 
       <footer className="mt-16 flex flex-wrap items-baseline justify-between gap-3 border-t border-ink-800 pt-6 t-mono-meta">
         <p>

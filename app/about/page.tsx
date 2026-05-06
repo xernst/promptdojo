@@ -93,7 +93,7 @@ export default function AboutPage() {
   return (
     <main id="main" className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
       {/* ───────── 1. HERO ─────────────────────────────────────── */}
-      <section className="border-b border-ink-800 pb-16">
+      <section className="pb-16">
         <div className="mb-6 inline-flex items-center gap-2 t-eyebrow">
           <span>❯</span>
           <span>what is this?</span>
@@ -119,7 +119,7 @@ export default function AboutPage() {
       </section>
 
       {/* ───────── 2. THE WEDGE ─────────────────────────────────── */}
-      <section className="border-b border-ink-800 py-16">
+      <section className="py-16">
         <div className="t-eyebrow mb-3">the wedge</div>
         <h2 className="t-section">
           every course teaches you what python{" "}
@@ -143,7 +143,7 @@ export default function AboutPage() {
       </section>
 
       {/* ───────── 3. WHAT'S INSIDE ─────────────────────────────── */}
-      <section className="border-b border-ink-800 py-16">
+      <section className="py-16">
         <div className="t-eyebrow mb-3">the curriculum</div>
         <h2 className="t-section">
           25 chapters. 624 <em className="t-emph">runnable</em> steps. zero install.
@@ -165,7 +165,7 @@ export default function AboutPage() {
       </section>
 
       {/* ───────── 4. HOW IT WORKS ──────────────────────────────── */}
-      <section className="border-b border-ink-800 py-16">
+      <section className="py-16">
         <div className="t-eyebrow mb-3">the loop</div>
         <h2 className="t-section">
           <em className="t-emph">read</em>. <em className="t-emph">run</em>. <em className="t-emph">fix</em>. repeat 624 times.
@@ -188,7 +188,7 @@ export default function AboutPage() {
       </section>
 
       {/* ───────── 5. NOT CODECADEMY ────────────────────────────── */}
-      <section className="border-b border-ink-800 py-16">
+      <section className="py-16">
         <div className="t-eyebrow mb-3">why this, not codecademy</div>
         <h2 className="t-section">
           the old way assumes you&apos;ll <em className="t-emph">write</em> the code.
@@ -224,7 +224,7 @@ export default function AboutPage() {
       </section>
 
       {/* ───────── 6. WHO BUILT IT ──────────────────────────────── */}
-      <section className="border-b border-ink-800 py-16">
+      <section className="py-16">
         <div className="t-eyebrow mb-3">who built it</div>
         <div className="font-display text-lg leading-relaxed text-ink-300">
           <p>
@@ -248,7 +248,7 @@ export default function AboutPage() {
       </section>
 
       {/* ───────── 7. FREE FOREVER ──────────────────────────────── */}
-      <section className="border-b border-ink-800 py-16">
+      <section className="py-16">
         <div className="t-eyebrow mb-3">free forever</div>
         <h2 className="t-section">
           $0. <em className="t-emph">open source</em>. no upsell. <em className="t-emph">ever</em>.
@@ -304,7 +304,7 @@ export default function AboutPage() {
       </section>
 
       {/* ───────── 8. FAQ ───────────────────────────────────────── */}
-      <section className="border-b border-ink-800 py-16">
+      <section className="py-16">
         <div className="t-eyebrow mb-3">faq</div>
         <h2 className="t-section">quick <em className="t-emph">answers</em>.</h2>
         <p className="t-mono-meta mt-3">last revised 2026-05-06</p>
