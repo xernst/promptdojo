@@ -122,11 +122,15 @@ export default async function Home() {
         </div>
 
         <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
+          {/* Primary CTA points at chapter 16 (Agent Loops) — the demo
+              that pays off "ai writes this. it's wrong." Per growth audit
+              2026-05-07: variables-first sent the AI-curious audience
+              into the boring part. */}
           <Link
-            href="/learn/v2/variables/naming-things/0"
+            href="/learn/v2/agent-loops/the-loop/0"
             className="dojo-btn-primary"
           >
-            run your first lesson <span aria-hidden>→</span>
+            catch ai&apos;s first bug <span aria-hidden>→</span>
           </Link>
           <a
             href="#chapters"
@@ -135,6 +139,15 @@ export default async function Home() {
             or pick your chapter ↓
           </a>
         </div>
+        <p className="mt-4 t-mono-meta">
+          new to python?{" "}
+          <Link
+            href="/learn/v2/variables/naming-things/0"
+            className="text-ink-300 underline decoration-ink-700 underline-offset-4 hover:text-green-400 hover:decoration-green-500"
+          >
+            start at chapter 1 →
+          </Link>
+        </p>
       </header>
 
       <HomeClient

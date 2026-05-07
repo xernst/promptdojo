@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import LessonShell from "./LessonShell";
+import ChapterEndCard from "./ChapterEndCard";
+import TweetThisStep from "./TweetThisStep";
 import { phaseForChapter } from "@/lib/curriculum/phases";
 import type { IDEFile, PersistentIDEHandle } from "./PersistentIDE";
 import StepRouter, { type StepIDEBridge } from "./StepRouter";
@@ -74,8 +76,14 @@ export default function LessonStepClient({
   next,
 }: Props) {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile>(FRESH_PROFILE);
-  const [latestAttempt, setLatestAttempt] = useState<StepAttempt | null>(null);
+  const [profile] = useState<UserProfile>(() => {
+    const progress = loadProgressV2();
+    return progress.profile ? { ...FRESH_PROFILE, ...progress.profile } : FRESH_PROFILE;
+  });
+  const [latestAttempt, setLatestAttempt] = useState<StepAttempt | null>(() => {
+    const prior = getStepProgress(step.id);
+    return prior?.attempts?.slice().reverse().find((a) => a.correct) ?? null;
+  });
   const ideRef = useRef<PersistentIDEHandle>(null);
   const announceRef = useRef<HTMLHeadingElement>(null);
   const isFirstStep = useRef(true);
@@ -96,10 +104,6 @@ export default function LessonStepClient({
   // previously-passed attempt for this step so reload doesn't ask the user
   // to re-pass content they've already completed.
   useEffect(() => {
-    const progress = loadProgressV2();
-    if (progress.profile) {
-      setProfile({ ...FRESH_PROFILE, ...progress.profile });
-    }
     setLastVisitedV2({
       chapterSlug: chapter.slug,
       lessonSlug: lesson.slug,
@@ -108,12 +112,6 @@ export default function LessonStepClient({
     if (stepIndex === 0) {
       markLessonStarted(chapter.slug, lesson.slug);
     }
-    const prior = getStepProgress(step.id);
-    const lastPassed = prior?.attempts
-      ?.slice()
-      .reverse()
-      .find((a) => a.correct);
-    setLatestAttempt(lastPassed ?? null);
   }, [chapter.slug, lesson.slug, stepIndex, step.id]);
 
   const ideFiles = useMemo<IDEFile[]>(() => buildFilesForStep(step), [step]);
@@ -244,28 +242,52 @@ export default function LessonStepClient({
         );
       })()}
       prompt={
-        <StepRouter
-          step={step}
-          profile={profile}
-          onAttempt={handleAttempt}
-          ide={ideBridge}
-        />
+        <>
+          <StepRouter
+            key={step.id}
+            step={step}
+            profile={profile}
+            onAttempt={handleAttempt}
+            ide={ideBridge}
+          />
+          {/* Chapter-end Follow CTA — only at the final step of the
+              chapter (next === null), only after the user has passed.
+              Direct lever on the @TFisPython follower gate. */}
+          {!next && passed ? (
+            <ChapterEndCard
+              chapterTitle={chapter.title}
+              isCourseEnd={
+                tree.toc.chapters[tree.toc.chapters.length - 1]?.slug ===
+                chapter.slug
+              }
+            />
+          ) : null}
+        </>
       }
       footer={
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-xs text-ink-500">
             {passed
               ? "locked in. move on when you're ready."
               : "⌘↵ runs the editor."}
           </span>
-          <button
-            type="button"
-            onClick={handleContinue}
-            disabled={!passed && step.type !== "read"}
-            className="dojo-btn-primary"
-          >
-            {next ? "continue →" : "that's all of it →"}
-          </button>
+          <div className="flex items-center gap-4">
+            <TweetThisStep
+              chapterTitle={chapter.title}
+              chapterSlug={chapter.slug}
+              lessonTitle={lesson.title}
+              lessonSlug={lesson.slug}
+              stepIndex={stepIndex}
+            />
+            <button
+              type="button"
+              onClick={handleContinue}
+              disabled={!passed && step.type !== "read"}
+              className="dojo-btn-primary"
+            >
+              {next ? "continue →" : "that's all of it →"}
+            </button>
+          </div>
         </div>
       }
       ide={
