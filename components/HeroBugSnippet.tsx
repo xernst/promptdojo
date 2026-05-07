@@ -1,11 +1,18 @@
 // Hero bug snippet — the screenshot-anchor for the home page.
 //
-// Per audit-v5/ux.md: rewritten for the actual audience (PMs, marketers,
-// ops folks) who don't know Python. The mutable-default-arg version was
-// correct but unreadable to non-devs — they couldn't share what they
-// couldn't articulate. This version uses `or` truthiness, which reads
-// like English to them ("pro or enterprise") but quietly fails the way
-// AI bugs always do.
+// The hero needs a bug AI actually ships, with a consequence the
+// audience (PMs, marketers, ops folks) recognizes from real life.
+//
+// Design constraints:
+//   1. Readable to a non-dev (a for-loop with an if is the floor)
+//   2. AI plausibly writes this — not a Python gotcha disguised as one
+//   3. Business consequence is visceral (spam complaints, lost money,
+//      angry customer, broken report — not "AttributeError")
+//   4. The fix is obvious once you see it (one missing line)
+//
+// This bug — "the missing check" — is the #1 thing AI gets wrong.
+// AI does exactly what you asked. It doesn't ask "should we?". You
+// catch this in your unsubscribe complaints, not your tests.
 
 export default function HeroBugSnippet() {
   return (
@@ -25,35 +32,35 @@ export default function HeroBugSnippet() {
           style={{ fontVariantLigatures: "none" }}
         >
           <code>
-            <span className="text-ink-500"># filter to our paying users</span>
+            <span className="text-ink-500"># email new signups about the launch</span>
             {"\n"}
-            users = api.list_users(
+            <span className="text-green-500">for</span> user{" "}
+            <span className="text-green-500">in</span> users:
             {"\n  "}
-            plan=
+            <span className="text-green-500">if</span> user.created_at{" "}
+            &gt; last_monday:
+            {"\n    "}
+            send_email(user.email,{" "}
+            <span className="text-green-300">&quot;we just launched!&quot;</span>
+            ){"\n\n"}
+            <span className="text-ink-500"># expected: welcome emails to new signups</span>
+            {"\n"}
             <span
               style={{ color: "var(--err)", background: "rgba(239,68,68,0.14)" }}
             >
-              <span className="text-green-300">&quot;pro&quot;</span>{" "}
-              <span className="text-green-500">or</span>{" "}
-              <span className="text-green-300">&quot;enterprise&quot;</span>
+              <span className="text-ink-500"># shipped:  also emailed 14 users who unsubscribed last week</span>
             </span>
-            ,{"\n"}){"\n\n"}
-            <span className="text-ink-500"># expected: pro + enterprise users</span>
-            {"\n"}
-            <span className="text-ink-500"># shipped:  only pro users</span>
           </code>
         </pre>
       </div>
       {/* row 3 — annotation strip, always visible */}
       <div className="border-t border-ink-800 px-4 py-3 font-mono text-xs text-ink-400">
         <strong className="font-mono uppercase tracking-wider text-err">
-          truthiness bug
+          the missing check
         </strong>
-        {" "}— python reads{" "}
-        <code className="text-ink-300">&quot;pro&quot; or &quot;enterprise&quot;</code>{" "}
-        and returns{" "}
-        <code className="text-ink-300">&quot;pro&quot;</code>. enterprise
-        customers vanish from the report.
+        {" "}— ai does exactly what you asked. it doesn&apos;t ask{" "}
+        <em className="not-italic text-ink-300">should we?</em>. you find
+        this bug in your unsubscribe complaints, not your tests.
       </div>
     </div>
   );
