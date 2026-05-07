@@ -13,10 +13,15 @@ export default function PriceBand() {
       >
         $0
       </div>
+      {/* "no login" was here previously — pulled when magic-link save
+          landed (Pass 5). "no streaks" was here too but contradicted the
+          visible streak widget on the same scroll. "no guilt" is honest
+          (we DO show streaks, but we don't punish skips — frozen flames
+          forgive a missed day). Per audit-v5/ux.md trust-dip fix. */}
       <div className="t-mono-meta mt-10 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-        <span>no login</span>
+        <span>no signup</span>
         <span className="text-ink-700">·</span>
-        <span>no streaks</span>
+        <span>no guilt</span>
         <span className="text-ink-700">·</span>
         <span>no upsell</span>
         <span className="text-ink-700">·</span>

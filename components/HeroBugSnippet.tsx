@@ -1,13 +1,11 @@
 // Hero bug snippet — the screenshot-anchor for the home page.
 //
-// Two-row chrome (cursor.py · ai-generated), code body with the
-// mutable-default-arg bug highlighted, footer summary. On desktop
-// the red annotation arrow renders to the right of the bug line.
-//
-// The mutable-default-arg bug: a one-screen demonstration of why the AI
-// codes you ship need a reader.
-//
-// Per design-kit/audit-v3/HEADOFIT-plan.md PR 7.
+// Per audit-v5/ux.md: rewritten for the actual audience (PMs, marketers,
+// ops folks) who don't know Python. The mutable-default-arg version was
+// correct but unreadable to non-devs — they couldn't share what they
+// couldn't articulate. This version uses `or` truthiness, which reads
+// like English to them ("pro or enterprise") but quietly fails the way
+// AI bugs always do.
 
 export default function HeroBugSnippet() {
   return (
@@ -27,28 +25,35 @@ export default function HeroBugSnippet() {
           style={{ fontVariantLigatures: "none" }}
         >
           <code>
-            <span className="text-green-500">def</span>{" "}
-            <span className="text-green-300">collect_errors</span>(
+            <span className="text-ink-500"># filter to our paying users</span>
+            {"\n"}
+            users = api.list_users(
             {"\n  "}
-            msg: <span className="text-green-500">str</span>,
-            {"\n  "}
-            bag: <span className="text-green-500">list</span> ={" "}
-            <span style={{ color: "var(--err)", background: "rgba(239,68,68,0.14)" }}>
-              []
+            plan=
+            <span
+              style={{ color: "var(--err)", background: "rgba(239,68,68,0.14)" }}
+            >
+              <span className="text-green-300">&quot;pro&quot;</span>{" "}
+              <span className="text-green-500">or</span>{" "}
+              <span className="text-green-300">&quot;enterprise&quot;</span>
             </span>
-            {"\n"}):{"\n  "}
-            bag.append(msg){"\n  "}
-            <span className="text-green-500">return</span> bag
+            ,{"\n"}){"\n\n"}
+            <span className="text-ink-500"># expected: pro + enterprise users</span>
+            {"\n"}
+            <span className="text-ink-500"># shipped:  only pro users</span>
           </code>
         </pre>
       </div>
       {/* row 3 — annotation strip, always visible */}
       <div className="border-t border-ink-800 px-4 py-3 font-mono text-xs text-ink-400">
         <strong className="font-mono uppercase tracking-wider text-err">
-          mutable default arg
+          truthiness bug
         </strong>
-        {" "}— python evaluates the list once at definition. every caller
-        mutates the same list.
+        {" "}— python reads{" "}
+        <code className="text-ink-300">&quot;pro&quot; or &quot;enterprise&quot;</code>{" "}
+        and returns{" "}
+        <code className="text-ink-300">&quot;pro&quot;</code>. enterprise
+        customers vanish from the report.
       </div>
     </div>
   );

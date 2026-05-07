@@ -12,30 +12,38 @@ import Wordmark from "@/components/Wordmark";
 import HeroBugSnippet from "@/components/HeroBugSnippet";
 import { formatDateShort, githubStats } from "@/lib/github-stats";
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://promptdojo.pages.dev"),
-  title: "promptdojo — free runnable python course for ai builders",
-  description:
-    "free, open-source python course for pms, marketers, and ops folks who use cursor and claude code daily. 25 chapters, 624 runnable steps, runs in your browser. no signup, no paywall.",
-  alternates: { canonical: "https://promptdojo.dev/" },
-  openGraph: {
-    type: "website",
+// Dynamic metadata so the description always reflects the actual chapter
+// + step counts at build time. Per audit-v5/code-review.md (the hardcoded
+// "25 chapters, 624 steps" lied — actual was 26 / 515).
+export async function generateMetadata(): Promise<Metadata> {
+  const toc = getV2Toc();
+  const chapters = toc.chapters.length;
+  const steps = toc.chapters.reduce(
+    (a: number, c: { stepCount: number }) => a + c.stepCount,
+    0,
+  );
+  return {
+    metadataBase: new URL("https://promptdojo.pages.dev"),
     title: "promptdojo — free runnable python course for ai builders",
-    description:
-      "ai writes this. it's wrong. learn the python you need to read what ai wrote, catch what it got wrong, and direct it deliberately. 25 chapters, free forever.",
-    url: "https://promptdojo.dev/",
-    siteName: "promptdojo",
-    images: [{ url: "/og/launch/wedge", width: 1600, height: 900, alt: "ai writes this. it's wrong." }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "promptdojo — ai writes this. it's wrong.",
-    description:
-      "the python you need to direct ai agents, read what they wrote, and catch what they got wrong.",
-    creator: "@TFisPython",
-    images: ["/og/launch/wedge"],
-  },
-};
+    description: `free, open-source python course for pms, marketers, and ops folks who use cursor and claude code daily. ${chapters} chapters, ${steps} runnable steps, runs in your browser. no signup, no paywall.`,
+    alternates: { canonical: "https://promptdojo.dev/" },
+    openGraph: {
+      type: "website",
+      title: "promptdojo — free runnable python course for ai builders",
+      description: `ai writes this. it's wrong. learn the python you need to read what ai wrote, catch what it got wrong, and direct it deliberately. ${chapters} chapters, free forever.`,
+      url: "https://promptdojo.dev/",
+      siteName: "promptdojo",
+      images: [{ url: "/og/launch/wedge", width: 1600, height: 900, alt: "ai writes this. it's wrong." }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "promptdojo — ai writes this. it's wrong.",
+      description: "the python you need to direct ai agents, read what they wrote, and catch what they got wrong.",
+      creator: "@TFisPython",
+      images: ["/og/launch/wedge"],
+    },
+  };
+}
 
 export default async function Home() {
   const toc = getV2Toc();
@@ -74,6 +82,8 @@ export default async function Home() {
     }),
   );
   const v2Chapters = v2ChaptersWithStepIds.map((c) => c.meta);
+  const totalChapters = v2Chapters.length;
+  const totalSteps = v2Chapters.reduce((a, c) => a + c.stepCount, 0);
   const stepIdsByChapter: Record<string, string[]> = Object.fromEntries(
     v2ChaptersWithStepIds.map((c) => [c.meta.slug, c.stepIds]),
   );
@@ -103,7 +113,8 @@ export default async function Home() {
 
         <p className="t-body mt-12 max-w-2xl">
           a python school for the version of you that lives in cursor.
-          25 chapters · 624 runnable steps · runs in your browser · free forever.
+          {" "}{totalChapters} chapters · {totalSteps} runnable steps · runs
+          in your browser · free forever.
         </p>
 
         <div className="mt-16">
@@ -164,7 +175,7 @@ export default async function Home() {
 
       <section>
         <h2 className="t-eyebrow mb-12">
-          25 chapters. 624 runnable steps. free forever.
+          {totalChapters} chapters. {totalSteps} runnable steps. free forever.
         </h2>
         <PhaseBandedRail
           chapters={v2Chapters}
