@@ -5,3 +5,4 @@ blurb: "if you can't test it, you can't ship it. learn the simple-but-strict eva
 lessons:
   - 01-writing-evals
   - 02-llm-as-judge
+  - 03-the-rise-of-evals-as-a-discipline

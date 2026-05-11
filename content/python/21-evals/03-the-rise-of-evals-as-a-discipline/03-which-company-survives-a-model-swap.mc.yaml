@@ -1,0 +1,50 @@
+xp: 2
+estSeconds: 70
+concept: model-swap-survival
+code: |
+  # four companies. each has shipped an LLM-powered feature.
+  # GPT-5 launches tomorrow. which one still has a working product on day 2?
+  companies = {
+      "A": {
+          "name": "VibeCo",
+          "process": "founder tunes the prompt by hand, ships when it 'feels right', no test cases on disk",
+      },
+      "B": {
+          "name": "TestsBeforePromptCo",
+          "process": "200 input/expected pairs in a YAML file; CI runs them on every prompt change AND every model version; release blocked on regressions",
+      },
+      "C": {
+          "name": "DemoDrivenCo",
+          "process": "three hand-picked example inputs in the README; runs them manually before every deploy",
+      },
+      "D": {
+          "name": "PromptLibraryCo",
+          "process": "60 prompts in a notion doc, color-coded by which model they were tuned for; no programmatic check",
+      },
+  }
+  for k, v in companies.items():
+      print(f"{k}: {v['name']:25} — {v['process']}")
+prompt: |
+  Tomorrow, GPT-5 ships. Every team's existing prompts will behave
+  differently — some better, some worse, some catastrophically wrong
+  on inputs they used to handle.
+
+  Which company still has a working product on day 2 with high
+  confidence?
+options:
+  - id: a
+    label: "A — VibeCo (founder tunes by feel)"
+    explain: "No test cases means no way to detect that GPT-5 broke anything until customers complain. The vibes era's exact failure mode."
+  - id: b
+    label: "B — TestsBeforePromptCo (200 cases in CI)"
+  - id: c
+    label: "C — DemoDrivenCo (three README examples)"
+    explain: "Three hand-picked inputs is better than zero, but it's still demo-driven evals. The cases that break on a model swap are almost never the ones in your README — they're the long-tail inputs your customers actually send."
+  - id: d
+    label: "D — PromptLibraryCo (60 prompts, no programmatic check)"
+    explain: "Lots of prompts but no way to verify them. A library of unverified prompts is just a bigger pile of vibes. Quantity doesn't replace measurement."
+answerIds:
+  - b
+hint:
+  - level: 1
+    body: "The question 'does my product still work after a model swap?' is only answerable if you can run a known set of inputs through the new model and compare to known-good outputs. That's an eval suite. Only one company has one."

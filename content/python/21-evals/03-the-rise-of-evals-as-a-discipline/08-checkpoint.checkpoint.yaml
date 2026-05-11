@@ -1,0 +1,93 @@
+xp: 8
+estSeconds: 240
+concept: triage-teams-for-model-launch
+prompt: |
+  Final drill. Synthesize the chapter's history into one function:
+  `triage_teams(teams)` that takes a list of team profiles and returns
+  a dict with two fields:
+
+  - `verdicts`: a dict mapping each team's `name` to its verdict
+    string (same four tiers as step 07)
+  - `most_at_risk`: the `name` of the team with the LOWEST readiness
+    score (the team most likely to break on the next model launch)
+
+  Score each team using the same rules as step 07:
+
+  - `has_test_set` True: +25
+  - `has_judge_prompt` True: +15
+  - `ci_runs_evals` True: +25
+  - `tracks_eval_history` True: +15
+  - `eval_count_per_feature` >= 20: +20
+
+  Verdict tiers: >=80 `"eval-mature"`, >=50 `"eval-aware"`, >=20
+  `"eval-curious"`, else `"vibes era"`.
+
+  On ties for lowest score, return the FIRST tied team (Python's
+  `min` with `key=` preserves stable order).
+
+  Five teams run. Expected output:
+  ```
+  verdicts: {'CursorClone': 'eval-mature', 'SeriesBAI': 'eval-mature', 'SeedAI': 'eval-curious', 'ConsultingShop': 'eval-curious', 'PromptShopCo': 'vibes era'}
+  most at risk: PromptShopCo
+  ```
+starter: |
+  teams = [
+      {"name": "CursorClone",     "has_test_set": True,  "has_judge_prompt": True,  "ci_runs_evals": True,  "tracks_eval_history": True,  "eval_count_per_feature": 80},
+      {"name": "SeriesBAI",       "has_test_set": True,  "has_judge_prompt": True,  "ci_runs_evals": True,  "tracks_eval_history": False, "eval_count_per_feature": 30},
+      {"name": "SeedAI",          "has_test_set": True,  "has_judge_prompt": False, "ci_runs_evals": False, "tracks_eval_history": False, "eval_count_per_feature": 10},
+      {"name": "ConsultingShop",  "has_test_set": True,  "has_judge_prompt": True,  "ci_runs_evals": False, "tracks_eval_history": False, "eval_count_per_feature": 5},
+      {"name": "PromptShopCo",    "has_test_set": False, "has_judge_prompt": False, "ci_runs_evals": False, "tracks_eval_history": False, "eval_count_per_feature": 0},
+  ]
+
+  # define triage_teams(teams) below
+
+  result = triage_teams(teams)
+  print(f"verdicts: {result['verdicts']}")
+  print(f"most at risk: {result['most_at_risk']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    verdicts: {'CursorClone': 'eval-mature', 'SeriesBAI': 'eval-mature', 'SeedAI': 'eval-curious', 'ConsultingShop': 'eval-curious', 'PromptShopCo': 'vibes era'}
+    most at risk: PromptShopCo
+  normalize: collapse-trailing-newline
+solution: |
+  teams = [
+      {"name": "CursorClone",     "has_test_set": True,  "has_judge_prompt": True,  "ci_runs_evals": True,  "tracks_eval_history": True,  "eval_count_per_feature": 80},
+      {"name": "SeriesBAI",       "has_test_set": True,  "has_judge_prompt": True,  "ci_runs_evals": True,  "tracks_eval_history": False, "eval_count_per_feature": 30},
+      {"name": "SeedAI",          "has_test_set": True,  "has_judge_prompt": False, "ci_runs_evals": False, "tracks_eval_history": False, "eval_count_per_feature": 10},
+      {"name": "ConsultingShop",  "has_test_set": True,  "has_judge_prompt": True,  "ci_runs_evals": False, "tracks_eval_history": False, "eval_count_per_feature": 5},
+      {"name": "PromptShopCo",    "has_test_set": False, "has_judge_prompt": False, "ci_runs_evals": False, "tracks_eval_history": False, "eval_count_per_feature": 0},
+  ]
+
+  def score_team(t):
+      s = 0
+      if t.get("has_test_set"):
+          s += 25
+      if t.get("has_judge_prompt"):
+          s += 15
+      if t.get("ci_runs_evals"):
+          s += 25
+      if t.get("tracks_eval_history"):
+          s += 15
+      if t.get("eval_count_per_feature", 0) >= 20:
+          s += 20
+      return s
+
+  def verdict_for(score):
+      if score >= 80:
+          return "eval-mature"
+      if score >= 50:
+          return "eval-aware"
+      if score >= 20:
+          return "eval-curious"
+      return "vibes era"
+
+  def triage_teams(teams):
+      verdicts = {t["name"]: verdict_for(score_team(t)) for t in teams}
+      most_at_risk = min(teams, key=score_team)["name"]
+      return {"verdicts": verdicts, "most_at_risk": most_at_risk}
+
+  result = triage_teams(teams)
+  print(f"verdicts: {result['verdicts']}")
+  print(f"most at risk: {result['most_at_risk']}")
+passThreshold: 0.66

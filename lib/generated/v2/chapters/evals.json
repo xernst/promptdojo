@@ -539,7 +539,207 @@
         }
       ],
       "xpTotal": 32
+    },
+    {
+      "slug": "the-rise-of-evals-as-a-discipline",
+      "title": "How evals went from research curiosity to the only thing that ships — a five-year history",
+      "estMinutes": 20,
+      "prerequisites": [
+        "llm-as-judge"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "evals/the-rise-of-evals-as-a-discipline/s01-01-the-prompt-engineering-era",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 220,
+          "concept": "prompt-engineering-era",
+          "body": "# The vibes era: 2022 to 2024\n\nFor about eighteen months after ChatGPT shipped, the entire LLM\nindustry ran on a methodology that, in retrospect, was a methodology\nonly by accident. It had a name — **prompt engineering** — and a job\ntitle to match. LinkedIn filled with \"Prompt Engineer\" titles\nattached to six-figure salaries. Twitter filled with thread after\nthread of \"the 17 magic phrases that 10x ChatGPT.\" A cottage industry\nof \"prompt marketplaces\" appeared, selling jailbreaks and templates\nfor $9.99.\n\nThe underlying loop looked like this:\n\n1. Write a prompt.\n2. Run it on three or four inputs you happen to remember.\n3. If the output looks good, ship it.\n4. When a customer complains, go back to step 1.\n\nThat's it. That was the methodology. Nobody called it \"vibes\" at the\ntime — at the time it just felt like the work. But it was vibes. The\nquality bar was \"does this feel right when I read it.\" The\nregression detection was \"did anyone complain yet.\" The release\ngate was \"the founder said go.\"\n\n## Why the vibes era worked at first\n\nIt worked for the same reason any unscalable practice works at small\nscale: the surface area was small. The first wave of LLM products\nwere demos and prototypes. A demo only has to work for the demo. A\nprototype only has to work for the screenshot you put in the deck.\nIf your prompt fails on input #47, you'll never know, because input\n#47 was never going to happen in front of an investor.\n\nIt also worked because the models themselves were a moving target in\na way that hid product quality issues. Every six months a new model\ndropped that was strictly better than the last. If your prompt had a\nbug, you could often just wait three months and let the next model\npatch over it. That's not engineering. That's hoping. But it felt\nlike progress, and the chart of model capability over time made\neveryone feel like geniuses.\n\n## Why the vibes era failed for products\n\nThe moment you go from demo to product, three things break:\n\n**Vibes don't survive a model swap.** Every prompt engineer of the\n2023 era has the same scar: the day OpenAI deprecated `gpt-3.5-turbo-0301`\nand their carefully tuned prompt started returning garbage. Vibes are\nlocal to a model version. The minute the model changes — and models\nchange every quarter — your \"battle-tested\" prompt is no longer\nbattle-tested against anything. Without an eval suite, you don't know\n*how* it broke. You only know that the support tickets are flowing.\n\n**Vibes don't catch regressions.** The most expensive bug in LLM\nproducts is the silent one: your prompt got \"improved\" last Tuesday to\nfix a customer complaint, and now it's worse on a different input\nnobody noticed. There is no way to detect this without a regression\nsuite. None. The vibes era had no answer for this problem — the\nanswer was \"hope the next complaint surfaces it quickly.\"\n\n**Vibes can't be reviewed.** A PR that says \"I changed the prompt\nfrom X to Y, it feels better to me\" is not reviewable. The reviewer\nhas no basis to push back. They either trust you or they don't. This\nkilled the engineering culture inside AI teams. Senior ICs could not\ndo their job — could not catch bad changes, could not enforce a\nquality bar — because there was nothing to point at. Process collapsed\ninto \"whoever yells the loudest wins the prompt fight.\"\n\n## The cultural tell\n\nThe clearest sign that prompt engineering was about to collapse as a\ndiscipline was the way prompt engineers talked about their work. They\ndescribed it the way magicians describe magic — as art, as feel, as\nsomething that couldn't quite be explained. \"You have to *know* what\nthe model wants.\" \"Some prompts just *have it*.\" \"I can tell within a\nsentence whether a prompt will work.\"\n\nThis is the language of a field that hasn't been measured yet. Every\ndiscipline goes through this phase before it becomes engineering. The\nchefs before recipes. The pilots before instruments. The doctors\nbefore germ theory. The phase ends when somebody figures out how to\nmeasure the thing — at which point all the people who described it\nas art either retool or get washed out.\n\nFor LLMs, that moment came in 2024. It has a name. We'll cover it in\nthe next step.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "evals/the-rise-of-evals-as-a-discipline/s02-02-the-eval-turn",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 220,
+          "concept": "the-eval-turn",
+          "body": "# The eval turn: 2024 onward\n\nIf the prompt-engineering era had a single obituary, it was a blog\npost Hamel Husain published in June 2024 titled **\"Your AI Product\nNeeds Evals\"** (hamel.dev/blog/posts/evals/). Hamel had spent the\nprior eighteen months consulting for companies that had shipped LLM\nfeatures and were now drowning in production failures. The post was\nnot a thought piece. It was the field notes of someone who had\nwatched a dozen teams discover, independently, that the methodology\nthey'd been using had no answer to the question *\"is the new prompt\nbetter than the old one?\"*\n\nThe thesis was simple and, by mid-2024, controversial:\n\n> If you do not have an eval suite, you do not have an AI product.\n> You have a demo that happens to be in production.\n\nHamel's framing landed because it named the thing every senior IC at\nevery AI company was already feeling. The vibes loop was not\nsustainable. The next prompt change was always a coin flip. The\nsupport tickets were already a stream, not a trickle. The eval turn\nwas the realization that the LLM industry had to grow up — fast — or\nthe products would not survive contact with the second year of\ncustomer use.\n\n## The supporting cast\n\nHamel's post wasn't alone. The same months produced a small library\nof essays and papers that defined the new discipline:\n\n**Eugene Yan** had been writing about evals from the ML engineering\nside for almost a year — most famously the \"Task-Specific LLM Evals\nthat Do & Don't Work\" piece (eugeneyan.com/writing/evals/), which\ncatalogued what was actually working in production at scale. Yan's\ncontribution was the *taxonomy* — reference-free vs reference-based,\ndirect grading vs pairwise, code-graded vs model-graded — that gave\nthe discipline a shared vocabulary.\n\n**Shreya Shankar** (Berkeley, now CMU) published the paper that gave\nthe field its academic spine: **\"Who Validates the Validators?\nAligning LLM-Assisted Evaluation of LLM Outputs with Human Preferences\"**\n(Shankar et al., UIST 2024, arxiv.org/abs/2404.12272). The paper\nformalized the trust problem at the heart of LLM-as-judge — if you're\nusing a model to grade a model, who grades the grader? — and produced\nEvalGen, the tool that lets you iteratively align an LLM judge to\nhuman preferences. After this paper, \"I'll just use LLM-as-judge\"\nstopped being a one-liner answer and started being a process.\n\n**Braintrust** (braintrust.dev) was founded in late 2023 and shipped\nits product around the same window as Hamel's post. It was the first\nof the eval-native dev tools — not a generic logging platform, not a\nLangChain plugin, but a tool whose entire reason to exist was running\neval suites against prompt changes. Within six months, every serious\nAI infra company either had an eval product (LangSmith, Galileo,\nPatronus) or was building one (OpenAI's evals SDK, the Inspect AI\nframework from the UK AISI).\n\n**Anthropic** put the period on the era in December 2024 with the\npublication of **\"Building Effective Agents\"**\n(anthropic.com/research/building-effective-agents). The essay is\nworth rereading after you've finished this chapter. It is a how-to\nguide for shipping agentic systems written by the company shipping\nthe most-deployed agentic system on the market, and the word \"eval\"\nor \"evaluation\" appears in nearly every section. The mantra is\nexplicit:\n\n> Successful implementations weren't using the most complex\n> frameworks. They were using simple, composable patterns — and\n> measuring the outputs at every step.\n\nTranslation: evals are not the last thing you do. Evals are the\n*first* thing you do. The prompt comes after.\n\n## What changed in the industry\n\nBy mid-2025, the cultural shift inside AI engineering was complete:\n\n- **Job postings changed.** \"Prompt Engineer\" stopped appearing as a\n  title. \"AI / LLM Engineer\" started carrying an explicit eval-suite\n  requirement in the JD. By late 2025, \"can you architect an eval\n  harness for our use case\" was a standard interview loop.\n- **Tooling changed.** Every serious LLM framework now ships with\n  evals as a first-class primitive (see lesson 02 step 1 for the\n  table). The frameworks that didn't add evals got bypassed.\n- **Internal practice changed.** Eval-mature teams started running\n  their eval suite *on every prompt change*. Then *on every model\n  version they tested*. Then *on every CI run*. Then *as a release\n  gate*. The discipline tightened in stages.\n\nHamel's post named the field. Yan's posts gave it vocabulary.\nShankar's paper gave it academic rigor. Braintrust gave it tooling.\nAnthropic's essay gave it the official seal. By the end of 2024, the\nquestion stopped being \"should I write evals?\" and started being\n\"why don't you have them yet?\"\n\nThe next step is interactive. You're going to play that question\nforward — to a model-swap scenario — and see which kind of team\nsurvives.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "evals/the-rise-of-evals-as-a-discipline/s03-03-which-company-survives-a-model-swap",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The question 'does my product still work after a model swap?' is only answerable if you can run a known set of inputs through the new model and compare to known-good outputs. That's an eval suite. Only one company has one.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 70,
+          "concept": "model-swap-survival",
+          "prompt": "Tomorrow, GPT-5 ships. Every team's existing prompts will behave\ndifferently — some better, some worse, some catastrophically wrong\non inputs they used to handle.\n\nWhich company still has a working product on day 2 with high\nconfidence?\n",
+          "options": [
+            {
+              "id": "a",
+              "label": "A — VibeCo (founder tunes by feel)",
+              "explain": "No test cases means no way to detect that GPT-5 broke anything until customers complain. The vibes era's exact failure mode."
+            },
+            {
+              "id": "b",
+              "label": "B — TestsBeforePromptCo (200 cases in CI)"
+            },
+            {
+              "id": "c",
+              "label": "C — DemoDrivenCo (three README examples)",
+              "explain": "Three hand-picked inputs is better than zero, but it's still demo-driven evals. The cases that break on a model swap are almost never the ones in your README — they're the long-tail inputs your customers actually send."
+            },
+            {
+              "id": "d",
+              "label": "D — PromptLibraryCo (60 prompts, no programmatic check)",
+              "explain": "Lots of prompts but no way to verify them. A library of unverified prompts is just a bigger pile of vibes. Quantity doesn't replace measurement."
+            }
+          ],
+          "answerIds": [
+            "b"
+          ],
+          "shuffle": false,
+          "code": "# four companies. each has shipped an LLM-powered feature.\n# GPT-5 launches tomorrow. which one still has a working product on day 2?\ncompanies = {\n    \"A\": {\n        \"name\": \"VibeCo\",\n        \"process\": \"founder tunes the prompt by hand, ships when it 'feels right', no test cases on disk\",\n    },\n    \"B\": {\n        \"name\": \"TestsBeforePromptCo\",\n        \"process\": \"200 input/expected pairs in a YAML file; CI runs them on every prompt change AND every model version; release blocked on regressions\",\n    },\n    \"C\": {\n        \"name\": \"DemoDrivenCo\",\n        \"process\": \"three hand-picked example inputs in the README; runs them manually before every deploy\",\n    },\n    \"D\": {\n        \"name\": \"PromptLibraryCo\",\n        \"process\": \"60 prompts in a notion doc, color-coded by which model they were tuned for; no programmatic check\",\n    },\n}\nfor k, v in companies.items():\n    print(f\"{k}: {v['name']:25} — {v['process']}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "evals/the-rise-of-evals-as-a-discipline/s04-04-case-studies",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 220,
+          "concept": "eval-case-studies",
+          "body": "# Three case studies: who shipped, who walked back\n\nTheory only takes you so far. The eval turn is a real thing because\nspecific companies, with specific products, learned specific lessons\nthe hard way. Three worth knowing.\n\n## Cursor: the eval harness that ate the IDE\n\nCursor — the AI-first code editor that grew faster than any developer\ntool in history — is the most-referenced internal case study in\npresent-day AI engineering. The Cursor team is famously eval-heavy.\nAnthropic engineers have referenced Cursor's harness in talks and\nblog posts (search Anthropic's developer-relations content) as an\nexample of what mature eval discipline looks like in production: a\nharness that ships hundreds of cases against every prompt change,\ncatches regressions before users see them, and lets the team upgrade\nto new model versions on day-one of release.\n\nThe interesting thing about Cursor is not that they have evals.\nEveryone \"has evals\" by 2025. The interesting thing is that the eval\nsuite is treated as the *primary artifact*. The prompts are\ndisposable. The agent harness is disposable. The model bindings are\ndisposable. What persists across all the rewrites is the eval suite —\nbecause it encodes the team's accumulated knowledge of \"what the\nproduct is supposed to do.\" When GPT-5 ships, Cursor doesn't rewrite\nthe product. They run the suite, see what breaks, adjust the prompts\nto fix the breaks, and ship the new model. The eval suite is the\nspecification. The prompt is implementation detail.\n\nThis is the bar. If your eval suite cannot serve as a spec, you do\nnot have an eval suite. You have a smoke test.\n\n## Klarna: the walk-back\n\nIn May 2024, Klarna announced — proudly — that its OpenAI-powered\ncustomer service bot had replaced the work of 700 full-time agents.\nThe press loved it. By mid-2025, Klarna was quietly hiring human\nagents back. Sebastian Siemiatkowski (CEO) acknowledged in a\n*Bloomberg* interview that AI-only support had hurt service quality\nand the company was rebuilding a human-in-the-loop tier.\n\nThere are a half-dozen lessons in the Klarna walk-back, but the one\nrelevant to this chapter is this: Klarna's AI bot did not get\n*worse* over time. The models, in fact, got better. What happened\nwas that Klarna's eval coverage was demo-grade — they had launched\non the inputs they'd tested, and the long tail of real customer\ninteractions hit failure modes their internal evals had never\nflagged. The bot was confidently wrong on things it should have\nescalated, confidently bland on things customers needed empathy on,\nand confidently helpful on things that needed a refund-policy lookup\nit didn't have. Without eval coverage on those edge categories, the\nteam couldn't even *see* the problem until customer satisfaction\nmetrics fell off a cliff.\n\nKlarna didn't fail because they used AI. They failed because they\nshipped AI without an eval suite that could measure the failure\nmodes that actually mattered to customers. The walk-back wasn't a\nreferendum on AI customer service. It was a referendum on\nshipping-before-measuring.\n\n## Anthropic: \"eval-driven development\" becomes a mantra\n\nAnthropic — the company that publishes \"Building Effective Agents\"\n— has been the most explicit about eval-driven development as\n*practice*, not just a slogan. The phrase shows up in their public\ntalks, their docs, their cookbook. The pattern is consistent across\nevery Anthropic-published recipe for agent design:\n\n1. Start with a small, hand-built eval set (50 cases is plenty).\n2. Build the simplest agent that passes 80% of the set.\n3. Look at the failures. Find the common failure modes.\n4. Either fix the agent or, more often, *expand the eval set* with\n   cases that capture the failure mode.\n5. Iterate.\n\nThe mantra is: **evals come first, prompts come second, framework\nchoice comes third**. If you don't know what you're trying to\nmeasure, no amount of framework cleverness will save you.\n\n## The pattern across all three\n\nThe pattern across Cursor, Klarna, and Anthropic is the same — and\nit's the central, slightly counterintuitive thesis of the eval era:\n\n> **The teams with the heaviest eval discipline ship faster, not\n> slower.**\n\nThis sounds wrong on the first hearing. Adding tests slows you down,\ndoesn't it? In the LLM context, no — and the reason is that the\n*alternative* to eval discipline is not \"no overhead, just speed.\"\nThe alternative is *the silent regression*: the change you shipped\nthat worked on three inputs and broke seventeen, that you didn't\nnotice for six weeks, that you then spent two months debugging\nbecause you had no way to isolate when it started. Eval-mature teams\ntrade five minutes of CI time for not having that six-week\ndebugging cycle. The net is enormous velocity.\n\nThe teams without evals look fast from the outside in week one.\nThey are dead in the water by month six.\n\nIn the next step we'll codify this into a question you can apply to\nany team you join or start: are they eval-first, or prompt-first?",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "evals/the-rise-of-evals-as-a-discipline/s05-05-eval-first-vs-prompt-first",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Eval-first means the cases that define 'success' exist BEFORE the prompt that's supposed to produce success. The prompt is written to pass the evals, not the other way around. Only one flow does this in that order.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 70,
+          "concept": "eval-first-vs-prompt-first",
+          "prompt": "Anthropic's \"Building Effective Agents\" mantra: **evals come first,\nprompts come second**. Which of these four workflows is genuinely\neval-first?\n",
+          "options": [
+            {
+              "id": "a",
+              "label": "A — write prompt, then write evals 'eventually'",
+              "explain": "'Evals eventually' means evals never. By the time the prompt is shipped, the team has moved on and the evals never get written. This is the vibes era with extra steps."
+            },
+            {
+              "id": "b",
+              "label": "B — write 30 cases first, then write the prompt to pass them"
+            },
+            {
+              "id": "c",
+              "label": "C — ship, wait for complaints, add eval per complaint",
+              "explain": "Reactive eval growth is better than no evals, but it's still prompt-first. The customer is your QA loop. This is the Klarna pattern."
+            },
+            {
+              "id": "d",
+              "label": "D — let GPT-4 grade its own output, no ground truth on disk",
+              "explain": "This is the tautological-eval trap from chapter 21 lesson 01 step 4. The model judging itself is not an eval. Without ground truth, you're measuring nothing."
+            }
+          ],
+          "answerIds": [
+            "b"
+          ],
+          "shuffle": false,
+          "code": "# four team workflows for shipping a new AI feature.\n# only one of them is eval-first. which?\nworkflows = {\n    \"A\": {\n        \"name\": \"FlowA\",\n        \"steps\": [\n            \"1. write a prompt\",\n            \"2. try it on a few inputs\",\n            \"3. ship if it looks good\",\n            \"4. write evals 'eventually' when there's time\",\n        ],\n    },\n    \"B\": {\n        \"name\": \"FlowB\",\n        \"steps\": [\n            \"1. write 30 input/expected pairs that define what success means\",\n            \"2. run baseline (no prompt) — confirm 0% pass\",\n            \"3. write the simplest prompt that passes the suite\",\n            \"4. only ship when the suite passes\",\n        ],\n    },\n    \"C\": {\n        \"name\": \"FlowC\",\n        \"steps\": [\n            \"1. write a prompt\",\n            \"2. ship it\",\n            \"3. wait for customer complaints\",\n            \"4. add an eval case per complaint\",\n        ],\n    },\n    \"D\": {\n        \"name\": \"FlowD\",\n        \"steps\": [\n            \"1. write a prompt\",\n            \"2. ask GPT-4 to grade its own output\",\n            \"3. if GPT-4 says it's good, ship\",\n            \"4. no ground-truth cases on disk\",\n        ],\n    },\n}\nfor k, v in workflows.items():\n    print(f\"{k}: {v['name']}\")\n    for s in v['steps']:\n        print(f\"   {s}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "evals/the-rise-of-evals-as-a-discipline/s06-06-why-the-eval-engineer-eats-the-prompt-engineer",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 220,
+          "concept": "eval-engineer-vs-prompt-engineer",
+          "body": "# Why \"eval engineer\" eats \"prompt engineer\"\n\nThe labor-market argument is the cleanest way to understand why the\nfield has moved on. It has nothing to do with what's cool and\neverything to do with what's *durable*.\n\n## Durable artifacts vs ephemeral ones\n\nA prompt is an ephemeral artifact. It is tuned for a specific model,\na specific use case, often a specific customer segment. When the\nmodel changes — and the model changes every quarter — the prompt has\nto be retuned. When the use case shifts, the prompt has to be\nretuned. When the product team adds a new feature, the prompt has to\nbe retuned. The half-life of a production prompt in 2025 is\nmeasured in weeks, sometimes days.\n\nAn **eval suite** is a durable artifact. It encodes \"what does this\nfeature need to do for our customers\" in a form that survives every\nmodel swap, every prompt rewrite, every framework migration. The\neval suite a team wrote against GPT-4 in 2024 still runs against\nGPT-5 in 2026, against Claude Opus 5 in 2027, against whatever ships\nnext. It is the *specification* of the product. The prompt is the\n*implementation*.\n\nThis is the same distinction that makes test suites durable in\ntraditional software engineering. A C codebase from 1995 might be\nunreadable today, but the test suite — if there is one — still tells\nyou what the code was supposed to do. The implementation gets\nrewritten in Rust. The test suite endures.\n\n## What this means for who gets hired\n\nA \"prompt engineer\" was a person who knew which incantations made\nGPT-3.5 sit up and beg. That skill aged badly. The incantations that\nworked on GPT-3.5 are useless on GPT-5. The \"trick\" of prompt\nengineering — knowing the model's quirks — is exactly the thing that\nbecomes worthless every six months.\n\nAn **eval engineer** — or \"AI Engineer\" or \"LLM Engineer,\" titles\nvary — is a person who can:\n\n- Look at a fuzzy business problem and articulate it as a measurable\n  outcome.\n- Build a test set that covers the actual failure modes.\n- Choose the right judge for each case (exact match, schema, LLM-as-judge,\n  human review).\n- Set up CI that runs the suite on every prompt change.\n- Triage failures and decide which are bugs vs which are eval gaps.\n- Maintain the suite as the product and the customer base evolve.\n\nThat skillset compounds. The eval suite a senior IC builds in year\none is still earning compound returns for the company in year five.\nThe cost to replace that person is enormous, because the eval suite\nencodes years of accumulated product knowledge.\n\nA prompt? Anyone can rewrite a prompt. A prompt engineer is fungible\non the timescale of one model release.\n\nThis is the labor-market argument. It is not \"AI eats programmers.\"\nIt is \"the durable skill in AI eats the ephemeral skill in AI.\" The\npeople writing eval suites today are doing what test engineers\ndiscovered in the early 2000s: building the artifact that keeps\npaying off long after the prompt-of-the-month is gone.\n\n## Tie to the AI-native thesis\n\nThis connects directly to the AI-native discussion from chapter 26.\nThat chapter argued that companies have \"process debt\" — the\nunspoken-in-someone's-head workflows that bottleneck AI adoption.\nThe eval-suite equivalent is **eval debt**: the gap between \"we\nthink our AI feature works\" and \"we can prove it works on the\ninputs that matter to our customers.\"\n\nEvery AI team has eval debt. The eval-mature ones have a number on\nit (we have 200 cases, we add 5 per week, we run CI on every prompt\nchange). The eval-debt-laden ones don't even know how big the\nproblem is, because they have nothing to measure.\n\nThe strategic implication for your career is the same one the\nAI-native thesis applied to companies: **the durable career assets\nin AI are the ones that survive a model swap.** That means:\n\n- Knowing how to build eval suites (durable; survives every release)\n- Knowing how to design agent harnesses (durable; survives prompt\n  rewrites)\n- Knowing how to do evidence-based product work in AI (durable;\n  survives the hype cycle)\n\nNot durable: knowing the magic phrase that makes GPT-4 produce\nbetter JSON than GPT-4-turbo. By the time you've memorized it, it's\nalready a fossil.\n\n## The synthesis\n\nThe 2022-2024 era rewarded people who could make a model do a thing\nonce. The 2024-onward era rewards people who can prove a model will\ndo a thing reliably across the inputs the business cares about. That\nis a different skill, a different role, and a different career path.\nHamel named it. Yan systematized it. Shankar gave it academic\ngrounding. Anthropic codified it. Braintrust productized it.\n\nThe field has chosen. The prompt engineer of 2023 is a 2024 fossil.\nThe eval engineer of 2025 is the senior IC of 2030.\n\nIn the next step, you'll build the audit you can run on any team —\nyours, your future employer's, your startup's — to figure out which\nera they're operating in.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "write",
+          "id": "evals/the-rise-of-evals-as-a-discipline/s07-07-write-the-eval-readiness-audit",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Five conditionals, each adds a fixed number of points. Use `.get()` with defaults so missing fields don't crash. Then a four-way threshold for the verdict (>=80, >=50, >=20, else).",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "EvalMatureCo hits all five: 25 + 15 + 25 + 15 + 20 = 100. VibeCo hits zero conditions, score 0. Thresholds: >=80 mature, >=50 aware, >=20 curious, else vibes era.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "eval-readiness-audit",
+          "prompt": "Write `eval_readiness(team)` that takes a team profile (dict) and\nreturns a dict with two fields:\n\n- `score`: integer 0-100, higher means MORE eval discipline (good)\n- `verdict`: string, one of:\n  - `\"eval-mature\"` if score >= 80\n  - `\"eval-aware\"` if score >= 50\n  - `\"eval-curious\"` if score >= 20\n  - `\"vibes era\"` if score < 20\n\nScore the team on these signals (each adds points to the readiness\ntotal):\n\n- `has_test_set` is True: add 25 (Hamel: you do not have a product without one)\n- `has_judge_prompt` is True: add 15 (rubric or LLM-as-judge defined somewhere)\n- `ci_runs_evals` is True: add 25 (the regression gate)\n- `tracks_eval_history` is True: add 15 (can compare runs over time)\n- `eval_count_per_feature` >= 20: add 20 (Anthropic's 50-is-plenty floor)\n\nTwo teams run. Expected output:\n```\nEvalMatureCo: {'score': 100, 'verdict': 'eval-mature'}\nVibeCo:       {'score': 0, 'verdict': 'vibes era'}\n```\n",
+          "starter": "eval_mature_co = {\n    \"name\": \"EvalMatureCo\",\n    \"has_test_set\": True,\n    \"has_judge_prompt\": True,\n    \"ci_runs_evals\": True,\n    \"tracks_eval_history\": True,\n    \"eval_count_per_feature\": 50,\n}\n\nvibe_co = {\n    \"name\": \"VibeCo\",\n    \"has_test_set\": False,\n    \"has_judge_prompt\": False,\n    \"ci_runs_evals\": False,\n    \"tracks_eval_history\": False,\n    \"eval_count_per_feature\": 0,\n}\n\n# define eval_readiness(team) below\n\nprint(f\"EvalMatureCo: {eval_readiness(eval_mature_co)}\")\nprint(f\"VibeCo:       {eval_readiness(vibe_co)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "EvalMatureCo: {'score': 100, 'verdict': 'eval-mature'}\nVibeCo:       {'score': 0, 'verdict': 'vibes era'}\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "eval_mature_co = {\n    \"name\": \"EvalMatureCo\",\n    \"has_test_set\": True,\n    \"has_judge_prompt\": True,\n    \"ci_runs_evals\": True,\n    \"tracks_eval_history\": True,\n    \"eval_count_per_feature\": 50,\n}\n\nvibe_co = {\n    \"name\": \"VibeCo\",\n    \"has_test_set\": False,\n    \"has_judge_prompt\": False,\n    \"ci_runs_evals\": False,\n    \"tracks_eval_history\": False,\n    \"eval_count_per_feature\": 0,\n}\n\ndef eval_readiness(team):\n    score = 0\n    if team.get(\"has_test_set\"):\n        score += 25\n    if team.get(\"has_judge_prompt\"):\n        score += 15\n    if team.get(\"ci_runs_evals\"):\n        score += 25\n    if team.get(\"tracks_eval_history\"):\n        score += 15\n    if team.get(\"eval_count_per_feature\", 0) >= 20:\n        score += 20\n    if score >= 80:\n        verdict = \"eval-mature\"\n    elif score >= 50:\n        verdict = \"eval-aware\"\n    elif score >= 20:\n        verdict = \"eval-curious\"\n    else:\n        verdict = \"vibes era\"\n    return {\"score\": score, \"verdict\": verdict}\n\nprint(f\"EvalMatureCo: {eval_readiness(eval_mature_co)}\")\nprint(f\"VibeCo:       {eval_readiness(vibe_co)}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "evals/the-rise-of-evals-as-a-discipline/s08-08-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 240,
+          "concept": "triage-teams-for-model-launch",
+          "prompt": "Final drill. Synthesize the chapter's history into one function:\n`triage_teams(teams)` that takes a list of team profiles and returns\na dict with two fields:\n\n- `verdicts`: a dict mapping each team's `name` to its verdict\n  string (same four tiers as step 07)\n- `most_at_risk`: the `name` of the team with the LOWEST readiness\n  score (the team most likely to break on the next model launch)\n\nScore each team using the same rules as step 07:\n\n- `has_test_set` True: +25\n- `has_judge_prompt` True: +15\n- `ci_runs_evals` True: +25\n- `tracks_eval_history` True: +15\n- `eval_count_per_feature` >= 20: +20\n\nVerdict tiers: >=80 `\"eval-mature\"`, >=50 `\"eval-aware\"`, >=20\n`\"eval-curious\"`, else `\"vibes era\"`.\n\nOn ties for lowest score, return the FIRST tied team (Python's\n`min` with `key=` preserves stable order).\n\nFive teams run. Expected output:\n```\nverdicts: {'CursorClone': 'eval-mature', 'SeriesBAI': 'eval-mature', 'SeedAI': 'eval-curious', 'ConsultingShop': 'eval-curious', 'PromptShopCo': 'vibes era'}\nmost at risk: PromptShopCo\n```\n",
+          "starter": "teams = [\n    {\"name\": \"CursorClone\",     \"has_test_set\": True,  \"has_judge_prompt\": True,  \"ci_runs_evals\": True,  \"tracks_eval_history\": True,  \"eval_count_per_feature\": 80},\n    {\"name\": \"SeriesBAI\",       \"has_test_set\": True,  \"has_judge_prompt\": True,  \"ci_runs_evals\": True,  \"tracks_eval_history\": False, \"eval_count_per_feature\": 30},\n    {\"name\": \"SeedAI\",          \"has_test_set\": True,  \"has_judge_prompt\": False, \"ci_runs_evals\": False, \"tracks_eval_history\": False, \"eval_count_per_feature\": 10},\n    {\"name\": \"ConsultingShop\",  \"has_test_set\": True,  \"has_judge_prompt\": True,  \"ci_runs_evals\": False, \"tracks_eval_history\": False, \"eval_count_per_feature\": 5},\n    {\"name\": \"PromptShopCo\",    \"has_test_set\": False, \"has_judge_prompt\": False, \"ci_runs_evals\": False, \"tracks_eval_history\": False, \"eval_count_per_feature\": 0},\n]\n\n# define triage_teams(teams) below\n\nresult = triage_teams(teams)\nprint(f\"verdicts: {result['verdicts']}\")\nprint(f\"most at risk: {result['most_at_risk']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "verdicts: {'CursorClone': 'eval-mature', 'SeriesBAI': 'eval-mature', 'SeedAI': 'eval-curious', 'ConsultingShop': 'eval-curious', 'PromptShopCo': 'vibes era'}\nmost at risk: PromptShopCo\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "teams = [\n    {\"name\": \"CursorClone\",     \"has_test_set\": True,  \"has_judge_prompt\": True,  \"ci_runs_evals\": True,  \"tracks_eval_history\": True,  \"eval_count_per_feature\": 80},\n    {\"name\": \"SeriesBAI\",       \"has_test_set\": True,  \"has_judge_prompt\": True,  \"ci_runs_evals\": True,  \"tracks_eval_history\": False, \"eval_count_per_feature\": 30},\n    {\"name\": \"SeedAI\",          \"has_test_set\": True,  \"has_judge_prompt\": False, \"ci_runs_evals\": False, \"tracks_eval_history\": False, \"eval_count_per_feature\": 10},\n    {\"name\": \"ConsultingShop\",  \"has_test_set\": True,  \"has_judge_prompt\": True,  \"ci_runs_evals\": False, \"tracks_eval_history\": False, \"eval_count_per_feature\": 5},\n    {\"name\": \"PromptShopCo\",    \"has_test_set\": False, \"has_judge_prompt\": False, \"ci_runs_evals\": False, \"tracks_eval_history\": False, \"eval_count_per_feature\": 0},\n]\n\ndef score_team(t):\n    s = 0\n    if t.get(\"has_test_set\"):\n        s += 25\n    if t.get(\"has_judge_prompt\"):\n        s += 15\n    if t.get(\"ci_runs_evals\"):\n        s += 25\n    if t.get(\"tracks_eval_history\"):\n        s += 15\n    if t.get(\"eval_count_per_feature\", 0) >= 20:\n        s += 20\n    return s\n\ndef verdict_for(score):\n    if score >= 80:\n        return \"eval-mature\"\n    if score >= 50:\n        return \"eval-aware\"\n    if score >= 20:\n        return \"eval-curious\"\n    return \"vibes era\"\n\ndef triage_teams(teams):\n    verdicts = {t[\"name\"]: verdict_for(score_team(t)) for t in teams}\n    most_at_risk = min(teams, key=score_team)[\"name\"]\n    return {\"verdicts\": verdicts, \"most_at_risk\": most_at_risk}\n\nresult = triage_teams(teams)\nprint(f\"verdicts: {result['verdicts']}\")\nprint(f\"most at risk: {result['most_at_risk']}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 21
     }
   ],
-  "xpTotal": 63
+  "xpTotal": 84
 }

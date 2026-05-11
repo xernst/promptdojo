@@ -1,0 +1,105 @@
+xp: 5
+estSeconds: 200
+concept: eval-readiness-audit
+prompt: |
+  Write `eval_readiness(team)` that takes a team profile (dict) and
+  returns a dict with two fields:
+
+  - `score`: integer 0-100, higher means MORE eval discipline (good)
+  - `verdict`: string, one of:
+    - `"eval-mature"` if score >= 80
+    - `"eval-aware"` if score >= 50
+    - `"eval-curious"` if score >= 20
+    - `"vibes era"` if score < 20
+
+  Score the team on these signals (each adds points to the readiness
+  total):
+
+  - `has_test_set` is True: add 25 (Hamel: you do not have a product without one)
+  - `has_judge_prompt` is True: add 15 (rubric or LLM-as-judge defined somewhere)
+  - `ci_runs_evals` is True: add 25 (the regression gate)
+  - `tracks_eval_history` is True: add 15 (can compare runs over time)
+  - `eval_count_per_feature` >= 20: add 20 (Anthropic's 50-is-plenty floor)
+
+  Two teams run. Expected output:
+  ```
+  EvalMatureCo: {'score': 100, 'verdict': 'eval-mature'}
+  VibeCo:       {'score': 0, 'verdict': 'vibes era'}
+  ```
+starter: |
+  eval_mature_co = {
+      "name": "EvalMatureCo",
+      "has_test_set": True,
+      "has_judge_prompt": True,
+      "ci_runs_evals": True,
+      "tracks_eval_history": True,
+      "eval_count_per_feature": 50,
+  }
+
+  vibe_co = {
+      "name": "VibeCo",
+      "has_test_set": False,
+      "has_judge_prompt": False,
+      "ci_runs_evals": False,
+      "tracks_eval_history": False,
+      "eval_count_per_feature": 0,
+  }
+
+  # define eval_readiness(team) below
+
+  print(f"EvalMatureCo: {eval_readiness(eval_mature_co)}")
+  print(f"VibeCo:       {eval_readiness(vibe_co)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    EvalMatureCo: {'score': 100, 'verdict': 'eval-mature'}
+    VibeCo:       {'score': 0, 'verdict': 'vibes era'}
+  normalize: collapse-trailing-newline
+solution: |
+  eval_mature_co = {
+      "name": "EvalMatureCo",
+      "has_test_set": True,
+      "has_judge_prompt": True,
+      "ci_runs_evals": True,
+      "tracks_eval_history": True,
+      "eval_count_per_feature": 50,
+  }
+
+  vibe_co = {
+      "name": "VibeCo",
+      "has_test_set": False,
+      "has_judge_prompt": False,
+      "ci_runs_evals": False,
+      "tracks_eval_history": False,
+      "eval_count_per_feature": 0,
+  }
+
+  def eval_readiness(team):
+      score = 0
+      if team.get("has_test_set"):
+          score += 25
+      if team.get("has_judge_prompt"):
+          score += 15
+      if team.get("ci_runs_evals"):
+          score += 25
+      if team.get("tracks_eval_history"):
+          score += 15
+      if team.get("eval_count_per_feature", 0) >= 20:
+          score += 20
+      if score >= 80:
+          verdict = "eval-mature"
+      elif score >= 50:
+          verdict = "eval-aware"
+      elif score >= 20:
+          verdict = "eval-curious"
+      else:
+          verdict = "vibes era"
+      return {"score": score, "verdict": verdict}
+
+  print(f"EvalMatureCo: {eval_readiness(eval_mature_co)}")
+  print(f"VibeCo:       {eval_readiness(vibe_co)}")
+hint:
+  - level: 1
+    body: "Five conditionals, each adds a fixed number of points. Use `.get()` with defaults so missing fields don't crash. Then a four-way threshold for the verdict (>=80, >=50, >=20, else)."
+  - level: 2
+    body: "EvalMatureCo hits all five: 25 + 15 + 25 + 15 + 20 = 100. VibeCo hits zero conditions, score 0. Thresholds: >=80 mature, >=50 aware, >=20 curious, else vibes era."

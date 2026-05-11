@@ -1,0 +1,14 @@
+slug: the-rise-of-evals-as-a-discipline
+title: "How evals went from research curiosity to the only thing that ships — a five-year history"
+estMinutes: 20
+prerequisites:
+  - llm-as-judge
+order:
+  - 01-the-prompt-engineering-era.read.md
+  - 02-the-eval-turn.read.md
+  - 03-which-company-survives-a-model-swap.mc.yaml
+  - 04-case-studies.read.md
+  - 05-eval-first-vs-prompt-first.mc.yaml
+  - 06-why-the-eval-engineer-eats-the-prompt-engineer.read.md
+  - 07-write-the-eval-readiness-audit.write.yaml
+  - 08-checkpoint.checkpoint.yaml

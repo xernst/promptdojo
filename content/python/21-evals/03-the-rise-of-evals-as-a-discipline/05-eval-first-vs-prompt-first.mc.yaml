@@ -1,0 +1,69 @@
+xp: 2
+estSeconds: 70
+concept: eval-first-vs-prompt-first
+code: |
+  # four team workflows for shipping a new AI feature.
+  # only one of them is eval-first. which?
+  workflows = {
+      "A": {
+          "name": "FlowA",
+          "steps": [
+              "1. write a prompt",
+              "2. try it on a few inputs",
+              "3. ship if it looks good",
+              "4. write evals 'eventually' when there's time",
+          ],
+      },
+      "B": {
+          "name": "FlowB",
+          "steps": [
+              "1. write 30 input/expected pairs that define what success means",
+              "2. run baseline (no prompt) — confirm 0% pass",
+              "3. write the simplest prompt that passes the suite",
+              "4. only ship when the suite passes",
+          ],
+      },
+      "C": {
+          "name": "FlowC",
+          "steps": [
+              "1. write a prompt",
+              "2. ship it",
+              "3. wait for customer complaints",
+              "4. add an eval case per complaint",
+          ],
+      },
+      "D": {
+          "name": "FlowD",
+          "steps": [
+              "1. write a prompt",
+              "2. ask GPT-4 to grade its own output",
+              "3. if GPT-4 says it's good, ship",
+              "4. no ground-truth cases on disk",
+          ],
+      },
+  }
+  for k, v in workflows.items():
+      print(f"{k}: {v['name']}")
+      for s in v['steps']:
+          print(f"   {s}")
+prompt: |
+  Anthropic's "Building Effective Agents" mantra: **evals come first,
+  prompts come second**. Which of these four workflows is genuinely
+  eval-first?
+options:
+  - id: a
+    label: "A — write prompt, then write evals 'eventually'"
+    explain: "'Evals eventually' means evals never. By the time the prompt is shipped, the team has moved on and the evals never get written. This is the vibes era with extra steps."
+  - id: b
+    label: "B — write 30 cases first, then write the prompt to pass them"
+  - id: c
+    label: "C — ship, wait for complaints, add eval per complaint"
+    explain: "Reactive eval growth is better than no evals, but it's still prompt-first. The customer is your QA loop. This is the Klarna pattern."
+  - id: d
+    label: "D — let GPT-4 grade its own output, no ground truth on disk"
+    explain: "This is the tautological-eval trap from chapter 21 lesson 01 step 4. The model judging itself is not an eval. Without ground truth, you're measuring nothing."
+answerIds:
+  - b
+hint:
+  - level: 1
+    body: "Eval-first means the cases that define 'success' exist BEFORE the prompt that's supposed to produce success. The prompt is written to pass the evals, not the other way around. Only one flow does this in that order."
