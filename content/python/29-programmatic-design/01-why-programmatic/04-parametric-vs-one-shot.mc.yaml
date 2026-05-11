@@ -1,0 +1,41 @@
+xp: 2
+estSeconds: 60
+concept: parametric-variation-defined
+code: |
+  # one shop runs both of these every week. one is a code job, one is a model job.
+
+  workflow_x = {
+      "frequency":  "weekly",
+      "inputs":     ["product_name", "price", "image_url", "cta_text"],
+      "rows":       80,        # 80 products in the catalog
+      "output":     "80 vertical ads, all 15s, brand template",
+  }
+
+  workflow_y = {
+      "frequency":  "one-off",
+      "inputs":     ["mood: dreamy, vaporwave, sunset, no copy"],
+      "rows":       1,
+      "output":     "one 8-second loop for the album art reveal",
+  }
+  print("X:", workflow_x)
+  print("Y:", workflow_y)
+prompt: |
+  Two workflows. Which one is "parametric variation" (and therefore
+  belongs in a programmatic video pipeline)?
+options:
+  - id: workflow_x
+    label: "Workflow X — 80 product ads from one template"
+  - id: workflow_y
+    label: "Workflow Y — one dreamy album-art loop"
+    explain: "One-off, no template, no structured inputs, no repetition. That's the canonical AI-gen-only brief — let the model paint one scene."
+  - id: both
+    label: "Both are parametric"
+    explain: "Y has no parameters that change between renders — it's a single render. Parametric variation means N different outputs from the same template, driven by N rows of structured inputs."
+  - id: neither
+    label: "Neither — both are single videos"
+    explain: "X is 80 videos, not one. The structured inputs (product_name, price, image_url, cta_text) and 80 rows of data are exactly what parametric variation means."
+answerIds:
+  - workflow_x
+hint:
+  - level: 1
+    body: 'Parametric variation = same template, N different rows of structured data, N different outputs. The "rows" field is the giveaway — 80 rows means 80 renders from one template.'

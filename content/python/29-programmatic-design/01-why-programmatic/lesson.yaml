@@ -1,0 +1,12 @@
+slug: why-programmatic
+title: "Why programmatic video — when AI gen alone isn't enough"
+estMinutes: 12
+prerequisites: []
+order:
+  - 01-intro.read.md
+  - 02-the-three-jobs.read.md
+  - 03-which-task-is-code.mc.yaml
+  - 04-parametric-vs-one-shot.mc.yaml
+  - 05-the-classifier.read.md
+  - 06-write-classify-video-task.write.yaml
+  - 07-checkpoint.checkpoint.yaml

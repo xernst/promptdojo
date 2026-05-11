@@ -1,0 +1,31 @@
+xp: 2
+estSeconds: 65
+concept: hyperframes-vs-remotion-team-fit
+code: |
+  team = {
+      "stack":            "Next.js shop, 12 React engineers, no designers",
+      "deliverable":      "5000 personalized year-in-review videos for paying customers",
+      "deadline":         "render must finish in under an hour total",
+      "design_lead":      "ships in Figma, hands React components to engineers",
+  }
+  for k, v in team.items():
+      print(f"{k:14s} {v}")
+prompt: |
+  Which tool fits this team best?
+options:
+  - id: remotion
+    label: "Remotion"
+  - id: hyperframes
+    label: "HyperFrames"
+    explain: "HyperFrames is great, but the signals here all point at React: a Next.js shop, React engineers, no designers, and 5000 renders that need parallel compute. That's Remotion + @remotion/lambda."
+  - id: ai_gen_only
+    label: "AI-gen-only (skip the framework)"
+    explain: "5000 personalized videos with per-customer data is exactly what AI gen alone can't do. Code is the answer; the question is which framework."
+  - id: both
+    label: "Both — run two pipelines in parallel"
+    explain: "Could work, but 'both' is for shops with two distinct workflows. This team has one workflow (year-in-review) and a clear React-leaning stack. Pick one tool."
+answerIds:
+  - remotion
+hint:
+  - level: 1
+    body: "Two signals dominate: React-heavy team (`team_familiarity_react=True`) and need to render 5000 videos under an hour (`render_target=scale`). Both push to Remotion."

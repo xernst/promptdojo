@@ -1,0 +1,586 @@
+{
+  "number": 29,
+  "slug": "programmatic-design",
+  "title": "programmatic design — code-driven video and the new design pipeline",
+  "blurb": "ai generates raw assets; code stitches them into something shippable. hyperframes, remotion, claude design — when each tool wins, how they combine, and the data-driven workflows that turn one template into a hundred videos.",
+  "overview": "## The model makes the shot. Code makes the deliverable.\n\nVeo, Sora, Runway, Pika — the AI video models are good at one shot. Hand one a prompt, get back a 5-second clip that looks cinematic. That's the right tool when the brief is \"make me a hero shot of a car driving through fog.\" It's the wrong tool when the brief is \"make me 100 versions of this product ad with different products, captions, and audio tracks, all in our brand palette, all under 15 seconds, all in 9:16 for TikTok.\"\n\nThe second brief is a code job. The first is a model job. This chapter is about the second one — the layer between \"AI generates an asset\" and \"marketing ships a campaign.\"\n\n## Why programmatic suddenly matters\n\nThree forces converged in 2026:\n\n1. **AI gen is cheap enough to be a primitive.** A 5-second Veo shot is a few dollars. That means you can call it from a loop instead of treating it as the whole product.\n2. **Code-driven video frameworks went mainstream.** HyperFrames (HTML+GSAP→MP4 via headless Chrome) and Remotion (React→MP4 via Chromium or AWS Lambda) gave web developers a way to compose video without learning After Effects.\n3. **The output channels demand volume.** TikTok rewards posting 3× a day. Every Shopify store wants product videos. The bottleneck isn't taste anymore — it's throughput.\n\nProgrammatic video is the answer to throughput. One template, a data source, and a render loop produces a hundred shippable assets in the time After Effects produces one.\n\n## What this chapter covers\n\nThree lessons. Each one zooms in on a different layer of the new design pipeline:\n\n1. **Why programmatic** — when AI gen alone wins, when code wins, when you need both. Three jobs only code does well: parametric variation, data-driven rendering, reproducibility under review.\n2. **HyperFrames and Remotion** — the two tools that own this space. HyperFrames is HTML+CSS+GSAP through `npx hyperframes render`. Remotion is React components through `@remotion/renderer` or `@remotion/lambda`. Pick by familiarity, not features.\n3. **The AI-native design pipeline** — concept → reference-gen → composition → audio → captions → render → ship. Where AI fits at each step, what each agent is good at, and the `website-to-hyperframes` pattern as a worked example.\n\n## What AI specifically gets wrong\n\n- **Treating one-shot AI gen as the whole pipeline.** You ask for a 30-second product launch video; the model gives you a 30-second hero shot with no copy, no captions, no CTA, no brand colors. The model's not wrong — it's just answering a different question.\n- **Hand-rolling video composition.** \"I'll just script FFmpeg directly.\" Possible, but every multi-scene timeline, transition, and synced caption you build is reinventing what HyperFrames or Remotion already ship.\n- **Picking the wrong tool for the team.** A React shop reaching for HyperFrames will fight the framework. A design shop reaching for Remotion will hate writing components. The two tools optimize for different mental models; pick the one your team already lives in.\n- **Skipping the data layer.** Programmatic video without a data source is just a slower way to make one video. The win is the spreadsheet (or DB, or JSON file) that drives 100 renders from one template.\n\n## What you'll be able to do at the end\n\n- Look at a video brief and decide: AI-gen-only, code-driven, or hybrid.\n- Pick between HyperFrames and Remotion using team-fit, not feature checklists.\n- Sketch the seven-step pipeline from concept to shipped MP4 — and name which AI model handles which step.\n- Score a team's pipeline coverage to find the gap (audio? captions? review loop?) that's blocking their throughput.\n\nAfter this chapter, \"we should make more video\" stops being a budget problem and becomes a pipeline problem — which is the kind of problem code is good at.\n",
+  "lessons": [
+    {
+      "slug": "why-programmatic",
+      "title": "Why programmatic video — when AI gen alone isn't enough",
+      "estMinutes": 12,
+      "prerequisites": [],
+      "steps": [
+        {
+          "type": "read",
+          "id": "programmatic-design/why-programmatic/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 150,
+          "concept": "when-ai-gen-isnt-enough",
+          "body": "# AI gen makes a shot. A pipeline makes a deliverable.\n\nType \"a cinematic dolly shot of an espresso shot pouring, slow motion, warm light\" into Veo or Sora and you'll get a beautiful 5-second clip. That's the model doing what it's best at — synthesizing one visual from one prompt.\n\nNow type \"make me 100 product videos for our Shopify catalog, each 15 seconds, with the product name, price, and CTA overlaid, in our brand colors, in 9:16 for TikTok, plus a 16:9 version for YouTube Shorts and a 1:1 version for Instagram feed.\" Watch the model fail.\n\nIt fails not because the model is bad. It fails because **that's a different kind of problem.**\n\n## The two kinds of video problems\n\n| Kind | Looks like | Tool that wins |\n|---|---|---|\n| One-shot generation | \"Make me a cinematic hero shot of X\" | AI gen model (Veo, Sora, Runway, Pika) |\n| Composition | \"Stitch these 8 shots into a 30-second story with copy, captions, and music\" | Code (HyperFrames, Remotion, FFmpeg) |\n\nMost real video deliverables are **both**. You use the model to generate the raw shots, then you use code to assemble them into something that ships. The raw model output isn't the deliverable; it's an input.\n\nThe mistake people make in 2026 is treating AI gen as the whole pipeline. They paste a prompt, get back a 5-second clip, and try to make it stand alone as the campaign. Sometimes that works — short brand teasers, mood pieces. Most of the time it doesn't, because real video work needs:\n\n- A **headline** the viewer can read.\n- A **caption** synced to audio (98% of TikTok plays are muted).\n- A **CTA** at the end.\n- A **brand color** that matches the rest of the company's output.\n- A **duration** that matches the platform's algorithm (15s, 30s, 60s).\n- A **second version** in a different aspect ratio.\n- A **third version** with a different product.\n\nNone of those are model jobs. They're code jobs.\n\n## What \"programmatic\" means here\n\nA *programmatic video* is one where the timeline, layout, copy, and assembly are described in code — not painted by hand in a video editor. The clips inside it can be AI-generated, stock, or human-shot, but the composition is mechanical:\n\n```text\nscript.json + template.html → renderer → output.mp4\n```\n\nRun that pipeline once, you get one video. Run it with a different `script.json`, you get a different video. Run it 100 times in a loop with 100 different scripts, you get 100 videos. Same template, 100 deliverables.\n\nThat's the unlock. Not \"AI generates better shots\" (the models are already great). Not \"code lets me animate\" (After Effects has done that for 30 years). The unlock is **scale across a template** — turning one designer's hour of taste into a hundred shipped MP4s.\n\n## What this lesson does\n\nThe rest of this lesson builds the classifier. Given a video brief, you'll write a function that returns one of:\n\n- `\"ai-gen-only\"` — the model is the whole answer (mood piece, single shot, abstract visual).\n- `\"code-driven\"` — code is the whole answer (data-dashboard reel, captions over stock, slideshow).\n- `\"hybrid\"` — AI gen for inputs, code for composition (most real product videos).\n\nOnce you can classify briefs, the rest of the chapter is just picking the right tool for the code-driven and hybrid cases.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/why-programmatic/s02-02-the-three-jobs",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 180,
+          "concept": "three-jobs-only-code-does",
+          "body": "# Three jobs only code does well\n\nAI gen models will keep getting better at single-shot synthesis. They will not, in any version, become good at the three jobs below. These are the jobs that code has always owned and will keep owning, because they're not about taste — they're about structure.\n\n## Job 1 — Parametric variation\n\nThe canonical example: a YouTube channel ships a \"your-year-in-review\" video to every subscriber, personalized with their watch history. One template, millions of renders. Spotify Wrapped does this. Netflix's \"your top 10 of the year\" does this. So does every Shopify store running TikTok ads on autopilot.\n\nThe shape is always the same:\n\n```python\ntemplate = load_template(\"ad.html\")\nfor product in catalog:\n    video = render(template, product=product)\n    upload(video, channel=product.platform)\n```\n\nThe model can't do this. You'd have to call the model 100 times with 100 different prompts, and each output would have inconsistent fonts, inconsistent pacing, inconsistent brand. The variation is the point — but the *frame* around the variation needs to be invariant. That frame is code.\n\n## Job 2 — Data-driven rendering\n\nThe NFL highlight reel that updates after every Sunday's games. The trading-platform \"your portfolio this week\" video. The weekly weather forecast in your local-news app. These videos pull from a live database, render a composition against the current data, and ship before the data is stale.\n\nYou can't generate them with a prompt because the *inputs* change every render. The model has no concept of \"yesterday's box score.\" Code reads from the DB, formats the numbers, lays them out on a template, and renders.\n\nThe Remotion docs and the HyperFrames `data-in-motion.md` reference are entire pattern libraries for this — sparklines, animated counters, leaderboards, choropleth maps. All driven by JSON or a database query, none generated by a model.\n\n## Job 3 — Reproducibility under review\n\nThis one is boring but it's why agencies actually adopt programmatic. When a client asks \"can you change the CTA color from red to orange and re-render all 47 versions of the ad?\", you need:\n\n- The exact same composition, byte-identical except for the one change.\n- A deterministic render — no `Math.random()`, no model nondeterminism, no \"well, the AI decided to do it slightly differently this time.\"\n- Re-running last month's render with the same inputs and getting the same MP4.\n\nHyperFrames is explicit about this: the rules forbid `Math.random()`, `Date.now()`, and time-based logic for exactly this reason. Use a seeded PRNG. The render must be deterministic so review cycles converge instead of diverging.\n\nTry doing review cycles with a generative model. Every \"re-roll\" produces a different result. The client never gets the same video twice, and you never converge on \"approved.\"\n\n## The one-line test\n\nIf you can rephrase the brief as \"do X to a template with these inputs,\" it's a code job. If you can rephrase it as \"imagine a beautiful scene where X,\" it's a model job. If it's both (\"imagine a beautiful scene of X, then use that shot inside our standard template\"), it's hybrid — and the *pipeline* matters more than any single tool.\n\nThe rest of this chapter is about building that pipeline.",
+          "cta": "Got it",
+          "code": "# the three jobs that programmatic video does — and AI gen alone does not.\n\nJOBS = [\n    (\"parametric variation\",  \"1 template + N data rows → N videos\"),\n    (\"data-driven rendering\", \"video composition reads from a database\"),\n    (\"reproducibility\",       \"same inputs → byte-identical output\"),\n]\nfor name, why in JOBS:\n    print(f\"{name:24s} — {why}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "programmatic-design/why-programmatic/s03-03-which-task-is-code",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Code wins when the brief implies a TEMPLATE (same every time, copy stays put) or a DATA SOURCE (scores, prices, names that change per render). Model wins when the brief is \"imagine a beautiful scene.\"",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 55,
+          "concept": "code-job-vs-model-job",
+          "prompt": "Which TWO briefs are clearly code jobs (programmatic video), not\nAI-gen-only? Code wins when the deliverable is parametric, data-driven,\nor requires reproducibility. Model wins when the deliverable is one\nnovel scene with no structured inputs.\n",
+          "options": [
+            {
+              "id": "b_and_c",
+              "label": "B (channel intro) and C (NFL reel)"
+            },
+            {
+              "id": "a_and_d",
+              "label": "A (fog shot) and D (abstract loop)",
+              "explain": "Both are exactly what AI gen models are best at — single novel scenes with no copy, no data, no template. These are model jobs."
+            },
+            {
+              "id": "a_and_c",
+              "label": "A (fog shot) and C (NFL reel)",
+              "explain": "Half right. NFL reel is data-driven, definitely code. But the fog shot has no template, no parametric inputs, no data — pure model job."
+            },
+            {
+              "id": "c_and_d",
+              "label": "C (NFL reel) and D (abstract loop)",
+              "explain": "Half right. NFL reel is code. But the abstract loop is a model job — no copy, no data, just a vibe."
+            }
+          ],
+          "answerIds": [
+            "b_and_c"
+          ],
+          "shuffle": false,
+          "code": "briefs = {\n    \"A\": \"A 5-second cinematic shot of fog rolling over mountains at dawn.\",\n    \"B\": \"A 30-second YouTube channel intro, same every video, with the host's name and channel logo overlaid in their brand red.\",\n    \"C\": \"A 'top 10 plays of the week' NFL reel that pulls scores from the league API and ships every Monday.\",\n    \"D\": \"A dreamlike abstract loop for a chill-hop album cover, no copy, no captions.\",\n}\nfor k, v in briefs.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "programmatic-design/why-programmatic/s04-04-parametric-vs-one-shot",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Parametric variation = same template, N different rows of structured data, N different outputs. The \"rows\" field is the giveaway — 80 rows means 80 renders from one template.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 60,
+          "concept": "parametric-variation-defined",
+          "prompt": "Two workflows. Which one is \"parametric variation\" (and therefore\nbelongs in a programmatic video pipeline)?\n",
+          "options": [
+            {
+              "id": "workflow_x",
+              "label": "Workflow X — 80 product ads from one template"
+            },
+            {
+              "id": "workflow_y",
+              "label": "Workflow Y — one dreamy album-art loop",
+              "explain": "One-off, no template, no structured inputs, no repetition. That's the canonical AI-gen-only brief — let the model paint one scene."
+            },
+            {
+              "id": "both",
+              "label": "Both are parametric",
+              "explain": "Y has no parameters that change between renders — it's a single render. Parametric variation means N different outputs from the same template, driven by N rows of structured inputs."
+            },
+            {
+              "id": "neither",
+              "label": "Neither — both are single videos",
+              "explain": "X is 80 videos, not one. The structured inputs (product_name, price, image_url, cta_text) and 80 rows of data are exactly what parametric variation means."
+            }
+          ],
+          "answerIds": [
+            "workflow_x"
+          ],
+          "shuffle": false,
+          "code": "# one shop runs both of these every week. one is a code job, one is a model job.\n\nworkflow_x = {\n    \"frequency\":  \"weekly\",\n    \"inputs\":     [\"product_name\", \"price\", \"image_url\", \"cta_text\"],\n    \"rows\":       80,        # 80 products in the catalog\n    \"output\":     \"80 vertical ads, all 15s, brand template\",\n}\n\nworkflow_y = {\n    \"frequency\":  \"one-off\",\n    \"inputs\":     [\"mood: dreamy, vaporwave, sunset, no copy\"],\n    \"rows\":       1,\n    \"output\":     \"one 8-second loop for the album art reveal\",\n}\nprint(\"X:\", workflow_x)\nprint(\"Y:\", workflow_y)\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/why-programmatic/s05-05-the-classifier",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 130,
+          "concept": "classify-by-three-signals",
+          "body": "# Three signals, one decision\n\nYou're going to write `classify_video_task(task)` in the next step. The function reads a task dict and returns one of three strings: `\"ai-gen-only\"`, `\"code-driven\"`, or `\"hybrid\"`. Here's the decision logic.\n\n## The signals\n\nFour fields on the input task:\n\n- `rows: int` — how many different videos this brief produces from one template. `1` is one-off. `>1` is parametric.\n- `needs_copy: bool` — does the deliverable require text on screen (headline, caption, CTA, lower-third)? AI gen models still can't reliably render long, accurate copy.\n- `data_source: str | None` — is the content driven by a database, API, or spreadsheet? `None` means no live data input.\n- `is_one_shot: bool` — is the brief a single creative shot with no template (\"imagine a beautiful scene of...\")?\n\n## The decision tree\n\n```text\nif is_one_shot AND rows == 1 AND not needs_copy AND data_source is None:\n    return \"ai-gen-only\"   # model wins — single novel scene\n\nelif rows > 1 OR data_source is not None:\n    return \"code-driven\"   # parametric or data-driven — code wins\n\nelse:\n    return \"hybrid\"        # single video, but needs copy or non-trivial composition\n```\n\n## Why \"hybrid\" is the most common verdict\n\nMost real product videos are hybrid. The brief is \"a 20-second feature launch video with our brand template, our logo at the end, our copy, our music — and a hero shot we generate with Veo.\" That's one video (rows=1), no live data (data_source=None), but needs copy. The model generates the hero shot. Code stitches it into the template with the copy, logo, and music.\n\nHybrid is where most of this chapter lives. AI-gen-only is the boundary case where you don't need a renderer. Code-driven is the boundary case where the model isn't even involved — every input is structured.\n\n## Examples mapped to verdicts\n\n| Brief | rows | needs_copy | data_source | is_one_shot | verdict |\n|---|---|---|---|---|---|\n| 5-second fog hero shot | 1 | False | None | True | `ai-gen-only` |\n| Channel intro (same every video) | 1 | True | None | False | `hybrid` |\n| 100 Shopify product ads | 100 | True | \"catalog.csv\" | False | `code-driven` |\n| NFL reel from league API | 1 | True | \"nfl-api\" | False | `code-driven` |\n| Album-art abstract loop | 1 | False | None | True | `ai-gen-only` |\n\nNote the asymmetry: `code-driven` doesn't require *all* its inputs to be structured — having any one of `rows > 1` or `data_source is not None` is enough. `ai-gen-only` requires *all four* signals to point at the model. That's intentional — when in doubt, default to code, because code can call the model but the model can't call code.",
+          "cta": "Got it",
+          "code": "# three signals decide where a video brief lands.\n\nSIGNALS = {\n    \"rows\":         \"more than 1 means parametric — code wins\",\n    \"needs_copy\":   \"headlines, captions, CTAs — code wins (model can't reliably render text)\",\n    \"data_source\":  \"live DB, API, spreadsheet — code wins\",\n    \"is_one_shot\":  \"single novel scene, no copy, no template — model wins\",\n}\nfor k, v in SIGNALS.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "write",
+          "id": "programmatic-design/why-programmatic/s06-06-write-classify-video-task",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Three branches in order. The first branch requires ALL four signals to point at the model. The second branch requires ANY one parametric/data signal. The third branch is the default fall-through (\"hybrid\").",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Use `task.get(\"rows\", 1)` so missing fields don't crash. The order of branches matters — check `ai-gen-only` first (most restrictive), then `code-driven`, then default to `hybrid`.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "classify-video-task",
+          "prompt": "Write `classify_video_task(task)` that takes a task dict and\nreturns one of `\"ai-gen-only\"`, `\"code-driven\"`, or `\"hybrid\"`.\n\nInput fields (all optional, use `.get()` with sensible defaults):\n\n- `rows: int` (default 1)\n- `needs_copy: bool` (default False)\n- `data_source: str | None` (default None)\n- `is_one_shot: bool` (default False)\n\nRules, in order:\n\n- If `is_one_shot` AND `rows == 1` AND NOT `needs_copy` AND\n  `data_source is None` → return `\"ai-gen-only\"`.\n- Else if `rows > 1` OR `data_source is not None` → return\n  `\"code-driven\"`.\n- Else → return `\"hybrid\"`.\n\nFive briefs run. Expected output:\n```\nfog shot:        ai-gen-only\nchannel intro:   hybrid\nshopify ads:     code-driven\nnfl reel:        code-driven\nalbum loop:      ai-gen-only\n```\n",
+          "starter": "briefs = [\n    (\"fog shot\",      {\"rows\": 1, \"needs_copy\": False, \"data_source\": None,        \"is_one_shot\": True}),\n    (\"channel intro\", {\"rows\": 1, \"needs_copy\": True,  \"data_source\": None,        \"is_one_shot\": False}),\n    (\"shopify ads\",   {\"rows\": 100,\"needs_copy\": True, \"data_source\": \"catalog.csv\",\"is_one_shot\": False}),\n    (\"nfl reel\",      {\"rows\": 1, \"needs_copy\": True,  \"data_source\": \"nfl-api\",   \"is_one_shot\": False}),\n    (\"album loop\",    {\"rows\": 1, \"needs_copy\": False, \"data_source\": None,        \"is_one_shot\": True}),\n]\n\n# define classify_video_task(task) below\n\nfor name, task in briefs:\n    print(f\"{name+':':16s} {classify_video_task(task)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "fog shot:        ai-gen-only\nchannel intro:   hybrid\nshopify ads:     code-driven\nnfl reel:        code-driven\nalbum loop:      ai-gen-only\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "briefs = [\n    (\"fog shot\",      {\"rows\": 1, \"needs_copy\": False, \"data_source\": None,        \"is_one_shot\": True}),\n    (\"channel intro\", {\"rows\": 1, \"needs_copy\": True,  \"data_source\": None,        \"is_one_shot\": False}),\n    (\"shopify ads\",   {\"rows\": 100,\"needs_copy\": True, \"data_source\": \"catalog.csv\",\"is_one_shot\": False}),\n    (\"nfl reel\",      {\"rows\": 1, \"needs_copy\": True,  \"data_source\": \"nfl-api\",   \"is_one_shot\": False}),\n    (\"album loop\",    {\"rows\": 1, \"needs_copy\": False, \"data_source\": None,        \"is_one_shot\": True}),\n]\n\ndef classify_video_task(task):\n    rows = task.get(\"rows\", 1)\n    needs_copy = task.get(\"needs_copy\", False)\n    data_source = task.get(\"data_source\", None)\n    is_one_shot = task.get(\"is_one_shot\", False)\n\n    if is_one_shot and rows == 1 and not needs_copy and data_source is None:\n        return \"ai-gen-only\"\n    if rows > 1 or data_source is not None:\n        return \"code-driven\"\n    return \"hybrid\"\n\nfor name, task in briefs:\n    print(f\"{name+':':16s} {classify_video_task(task)}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "programmatic-design/why-programmatic/s07-07-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 220,
+          "concept": "route-five-real-briefs",
+          "prompt": "Final drill. You're the in-house creative engineer at a DTC brand.\nFive briefs land in your inbox in one morning. Route each one.\n\nWrite `route_briefs(briefs)` that takes a list of brief dicts and\nreturns a dict mapping each brief's `name` to its classification\n(`\"ai-gen-only\"`, `\"code-driven\"`, or `\"hybrid\"`).\n\nUse the same rules as the previous step:\n\n- All four signals point at the model → `\"ai-gen-only\"`.\n- Any parametric signal (`rows > 1`) or data signal\n  (`data_source is not None`) → `\"code-driven\"`.\n- Otherwise → `\"hybrid\"`.\n\nExpected output:\n```\nfounder dream sequence: ai-gen-only\nweekly sale ads:        code-driven\nfeature launch:         hybrid\ncustomer testimonial:   hybrid\ninventory dashboard:    code-driven\n```\n",
+          "starter": "briefs = [\n    {\"name\": \"founder dream sequence\", \"rows\": 1,   \"needs_copy\": False, \"data_source\": None,         \"is_one_shot\": True},\n    {\"name\": \"weekly sale ads\",        \"rows\": 24,  \"needs_copy\": True,  \"data_source\": \"sale-feed\",  \"is_one_shot\": False},\n    {\"name\": \"feature launch\",         \"rows\": 1,   \"needs_copy\": True,  \"data_source\": None,         \"is_one_shot\": False},\n    {\"name\": \"customer testimonial\",   \"rows\": 1,   \"needs_copy\": True,  \"data_source\": None,         \"is_one_shot\": False},\n    {\"name\": \"inventory dashboard\",    \"rows\": 1,   \"needs_copy\": True,  \"data_source\": \"warehouse\",  \"is_one_shot\": False},\n]\n\n# define route_briefs(briefs) below\n\nresults = route_briefs(briefs)\nfor b in briefs:\n    print(f\"{b['name']+':':24s}{results[b['name']]}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "founder dream sequence: ai-gen-only\nweekly sale ads:        code-driven\nfeature launch:         hybrid\ncustomer testimonial:   hybrid\ninventory dashboard:    code-driven\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "briefs = [\n    {\"name\": \"founder dream sequence\", \"rows\": 1,   \"needs_copy\": False, \"data_source\": None,         \"is_one_shot\": True},\n    {\"name\": \"weekly sale ads\",        \"rows\": 24,  \"needs_copy\": True,  \"data_source\": \"sale-feed\",  \"is_one_shot\": False},\n    {\"name\": \"feature launch\",         \"rows\": 1,   \"needs_copy\": True,  \"data_source\": None,         \"is_one_shot\": False},\n    {\"name\": \"customer testimonial\",   \"rows\": 1,   \"needs_copy\": True,  \"data_source\": None,         \"is_one_shot\": False},\n    {\"name\": \"inventory dashboard\",    \"rows\": 1,   \"needs_copy\": True,  \"data_source\": \"warehouse\",  \"is_one_shot\": False},\n]\n\ndef classify(b):\n    rows = b.get(\"rows\", 1)\n    needs_copy = b.get(\"needs_copy\", False)\n    data_source = b.get(\"data_source\", None)\n    is_one_shot = b.get(\"is_one_shot\", False)\n    if is_one_shot and rows == 1 and not needs_copy and data_source is None:\n        return \"ai-gen-only\"\n    if rows > 1 or data_source is not None:\n        return \"code-driven\"\n    return \"hybrid\"\n\ndef route_briefs(briefs):\n    return {b[\"name\"]: classify(b) for b in briefs}\n\nresults = route_briefs(briefs)\nfor b in briefs:\n    print(f\"{b['name']+':':24s}{results[b['name']]}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 21
+    },
+    {
+      "slug": "hyperframes-and-remotion",
+      "title": "HyperFrames and Remotion — the two tools that own this space",
+      "estMinutes": 16,
+      "prerequisites": [
+        "why-programmatic"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "programmatic-design/hyperframes-and-remotion/s01-01-the-two-tools",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 180,
+          "concept": "hyperframes-vs-remotion-at-a-glance",
+          "body": "# Two tools, same job, different mental models\n\nProgrammatic video on the web converged on two open-source frameworks: **HyperFrames** and **Remotion**. They both render an MP4 from web code via a headless browser. They differ in *what you write*.\n\n| Tool | You write | The runtime is | The renderer is |\n|---|---|---|---|\n| **HyperFrames** | HTML + CSS + a paused GSAP timeline | Headless Chrome bundled by the CLI | `npx hyperframes render` (local FFmpeg pipeline) |\n| **Remotion** | React components with a `useCurrentFrame()` hook | Chromium under `@remotion/renderer` | `npx remotion render` locally, or `@remotion/lambda` on AWS |\n\nBoth produce the same kind of output: a deterministic MP4 that's reproducible across runs. The pick is about how your team thinks, not what the output looks like.\n\n## What \"the same job\" actually means\n\nA composition in either tool has:\n\n1. A **timeline** with explicit duration in seconds (or frames).\n2. **Layers** — visual elements positioned in space and time.\n3. **Media** — images, video, audio, ideally synced to the timeline.\n4. A **render** step that walks frame-by-frame, screenshots each frame, and stitches them into an MP4 via FFmpeg.\n\nThe big idea is the same in both: **treat video composition as a deterministic function of inputs**. Same inputs → same MP4, byte for byte. That's what makes parametric rendering possible.\n\n## What they're not\n\n- **Not real-time playback engines.** They don't compete with Unity or Unreal. They render offline, then play back.\n- **Not video editors.** They don't compete with Premiere or DaVinci. You write code, not click on a timeline.\n- **Not AI video models.** They don't generate frames from prompts. They composite frames you give them — and those frames can come from AI gen models, stock libraries, or hand-shot footage.\n\n## Why this lesson exists\n\nThe two tools are well-documented separately. What's missing is the *decision*: when do you reach for which? This lesson tours both, lays out the decision tree, and ends with you writing `pick_tool(project)` — a rule-based classifier that takes a project profile and returns `\"hyperframes\"`, `\"remotion\"`, `\"both\"`, or `\"ai-gen-only\"`.\n\nYou'll also see where the Claude Code `design-html` skill fits — it produces Pretext-native HTML for design finalization, which is *not* the same as HyperFrames HTML but lives in the same neighborhood.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/hyperframes-and-remotion/s02-02-hyperframes-tour",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 220,
+          "concept": "hyperframes-fundamentals",
+          "body": "# HyperFrames — HTML is the source of truth for video\n\nHyperFrames is what happens when someone notices that web developers already know how to author rich visuals (HTML + CSS + GSAP) and stops trying to invent a new authoring environment for video. You write an HTML file. The CLI renders it to MP4.\n\n## The file you write\n\nA HyperFrames project is an `index.html` file plus optional sub-compositions in `compositions/`. The HTML is plain — no framework, no build step from your side. Elements get `data-*` attributes for timing:\n\n```html\n<div id=\"title\"\n     data-composition-id=\"hero\"\n     data-width=\"1920\"\n     data-height=\"1080\"\n     data-duration=\"6\">\n  <h1 class=\"headline\">Launch day</h1>\n  <script src=\"https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js\"></script>\n  <script>\n    window.__timelines = window.__timelines || {};\n    const tl = gsap.timeline({ paused: true });\n    tl.from(\".headline\", { y: 60, opacity: 0, duration: 0.7, ease: \"power3.out\" }, 0.3);\n    window.__timelines[\"hero\"] = tl;\n  </script>\n</div>\n```\n\nNotes that matter:\n\n- **Every clip needs `data-composition-id`** for the renderer to identify it.\n- **The timeline is `paused: true`** because the framework drives playback.\n- **You register the timeline on `window.__timelines`** so the renderer can find it.\n- **Duration comes from `data-duration`**, not from the GSAP timeline length.\n\n## Rules HyperFrames enforces\n\nA few non-negotiable rules from the skill ground truth — these will save you debugging time:\n\n- **Deterministic only.** No `Math.random()`, no `Date.now()`, no `setTimeout` for timing. Use a seeded PRNG (like mulberry32) if you need pseudo-random values. The render must be reproducible.\n- **No `repeat: -1`.** Infinite repeats break the capture engine. Calculate a finite repeat count from duration.\n- **Synchronous timeline construction.** Build the timeline at page load. The capture engine reads `window.__timelines` synchronously.\n- **Animate visual properties only.** `opacity`, `x`, `y`, `scale`, `rotation`, `color`, `borderRadius`, transforms. Do NOT animate `visibility` or `display`. Do NOT call `video.play()` — the framework owns playback.\n\n## The CLI surface\n\nLook at the table in the editor. The workflow is always: `init` once, then a loop of `lint` → `preview` → render small previews, with `render` at the end for the final MP4.\n\nRender flags worth knowing:\n\n- `--quality draft` while iterating, `--quality high` for delivery.\n- `--fps 30` is default; `--fps 60` doubles render time.\n- `--format webm` if you need a transparent video.\n- `--docker` produces byte-identical output across machines (important for CI).\n- `--strict` fails the render if lint produces any errors.\n\n## Why this design wins for some teams\n\nHyperFrames is built on three bets:\n\n1. **CSS animations are good enough for most motion design.** With GSAP on top, you have the same toolbox web designers use every day.\n2. **HTML is the most reviewable text format for visual work.** Diff-friendly, version-control-friendly, easy to read in a PR.\n3. **The browser's compositor is the best frame engine that already exists.** Why reinvent it?\n\nIf your team thinks in CSS and GSAP — if \"I'd just write a div with `transform: translateX(...)` for that\" is your first instinct — HyperFrames matches your mental model. If your team thinks in React state machines, the next section is for you.",
+          "cta": "Got it",
+          "code": "# the HyperFrames CLI surface, in order of how often you'll use each command.\n\nCOMMANDS = [\n    (\"npx hyperframes init my-video\",          \"scaffold a new project with templates\"),\n    (\"npx hyperframes lint\",                   \"static checks on index.html + compositions/\"),\n    (\"npx hyperframes preview\",               \"dev server with hot reload (default port 3002)\"),\n    (\"npx hyperframes render\",                \"render to MP4 in renders/\"),\n    (\"npx hyperframes transcribe audio.mp3\",  \"Whisper transcription for caption sync\"),\n    (\"npx hyperframes tts 'hello' --voice af_nova\", \"Kokoro TTS for narration\"),\n    (\"npx hyperframes doctor\",                \"diagnose Chrome, FFmpeg, Node, memory\"),\n]\nfor cmd, what in COMMANDS:\n    print(f\"{cmd:48s} — {what}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "programmatic-design/hyperframes-and-remotion/s03-03-hyperframes-cli",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The real HyperFrames CLI verbs are: init, lint, preview, render, transcribe, tts, doctor, browser, info, upgrade, compositions, docs, benchmark. `compile-to-bytecode` and `flatten-keyframes` were never part of the tool.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 55,
+          "concept": "hyperframes-cli-commands",
+          "prompt": "Three of those commands are real HyperFrames CLI commands. Two\nare made up. Which THREE are real?\n",
+          "options": [
+            {
+              "id": "a_b_d",
+              "label": "A (init), B (lint), and D (render --quality draft)"
+            },
+            {
+              "id": "a_c_e",
+              "label": "A (init), C (compile-to-bytecode), and E (flatten-keyframes)",
+              "explain": "C and E are inventions. HyperFrames has no compile-to-bytecode or flatten-keyframes commands. The real CLI is: init, lint, preview, render, transcribe, tts, doctor, browser, info, upgrade, compositions, docs, benchmark."
+            },
+            {
+              "id": "b_d_e",
+              "label": "B (lint), D (render --quality draft), and E (flatten-keyframes)",
+              "explain": "B and D are real. E is invented — HyperFrames does not have a flatten-keyframes command."
+            },
+            {
+              "id": "a_b_e",
+              "label": "A (init), B (lint), and E (flatten-keyframes)",
+              "explain": "A and B are real. E is invented."
+            }
+          ],
+          "answerIds": [
+            "a_b_d"
+          ],
+          "shuffle": false,
+          "code": "# five commands, three of them are real HyperFrames CLI commands. two are made up.\n\ncommands = {\n    \"A\": \"npx hyperframes init my-video\",\n    \"B\": \"npx hyperframes lint\",\n    \"C\": \"npx hyperframes compile-to-bytecode\",\n    \"D\": \"npx hyperframes render --quality draft\",\n    \"E\": \"npx hyperframes flatten-keyframes\",\n}\nfor k, v in commands.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/hyperframes-and-remotion/s04-04-remotion-tour",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "remotion-fundamentals",
+          "body": "# Remotion — React components, frame by frame\n\nRemotion's pitch: \"if you can write React, you can write video.\" A composition is a React component. The renderer evaluates that component once per frame, screenshots the output, and stitches the frames into an MP4.\n\n## The component you write\n\n```tsx\nimport { useCurrentFrame, interpolate, AbsoluteFill } from \"remotion\";\n\nexport const Title: React.FC<{ headline: string }> = ({ headline }) => {\n  const frame = useCurrentFrame();\n  const opacity = interpolate(frame, [0, 30], [0, 1], {\n    extrapolateRight: \"clamp\",\n  });\n  return (\n    <AbsoluteFill style={{ backgroundColor: \"#0a0a0a\", justifyContent: \"center\" }}>\n      <h1 style={{ opacity, color: \"white\", fontSize: 120 }}>{headline}</h1>\n    </AbsoluteFill>\n  );\n};\n```\n\n`useCurrentFrame()` returns the current frame number (0 at start, `fps * duration` at end). `interpolate(frame, [0, 30], [0, 1])` maps frames 0-30 to opacity 0-1. There's no timeline object you push tweens onto — every frame is a fresh render of the component with the current frame number wired through props or hooks.\n\n## How a project is laid out\n\nA Remotion project is a normal React app under `src/`, plus a `remotion.config.ts` and a `Root.tsx` that registers compositions:\n\n```tsx\nimport { Composition } from \"remotion\";\nimport { Title } from \"./Title\";\n\nexport const Root = () => (\n  <>\n    <Composition\n      id=\"hero-title\"\n      component={Title}\n      durationInFrames={150}\n      fps={30}\n      width={1920}\n      height={1080}\n      defaultProps={{ headline: \"Launch day\" }}\n    />\n  </>\n);\n```\n\nThat `<Composition />` block is the same shape as a HyperFrames clip — name, duration, dimensions. Props are explicitly typed, which is the React-y advantage: TypeScript catches \"I forgot to pass the headline\" at compile time.\n\n## The render path\n\nTwo rendering options:\n\n- **Local:** `npx remotion render hero-title out.mp4 --props='{\"headline\":\"Hello\"}'`. Spins up Chromium, renders frame by frame, stitches via FFmpeg. Good for laptop iteration.\n- **AWS Lambda:** `@remotion/lambda` distributes the render across many Lambda functions running in parallel. Each function renders a chunk of frames; the result is concatenated in S3. This is how production teams render long videos in seconds instead of hours. Lambda renders cost a few cents per render on AWS, plus Remotion's licensing layer on top.\n\n## Licensing — read the fine print\n\nRemotion is \"open source\" but commercial usage at scale requires a paid license. As of 2026:\n\n- **Free license** for individuals or companies with ≤ 3 employees.\n- **Company license** is per-developer-seat ($25/dev/month) plus per-render fees for self-hosted ($10 per 1000 renders/month), with a $100/month minimum.\n- **Enterprise license** starts at $500/month.\n\nHyperFrames is also open source but does not have a per-seat or per-render licensing wall. If cost across a large org matters, that's a real consideration.\n\n## Why this design wins for some teams\n\nRemotion is built on three bets, parallel to HyperFrames' three:\n\n1. **React is the most expressive language for declarative UI**, and video is UI through time.\n2. **The component model handles parametric rendering naturally.** Props in, frames out. A loop over a JSON file becomes a loop over `defaultProps`.\n3. **AWS Lambda is the right scale model.** Hundreds of renders in parallel without provisioning servers.\n\nIf your team already lives in React, ships Next.js apps, and would rather write `interpolate(...)` than tween config objects, Remotion's mental model is the right match. If your team is half designers, half engineers, and \"let's write some CSS\" is the natural first instinct, HyperFrames probably wins.",
+          "cta": "Got it",
+          "code": "# Remotion's surface, paraphrased — the React side of programmatic video.\n\nREMOTION_BUILDING_BLOCKS = [\n    (\"<Composition />\",      \"register a renderable component with a name, duration, fps, dimensions\"),\n    (\"useCurrentFrame()\",    \"hook that returns the current frame number — drives all motion\"),\n    (\"interpolate(...)\",     \"map a frame range to a value range, optional easing\"),\n    (\"<Sequence from=... />\", \"compose multiple components on a shared timeline\"),\n    (\"<Video /> / <Audio />\",\"media elements with frame-aware playback\"),\n    (\"npx remotion render\",  \"render a composition to MP4 locally\"),\n    (\"@remotion/lambda\",     \"render distributed across AWS Lambda for speed and scale\"),\n]\nfor k, v in REMOTION_BUILDING_BLOCKS:\n    print(f\"{k:24s} — {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/hyperframes-and-remotion/s05-05-the-decision-tree",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 150,
+          "concept": "pick-by-team-fit",
+          "body": "# Pick by team fit, not feature list\n\nThe two tools have ~95% feature overlap. They both render parametric, deterministic MP4s from web code, run in a headless browser, and support audio + video tracks. Trying to pick based on \"which has more features\" is the wrong frame.\n\nPick based on **who's on the team** and **how the renders are deployed**. Four signals do most of the work.\n\n## Signal 1 — team_familiarity_react\n\nThe biggest predictor of which tool wins is whether your team already ships React. If yes, Remotion's mental model (`useCurrentFrame()`, `interpolate(...)`, props) is a natural extension of what they do all day. If no — if your team is designers, freelancers, or people who think in CSS first — the HyperFrames learning curve is much shorter.\n\n**Rule:** React-heavy team → Remotion bias. CSS/design-heavy team → HyperFrames bias.\n\n## Signal 2 — needs_text_reflow\n\nIf headlines have to auto-wrap based on actual rendered font metrics — \"this could be 'Welcome' or 'Welcome to the demo experience', and the layout has to look good either way\" — HyperFrames has an edge. It runs in real Chrome with real font metrics. There's a `window.__hyperframes.fitTextFontSize(...)` helper specifically for dynamic text overflow.\n\nRemotion can do this too, but you'll be writing it yourself in React. HyperFrames ships the helper.\n\n**Rule:** Text-heavy parametric work → HyperFrames slight edge.\n\n## Signal 3 — render_target\n\nIf you're rendering on one developer's laptop, both tools are roughly equivalent. If you're rendering 1000s of videos a day, you want Remotion + AWS Lambda. The Lambda distribution is the production scale move — render chunks in parallel, concatenate the result. HyperFrames doesn't have an equivalent of `@remotion/lambda` baked in; you'd build your own queue + worker pool.\n\n**Rule:** `render_target == \"scale\"` (cloud, 1000s/day) → Remotion bias.\n\n## Signal 4 — complexity\n\nFor very simple compositions (a single shot with a headline), both tools are overkill. AI gen might be the right answer. For high-complexity work (10+ scenes with custom shader transitions), HyperFrames has a built-in shader-transitions package and a richer scene-transition system in the skill files. Remotion can do it; you'll just write more glue.\n\n**Rule:** Very simple → AI-gen-only might do it. Very high complexity → HyperFrames bias on transitions, Remotion bias on Lambda parallelization.\n\n## The combined rule (what you'll code)\n\n```python\ndef pick_tool(project):\n    if project[\"complexity\"] == \"simple\" and project[\"render_target\"] == \"local\":\n        return \"ai-gen-only\"   # don't reach for a framework\n    if project[\"team_familiarity_react\"] and project[\"render_target\"] == \"scale\":\n        return \"remotion\"      # React team + Lambda need\n    if project[\"needs_text_reflow\"] or not project[\"team_familiarity_react\"]:\n        return \"hyperframes\"   # design-first team or heavy reflow\n    return \"both\"              # in-house engineers, pick the one with momentum\n```\n\n`\"both\"` isn't a cop-out — some shops run a Remotion pipeline for parametric ads and a HyperFrames pipeline for designer-driven brand work. Different tools for different jobs is fine. The point is to *choose intentionally*, not by accident.",
+          "cta": "Got it",
+          "code": "# the four signals that decide hyperframes vs remotion (vs both vs neither).\n\nSIGNALS = {\n    \"team_familiarity_react\": \"does your team already ship React apps?\",\n    \"needs_text_reflow\":      \"do headlines need to auto-wrap based on font metrics?\",\n    \"render_target\":          \"'local' (one developer's laptop) or 'scale' (Lambda)?\",\n    \"complexity\":             \"'simple' (1-2 scenes), 'medium' (3-10), or 'high' (10+ scenes)\",\n}\nfor k, v in SIGNALS.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "programmatic-design/hyperframes-and-remotion/s06-06-pick-the-tool",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Two signals dominate: React-heavy team (`team_familiarity_react=True`) and need to render 5000 videos under an hour (`render_target=scale`). Both push to Remotion.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 65,
+          "concept": "hyperframes-vs-remotion-team-fit",
+          "prompt": "Which tool fits this team best?\n",
+          "options": [
+            {
+              "id": "remotion",
+              "label": "Remotion"
+            },
+            {
+              "id": "hyperframes",
+              "label": "HyperFrames",
+              "explain": "HyperFrames is great, but the signals here all point at React: a Next.js shop, React engineers, no designers, and 5000 renders that need parallel compute. That's Remotion + @remotion/lambda."
+            },
+            {
+              "id": "ai_gen_only",
+              "label": "AI-gen-only (skip the framework)",
+              "explain": "5000 personalized videos with per-customer data is exactly what AI gen alone can't do. Code is the answer; the question is which framework."
+            },
+            {
+              "id": "both",
+              "label": "Both — run two pipelines in parallel",
+              "explain": "Could work, but 'both' is for shops with two distinct workflows. This team has one workflow (year-in-review) and a clear React-leaning stack. Pick one tool."
+            }
+          ],
+          "answerIds": [
+            "remotion"
+          ],
+          "shuffle": false,
+          "code": "team = {\n    \"stack\":            \"Next.js shop, 12 React engineers, no designers\",\n    \"deliverable\":      \"5000 personalized year-in-review videos for paying customers\",\n    \"deadline\":         \"render must finish in under an hour total\",\n    \"design_lead\":      \"ships in Figma, hands React components to engineers\",\n}\nfor k, v in team.items():\n    print(f\"{k:14s} {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/hyperframes-and-remotion/s07-07-claude-design-html",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 130,
+          "concept": "design-html-and-claude-design",
+          "body": "# The Claude Code `design-html` skill and where it fits\n\nYou'll see the term \"Claude design\" come up in two related but distinct senses. Worth pinning down so you don't mix them up.\n\n## Sense 1 — the `design-html` skill (inside Claude Code)\n\n`design-html` is a gstack skill that runs inside Claude Code. It produces **Pretext-native HTML/CSS** — production-quality web pages where text actually reflows and heights are computed dynamically. The skill is for design finalization: someone has approved a mockup (from `/design-shotgun`, a CEO plan, or a back-of-napkin sketch) and now needs the actual HTML.\n\nIt is *not* a video tool. It produces static web pages, not MP4s. The neighborhood overlap is that the HTML it produces is the same kind of asset HyperFrames composes into video — clean, deterministic, web-native.\n\nIf your pipeline is \"design the page, then turn it into a 20-second promo video,\" you'd run `design-html` to ship the page and then HyperFrames (via `website-to-hyperframes`) to capture the page into a video.\n\n## Sense 2 — \"Claude Design\" the standalone product\n\nThere's also Claude Design, Anthropic's design tool. The `claude-design-hyperframes` skill exists specifically for that environment — it produces valid HyperFrames first drafts inside Claude Design that the user can then download, open in Claude Code, and refine.\n\nTwo things to know:\n\n1. The Claude Design skill uses **pre-valid skeletons** so the output passes `npx hyperframes lint` immediately.\n2. It explicitly hands off to a coding agent for polish: \"Claude Design creates the first cut of the film, Claude Code does the edit-bay refinement.\"\n\nThis handoff pattern matters for the pipeline lesson coming up. Different stages of the work want different tools, and the same HyperFrames project file is what passes between them.\n\n## When `design-html` enters the video pipeline\n\nThree real cases:\n\n- **You need a landing page first, then a video about that page.** Run `design-html` to ship the page. Run `website-to-hyperframes` against the URL of that page to produce the promo. Same brand, same copy, same colors — because both came from the same DESIGN.md.\n- **You need to embed a static \"frame\" inside a video.** A pricing table, a feature comparison, a stat callout. `design-html` produces the HTML; HyperFrames embeds it as a clip.\n- **You're doing a `/design-shotgun` exploration that ends in motion.** Generate variants statically, pick one, finalize with `design-html`, then bring it into motion via HyperFrames.\n\nThe mental model: `design-html` owns the *page*. HyperFrames owns the *page through time*. Remotion owns the *component through time*. Three tools, three slightly different jobs, one shared DNA — production-quality web output that's reproducible because it's code.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "write",
+          "id": "programmatic-design/hyperframes-and-remotion/s08-08-write-pick-tool",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Four branches, applied in order. The first branch (simple+local) is the escape hatch — no framework needed. After that, the React + scale combo is the Remotion lane. Then the reflow-or-no-react lane is HyperFrames. Everything else falls to \"both\".",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Order matters because rule 3 (`needs_text_reflow OR not react`) would otherwise swallow cases that rule 2 should claim. Always check the more specific rule first.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 220,
+          "concept": "pick-tool",
+          "prompt": "Write `pick_tool(project)` that takes a project dict and returns one\nof `\"hyperframes\"`, `\"remotion\"`, `\"both\"`, or `\"ai-gen-only\"`.\n\nInput fields:\n\n- `team_familiarity_react: bool`\n- `needs_text_reflow: bool`\n- `render_target: str` — either `\"local\"` or `\"scale\"`\n- `complexity: str` — `\"simple\"`, `\"medium\"`, or `\"high\"`\n\nApply these rules in order:\n\n1. If `complexity == \"simple\"` AND `render_target == \"local\"` →\n   return `\"ai-gen-only\"` (the framework is overkill).\n2. Else if `team_familiarity_react` AND `render_target == \"scale\"` →\n   return `\"remotion\"` (React team + Lambda need).\n3. Else if `needs_text_reflow` OR `not team_familiarity_react` →\n   return `\"hyperframes\"` (design-first team or reflow-heavy).\n4. Else → return `\"both\"`.\n\nFive projects run. Expected output:\n```\none-off mood reel:    ai-gen-only\n5000 yearly recap:    remotion\ndesigner brand reel:  hyperframes\nreflow-heavy ads:     hyperframes\nin-house mixed team:  both\n```\n",
+          "starter": "projects = [\n    (\"one-off mood reel\",   {\"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"simple\"}),\n    (\"5000 yearly recap\",   {\"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"scale\", \"complexity\": \"medium\"}),\n    (\"designer brand reel\", {\"team_familiarity_react\": False, \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"medium\"}),\n    (\"reflow-heavy ads\",    {\"team_familiarity_react\": True,  \"needs_text_reflow\": True,  \"render_target\": \"local\", \"complexity\": \"medium\"}),\n    (\"in-house mixed team\", {\"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"high\"}),\n]\n\n# define pick_tool(project) below\n\nfor name, p in projects:\n    print(f\"{name+':':22s}{pick_tool(p)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "one-off mood reel:    ai-gen-only\n5000 yearly recap:    remotion\ndesigner brand reel:  hyperframes\nreflow-heavy ads:     hyperframes\nin-house mixed team:  both\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "projects = [\n    (\"one-off mood reel\",   {\"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"simple\"}),\n    (\"5000 yearly recap\",   {\"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"scale\", \"complexity\": \"medium\"}),\n    (\"designer brand reel\", {\"team_familiarity_react\": False, \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"medium\"}),\n    (\"reflow-heavy ads\",    {\"team_familiarity_react\": True,  \"needs_text_reflow\": True,  \"render_target\": \"local\", \"complexity\": \"medium\"}),\n    (\"in-house mixed team\", {\"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"high\"}),\n]\n\ndef pick_tool(project):\n    complexity = project.get(\"complexity\", \"medium\")\n    render_target = project.get(\"render_target\", \"local\")\n    react = project.get(\"team_familiarity_react\", False)\n    reflow = project.get(\"needs_text_reflow\", False)\n\n    if complexity == \"simple\" and render_target == \"local\":\n        return \"ai-gen-only\"\n    if react and render_target == \"scale\":\n        return \"remotion\"\n    if reflow or not react:\n        return \"hyperframes\"\n    return \"both\"\n\nfor name, p in projects:\n    print(f\"{name+':':22s}{pick_tool(p)}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "programmatic-design/hyperframes-and-remotion/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 240,
+          "concept": "route-five-projects",
+          "prompt": "Final drill. Five projects on your desk. Pick a tool for each.\n\nWrite `route_projects(projects)` that returns a dict mapping each\nproject's `name` to `\"hyperframes\"`, `\"remotion\"`, `\"both\"`, or\n`\"ai-gen-only\"`.\n\nSame four rules as the previous step, in order:\n\n1. `complexity == \"simple\"` AND `render_target == \"local\"` →\n   `\"ai-gen-only\"`.\n2. `team_familiarity_react` AND `render_target == \"scale\"` →\n   `\"remotion\"`.\n3. `needs_text_reflow` OR NOT `team_familiarity_react` →\n   `\"hyperframes\"`.\n4. Else → `\"both\"`.\n\nExpected output:\n```\nfounder vision reel:    ai-gen-only\nspotify wrapped clone:  remotion\nbrand kit promo:        hyperframes\nmultilingual product:   hyperframes\nagency in-house team:   both\n```\n",
+          "starter": "projects = [\n    {\"name\": \"founder vision reel\",   \"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"simple\"},\n    {\"name\": \"spotify wrapped clone\", \"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"scale\", \"complexity\": \"high\"},\n    {\"name\": \"brand kit promo\",       \"team_familiarity_react\": False, \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"medium\"},\n    {\"name\": \"multilingual product\",  \"team_familiarity_react\": True,  \"needs_text_reflow\": True,  \"render_target\": \"local\", \"complexity\": \"medium\"},\n    {\"name\": \"agency in-house team\",  \"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"high\"},\n]\n\n# define route_projects(projects) below\n\nout = route_projects(projects)\nfor p in projects:\n    print(f\"{p['name']+':':24s}{out[p['name']]}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "founder vision reel:    ai-gen-only\nspotify wrapped clone:  remotion\nbrand kit promo:        hyperframes\nmultilingual product:   hyperframes\nagency in-house team:   both\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "projects = [\n    {\"name\": \"founder vision reel\",   \"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"simple\"},\n    {\"name\": \"spotify wrapped clone\", \"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"scale\", \"complexity\": \"high\"},\n    {\"name\": \"brand kit promo\",       \"team_familiarity_react\": False, \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"medium\"},\n    {\"name\": \"multilingual product\",  \"team_familiarity_react\": True,  \"needs_text_reflow\": True,  \"render_target\": \"local\", \"complexity\": \"medium\"},\n    {\"name\": \"agency in-house team\",  \"team_familiarity_react\": True,  \"needs_text_reflow\": False, \"render_target\": \"local\", \"complexity\": \"high\"},\n]\n\ndef pick(p):\n    if p[\"complexity\"] == \"simple\" and p[\"render_target\"] == \"local\":\n        return \"ai-gen-only\"\n    if p[\"team_familiarity_react\"] and p[\"render_target\"] == \"scale\":\n        return \"remotion\"\n    if p[\"needs_text_reflow\"] or not p[\"team_familiarity_react\"]:\n        return \"hyperframes\"\n    return \"both\"\n\ndef route_projects(projects):\n    return {p[\"name\"]: pick(p) for p in projects}\n\nout = route_projects(projects)\nfor p in projects:\n    print(f\"{p['name']+':':24s}{out[p['name']]}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 24
+    },
+    {
+      "slug": "the-ai-native-design-pipeline",
+      "title": "The AI-native design pipeline — concept to shipped MP4 in one workflow",
+      "estMinutes": 18,
+      "prerequisites": [
+        "hyperframes-and-remotion"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "programmatic-design/the-ai-native-design-pipeline/s01-01-the-seven-steps",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 180,
+          "concept": "seven-canonical-pipeline-steps",
+          "body": "# Seven steps, none of them optional\n\nA shippable video has seven canonical steps. Skip any one and you either don't ship or ship something broken. AI gen models give you huge leverage on steps 2 and 4 — generating reference frames and generating narration audio — but they don't *replace* the pipeline. They make each step cheaper.\n\nThe pipeline:\n\n1. **Concept** — what's this video doing? Who's it for? What action does it drive? This is the hardest step, and the one humans still own. AI can suggest concepts; it can't decide whether the brand should run them.\n2. **Reference-gen** — generate visual references for the look. Hero shots, b-roll, color palettes, moodboards. Veo, Sora, Midjourney, Runway. The cost is now low enough to generate 10 references and pick the best.\n3. **Composition** — assemble the references (plus copy, captions, brand assets) into a timeline. This is where HyperFrames or Remotion lives. The output of step 3 is a project file you can render.\n4. **Audio** — narration (TTS via HyperFrames' built-in Kokoro voices, or ElevenLabs, or Cartesia), music (licensed or AI-generated via Suno, Udio), sound effects. Audio is the single biggest predictor of whether a video feels professional.\n5. **Captions** — transcribe the audio to word-level timestamps and layer captions on screen. 98% of TikTok plays are muted. Captions aren't optional.\n6. **Render** — go from project file to MP4. Verify lint passes, verify WCAG contrast on text, verify the timeline duration matches the audio.\n7. **Review** — show the rough cut to stakeholders, collect notes, re-render. The reproducibility property from lesson 01 is what makes this loop converge.\n\n## What changes when you go AI-native\n\nPre-AI, this pipeline took a team — copywriter, motion designer, voice actor, sound engineer, video editor. The fast version was two weeks. The slow version was two months.\n\nThe AI-native version compresses each step by 10-100×:\n\n| Step | Pre-AI cost | AI-native cost |\n|---|---|---|\n| Concept | 2-3 days of meetings | 1-2 hours with an AI brainstorm partner |\n| Reference-gen | $500-2000 stock photo/footage license | 5-10 cents per Veo/Sora generation |\n| Composition | Motion designer at $1500/day | Engineer + HyperFrames for free |\n| Audio | $300-800 voice actor + studio | Kokoro TTS at ~free, or ElevenLabs at ~$0.30/min |\n| Captions | $1-3/minute via Rev | Whisper local for free |\n| Render | $50-200 render farm time | Lambda at a few cents, or local for free |\n| Review | 2-3 day async cycles | Same-day if the renders are fast enough |\n\nThe cost compression is the headline. The bigger story is the *throughput* compression. A team that used to ship 1 video a week can now ship 1 video a day. Or — with parametric variation — 100 videos a day, each personalized.\n\n## What this lesson teaches\n\nThe rest of the lesson walks through where AI fits at each step, the `website-to-hyperframes` pattern as a worked example, and the cost model. Then you'll write `score_pipeline(steps)` — a function that audits a team's pipeline and tells you which steps they're missing.\n\nMost pipelines fail not because step 3 is wrong but because someone forgot step 5 (captions) or step 7 (review). Scoring the pipeline against the seven canonical steps surfaces the gap before it costs you a ship date.",
+          "cta": "Got it",
+          "code": "# the seven canonical steps from idea to shipped MP4.\n\nPIPELINE = [\n    (\"1. concept\",        \"what is this video for, who is it for, what action does it drive\"),\n    (\"2. reference-gen\",  \"AI-generated visual references — moodboards, hero shots, b-roll\"),\n    (\"3. composition\",    \"HyperFrames or Remotion stitches references into a timeline\"),\n    (\"4. audio\",          \"TTS narration, licensed music, or a soundtrack track\"),\n    (\"5. captions\",       \"transcript synced to audio — TikTok plays muted by default\"),\n    (\"6. render\",         \"render to MP4, verify lint and contrast pass\"),\n    (\"7. review\",         \"stakeholder review, address notes, re-render\"),\n]\nfor step, what in PIPELINE:\n    print(f\"{step:18s} — {what}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/the-ai-native-design-pipeline/s02-02-where-ai-fits-each-step",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 200,
+          "concept": "model-per-step-routing",
+          "body": "# Different model for different step\n\nThe \"AI model\" inside this pipeline isn't one model — it's at least four, each doing what it's best at. Routing the right work to the right model is what makes the pipeline cheap and good.\n\n## Step 1 — Concept\n\nA reasoning-strong text model. Claude Opus, GPT-5, Gemini Ultra. The job is to take a fuzzy brief (\"we want to launch our new SKU\") and produce a structured concept doc: who's the audience, what action are we driving, what's the hook in the first 3 seconds, what's the CTA at the end. The token bill is small (a few thousand input, a few hundred output). You'll iterate maybe 3-5 times before locking the brief.\n\nTools that sit in this slot: gstack's `/plan-ceo-review`, `/design-shotgun`, `/plan-design-review`. They're concept-stage thinking partners. The output is a written plan, not pixels.\n\n## Step 2 — Reference-gen\n\nA video generation model. As of mid-2026, the strongest are Veo 3 (Google), Sora 2 (OpenAI), Runway Gen-4, Pika 2. Pick by what you need:\n\n- **Veo** for realistic motion and lighting.\n- **Sora** for stylized scenes and stronger physics.\n- **Runway** for image-to-video (start from a still, animate it).\n- **Pika** for fast iteration and lipsync.\n\nCosts in 2026: usually a few cents to a couple dollars per 5-10 second clip. Generate 10, throw away 9, use 1. The economics work because the rejection rate is much higher than for human-made footage but the per-unit cost is 100× lower.\n\n## Step 3 — Composition\n\nNot an AI step. This is where a coding agent (Claude Code, Cursor, Codex, Aider) drives the HyperFrames or Remotion project. The agent reads the brief, picks scenes, writes the HTML or React components, runs `npx hyperframes lint`, and iterates.\n\nWhere models *do* help: writing the composition. The HyperFrames skill files are designed specifically for an LLM agent to read — they're long, detailed, and ground-truth-authoritative. A coding agent can author a HyperFrames composition in one shot given the SKILL.md and a brief.\n\n## Step 4 — Audio\n\nThree sub-steps, three different models:\n\n- **Narration (TTS):** HyperFrames ships with Kokoro-82M (the `npx hyperframes tts` command). Voices like `af_nova`, `bf_emma`, etc. Free, local, deterministic. ElevenLabs is the paid alternative when you need a specific celebrity-style voice — costs ~$0.30/minute. Cartesia is the low-latency alternative.\n- **Music:** Suno or Udio for AI-generated tracks. Generally licensed for commercial use under their subscription tiers. Both are at the \"good enough for B-roll backing track, not good enough for the hero piece\" stage.\n- **SFX:** ElevenLabs Sound Effects, or pre-licensed Sonniss/Freesound libraries. AI gen still doesn't beat a real foley library for short percussive hits.\n\n## Step 5 — Captions\n\nWhisper (OpenAI) for transcription. HyperFrames bundles it via `npx hyperframes transcribe`. Runs locally, free, supports multiple model sizes (`tiny.en`, `base.en`, `medium.en`, `large-v3`). The output is word-level timestamps that the composition layer can sync against.\n\nFor non-English content, deepgram or AssemblyAI tend to outperform Whisper on accuracy.\n\n## Step 6 — Render\n\nNot an AI step. `npx hyperframes render` locally or `@remotion/lambda` for parallel cloud renders. Verify lint passes, verify contrast (HyperFrames runs a WCAG audit automatically), verify the timeline matches the audio length.\n\n## Step 7 — Review\n\nA vision-strong model can help with QA — Claude with vision, GPT-5 vision. Feed it the rendered MP4 (or screenshots at key timestamps) and ask: \"any visual issues?\". HyperFrames also has an animation-map script that produces a structured Gantt chart of every tween. Reading the JSON is faster than re-watching the video 50 times.\n\n## The routing table\n\n| Step | Model class | Example tools (2026) |\n|---|---|---|\n| Concept | Reasoning text | Claude Opus, GPT-5, Gemini Ultra |\n| Reference-gen | Video gen | Veo 3, Sora 2, Runway Gen-4, Pika 2 |\n| Composition | Coding agent | Claude Code, Cursor, Codex |\n| Audio (TTS) | Speech synthesis | Kokoro (local), ElevenLabs, Cartesia |\n| Audio (music) | Music gen | Suno, Udio |\n| Captions | Transcription | Whisper, Deepgram, AssemblyAI |\n| Render | None (mechanical) | HyperFrames CLI, Remotion CLI, @remotion/lambda |\n| Review | Vision model | Claude vision, GPT-5 vision |\n\nThe routing matters. Using a reasoning model for transcription is wasteful. Using a transcription model for concept work is malpractice. The pipeline wins when each step calls the right model for the job.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "programmatic-design/the-ai-native-design-pipeline/s03-03-which-model-which-step",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The right pattern: a model whose training matches the step. Veo for video. Whisper for transcription. Claude/GPT for reasoning concept work. The mistake is using one model class for all four.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 60,
+          "concept": "route-model-to-step",
+          "prompt": "Look at the editor. Every pick is the wrong tool. What's the correct\ngeneral pattern of model-to-step routing?\n",
+          "options": [
+            {
+              "id": "route_by_modality",
+              "label": "Route by modality — video gen for video, transcription for captions, reasoning for concept, mechanical CLI for render"
+            },
+            {
+              "id": "route_by_cost",
+              "label": "Pick the cheapest model that runs everywhere",
+              "explain": "Cheapest model for every step is a false economy. Whisper for concept work produces gibberish; a reasoning model for video gen produces nothing usable. Match the model to the task's modality."
+            },
+            {
+              "id": "one_model_for_all",
+              "label": "Use one frontier model (Claude or GPT-5) for every step",
+              "explain": "A reasoning text model can't generate video, can't transcribe audio reliably, and can't render an MP4. One model for all steps is the mistake the team in the editor made."
+            },
+            {
+              "id": "never_use_models",
+              "label": "Use only deterministic code — never call models inside a pipeline",
+              "explain": "That removes steps 2 (reference-gen) and 4 (audio narration) entirely. The pipeline collapses back to stock footage and hired voice actors. The whole AI-native unlock is gone."
+            }
+          ],
+          "answerIds": [
+            "route_by_modality"
+          ],
+          "shuffle": false,
+          "code": "# four steps, four model picks. one team got every pick wrong.\n\nteam_picks = {\n    \"reference-gen\": \"Claude Opus\",       # text model for video gen\n    \"captions\":      \"Veo 3\",             # video model for transcription\n    \"render\":        \"GPT-5 vision\",      # vision model for mechanical render\n    \"concept\":       \"Whisper large-v3\",  # transcription model for concept work\n}\nfor step, pick in team_picks.items():\n    print(f\"{step:14s} -> {pick}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/the-ai-native-design-pipeline/s04-04-website-to-hyperframes",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 220,
+          "concept": "website-to-hyperframes-worked-example",
+          "body": "# The `website-to-hyperframes` worked example\n\nThe cleanest example of the seven-step pipeline in the wild is the `website-to-hyperframes` skill (Josh's, ground truth in `~/.claude/skills/website-to-hyperframes/SKILL.md`). It takes one input — a URL — and produces a finished MP4 promo. Every canonical step from the previous lesson maps to one of its sub-steps.\n\n## The user prompt\n\n> \"Capture https://acme.com and make me a 25-second product launch video.\"\n\nThat's the whole brief. The skill runs seven gated steps to turn it into a finished HyperFrames project. Each step produces an artifact that gates the next.\n\n## Step-by-step\n\n### 1. Capture & Understand\nScrape the site (Puppeteer-style). Extract the brand: top colors, fonts, hero image, key headlines, vibe sentence. The output is a working summary the rest of the pipeline reads.\n\n**Gate:** print a site summary (name, colors, fonts, assets, one-sentence vibe).\n\n### 2. Write `DESIGN.md`\nSix sections, ~90 lines. Brand cheat sheet: palette with hex values + roles, typography (1-2 families), motion guidelines, \"what NOT to do\" anti-patterns. This is the document every later step references. Notably, every HyperFrames composition is required by the SKILL.md \"Visual Identity Gate\" to trace its palette and typography back to a `DESIGN.md`.\n\n**Gate:** `DESIGN.md` exists in the project directory.\n\n### 3. Write `SCRIPT.md`\nThe narration script. Story backbone. Scene durations come from the narration — not from guessing. If the script says \"Today, Acme is launching...\" and that's 3.2 seconds in TTS, the first beat is 3.2 seconds. Audio drives timing.\n\n**Gate:** `SCRIPT.md` exists.\n\n### 4. Write `STORYBOARD.md`\nPer-beat creative direction: mood, camera, animations, transitions, assets, depth layers, SFX. This is the creative north star — the document the engineer follows to build each composition.\n\n**Gate:** `STORYBOARD.md` exists with beat-by-beat direction and an asset audit table.\n\n### 5. Generate VO + map timing\nGenerate TTS audio (HyperFrames `npx hyperframes tts` with a Kokoro voice). Transcribe the TTS output (`npx hyperframes transcribe narration.wav`) to get word-level timestamps. Map timestamps to beats. Update `STORYBOARD.md` with real durations.\n\n**Gate:** `narration.wav` + `transcript.json` exist; beat timings in `STORYBOARD.md` updated.\n\n### 6. Build compositions\nBuild each composition in HyperFrames following the storyboard. After each one: self-review for layout, asset placement, animation quality. The skill enforces non-negotiable rules: every multi-scene composition uses transitions (no jump cuts), every scene has entrance animations on every element, and no exit animations except on the final scene (the transition IS the exit).\n\n**Gate:** every composition self-reviewed. No overlapping elements, no misplaced assets, no static images without motion.\n\n### 7. Validate & Deliver\nRun `npx hyperframes lint` and `npx hyperframes validate`. Validate runs a WCAG contrast audit — every text element gets sampled against its background at 5 timestamps. Deliver the preview to the user first. Only render to MP4 on explicit request.\n\n**Gate:** `lint` and `validate` pass with zero errors.\n\n## What this pattern teaches\n\nThree things to notice:\n\n1. **The gates matter more than the steps.** Each step produces a file that the next step reads. If `DESIGN.md` doesn't exist, step 4 can't start. The pipeline forces sequencing.\n2. **Audio drives timing, not the other way around.** Step 5 generates the TTS first, then step 6 builds visuals to match. Building the visuals first and then trying to record narration to fit always produces unnatural pacing.\n3. **Lint + validate are non-skippable.** A WCAG-failing video still renders, but it ships with text you can't read on the actual background. The pipeline catches this before render.\n\n## Why this maps to the canonical seven steps\n\nThe seven canonical steps from the previous lesson map directly:\n\n| Canonical step | `website-to-hyperframes` step |\n|---|---|\n| 1. Concept | Sub-steps 1-3 (capture + DESIGN.md + SCRIPT.md) |\n| 2. Reference-gen | Sub-step 4 (STORYBOARD references assets from capture) |\n| 3. Composition | Sub-step 6 (build compositions) |\n| 4. Audio | Sub-step 5 (TTS narration) |\n| 5. Captions | Sub-step 5 (transcript for word timing) |\n| 6. Render | Sub-step 7 (validate + preview) |\n| 7. Review | Sub-step 7 (deliver preview, await notes) |\n\nIf your team's pipeline doesn't have an artifact equivalent to each of these — no `DESIGN.md`, no `SCRIPT.md`, no `STORYBOARD.md` — you're skipping a step. The next two screens will give you a way to score that.",
+          "cta": "Got it",
+          "code": "# the 7-step workflow encoded in the website-to-hyperframes skill.\n\nSTEPS = [\n    (\"1. capture\",     \"scrape the site for colors, fonts, copy, key assets\"),\n    (\"2. DESIGN.md\",   \"write a brand cheat sheet (~90 lines, 6 sections)\"),\n    (\"3. SCRIPT.md\",   \"write the narration script — story backbone\"),\n    (\"4. STORYBOARD.md\",\"per-beat creative: mood, camera, animations, transitions\"),\n    (\"5. VO + timing\", \"TTS the script, transcribe for word-level timestamps\"),\n    (\"6. compositions\",\"build each beat in HyperFrames, self-review\"),\n    (\"7. validate\",    \"lint + validate + snapshot + preview, deliver\"),\n]\nfor step, what in STEPS:\n    print(f\"{step:18s} — {what}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/the-ai-native-design-pipeline/s05-05-the-cost-model",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 150,
+          "concept": "cost-of-each-step",
+          "body": "# The cost model — what one render actually costs\n\nThe headline most people miss: the *render* itself is free. The HyperFrames render runs on your laptop's CPU; the @remotion/lambda render is a few cents. The real cost is the AI inputs.\n\n## Per-render cost breakdown\n\nLook at the editor. A representative 30-second product video in 2026:\n\n- **Concept:** ~$0.10 in Claude/GPT tokens for the brief.\n- **Reference-gen:** $0.10 - $5.00 depending on how many AI gen attempts you make per shot. Veo charges per second of output; Sora is similar. Generate 10 attempts at $0.30 each and keep the best, you're at $3.\n- **Composition:** free in terms of API cost (Claude Code writes the HyperFrames HTML in a session you'd be running anyway). Maybe $0.50 - $2 in Anthropic API cost if you're using Claude Code in production with the chapter-23 prompt-cache hits.\n- **Audio:** free if you use Kokoro TTS. ElevenLabs is ~$0.30/minute. Music via Suno/Udio is a flat subscription, ~$10/month for effectively unlimited renders.\n- **Captions:** free via local Whisper.\n- **Render:** free on local CPU. ~$0.05 on @remotion/lambda for a 30-second clip.\n- **Review:** human time costs human-time money. The QA pass with a vision model is ~$0.10.\n\n**Total per render: $0.30 - $7.00 depending on how many AI gen attempts you make.**\n\nCompare to the pre-AI cost — voice actor at $300/hour, motion designer at $1500/day, stock licenses at $200/clip. The same 30-second video used to cost $2000-$5000 and 1-2 weeks. Now it costs $5 and one afternoon.\n\n## What this unlocks\n\nThree different business models live in the gap:\n\n### Model A — Volume at zero marginal cost\nA DTC brand renders a fresh ad for every product, every week. 200 products × 52 weeks = 10,400 ads/year. At $2/ad that's $20,800 — cheaper than one human-made campaign would have been. The cost-per-render is so low that the question \"is this product worth a video?\" stops mattering. Every product gets a video.\n\n### Model B — Quality at constant cost\nA high-end agency keeps the per-render budget around the pre-AI level ($500-1000) but uses the AI compression to do 50 iterations per render instead of 3. The output quality goes up because the rejection rate is now affordable.\n\n### Model C — Personalization at scale\nThe Spotify-Wrapped pattern. A subscription product generates a per-user video as a renewal hook or year-in-review. With 1M users at $2/render, the program costs $2M to run — but if it lifts retention by 1%, the LTV math wins easily.\n\n## Where the cost still bites\n\nThree real cost areas left:\n\n- **Reference-gen rejection rate.** AI video models still produce a lot of unusable output. Budgeting for 5-10× over-generation is normal.\n- **Music licensing.** AI-generated music is fine for B-roll but still doesn't beat a licensed track for hero pieces. Real licenses still cost real money.\n- **Review cycles.** If a stakeholder requests 30 revisions, \"rendering is free\" doesn't help — your engineer's time is the bottleneck.\n\nThe pipeline doesn't eliminate cost. It moves cost from \"rendering and production\" to \"deciding what to render.\" Which is the right place for the cost to be.",
+          "cta": "Got it",
+          "code": "# rough cost per render, AI-native pipeline, 2026 prices.\n\nCOSTS = {\n    \"1. concept\":       \"free (Claude/GPT call: ~$0.10)\",\n    \"2. reference-gen\": \"$0.10 - $5.00 (Veo/Sora/Runway clip × N tries)\",\n    \"3. composition\":   \"free (Claude Code session writes HyperFrames HTML)\",\n    \"4. audio (TTS)\":   \"free with Kokoro, ~$0.30/min with ElevenLabs\",\n    \"4. audio (music)\": \"Suno/Udio subscription, ~$10/mo for unlimited renders\",\n    \"5. captions\":      \"free (local Whisper)\",\n    \"6. render\":        \"free local CPU, or ~$0.05 on @remotion/lambda\",\n    \"7. review\":        \"free (human time + a vision-model QA call ~$0.10)\",\n}\nfor step, cost in COSTS.items():\n    print(f\"{step:20s} {cost}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "programmatic-design/the-ai-native-design-pipeline/s06-06-score-the-pipeline",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 140,
+          "concept": "pipeline-coverage-score",
+          "body": "# Score the pipeline against the canonical seven\n\nYou've seen the canonical seven steps and the worked example (`website-to-hyperframes`). Now the practical question: when you look at a real team's video workflow, how do you know if it's complete?\n\n## The scoring rule\n\nScore 15 points for each canonical step the team covers. Seven steps × 15 points = 105 points max, but we cap the score at 100. So if a team covers all seven, they hit 100. Missing any one drops them to 85. Missing two drops them to 70. The function returns an integer.\n\nThe seven canonical step names are:\n\n```python\nCANONICAL = [\n    \"concept\",\n    \"reference-gen\",\n    \"composition\",\n    \"audio\",\n    \"captions\",\n    \"render\",\n    \"review\",\n]\n```\n\n## What \"covered\" means\n\nA step is covered when the team has a *named tool or artifact* responsible for it. Not \"we talk about concept in a meeting.\" A real artifact: a `concept.md`, a SCRIPT, a reference shot library, a TTS tool, a captioning tool, a render command, a review checklist.\n\nThe input to your function will be a list of step dicts shaped like:\n\n```python\n[\n    {\"step\": \"concept\", \"tool\": \"Claude Opus\"},\n    {\"step\": \"reference-gen\", \"tool\": \"Veo 3\"},\n    {\"step\": \"composition\", \"tool\": \"HyperFrames\"},\n    # ...\n]\n```\n\nA step counts as covered if its `step` name is in `CANONICAL` AND it has a non-empty `tool`. Anything else doesn't count.\n\n## Why 15 points instead of dividing 100 by 7\n\nTwo reasons:\n\n1. **Round numbers are easier to debug.** 15 + 15 + 15 = 45, easy to see at a glance. 14.28... × 3 = 42.85 is not.\n2. **The cap rewards completeness.** If you cover all 7 you get 105, capped to 100. That asymmetry signals \"all 7 is the goal\" without making the math weird.\n\n## What scores actually mean\n\n| Score | Verdict |\n|---|---|\n| 100 | Full pipeline (all 7 covered → 105 capped to 100). Ready to scale. |\n| 90 | One missing. Find it, fix it. |\n| 75 | Two missing. Probably captions + review. |\n| 60 or below | Multiple gaps. The team isn't shipping; they're rendering proofs. |\n\nThe most common gaps in 2026:\n\n- **Captions.** Teams render to MP4 and don't add captions, then wonder why TikTok performance is bad. (98% muted plays.)\n- **Review.** Teams render once and ship. No structured review = no convergence on quality.\n- **Reference-gen.** Teams skip AI gen, hire stock, and pay 100× more per shot than they need to.\n\nCoverage scoring catches all three. The next screen has you write it.",
+          "cta": "Got it",
+          "code": "# the function you'll write next.\n\ndef score_pipeline_preview(steps):\n    \"\"\"returns 0-100; each canonical step covered = 15 points (capped at 100).\"\"\"\n    ...\nprint(\"preview only — you implement this in the next screen\")\n",
+          "runnable": true
+        },
+        {
+          "type": "write",
+          "id": "programmatic-design/the-ai-native-design-pipeline/s07-07-write-score-pipeline",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Use a set to dedupe — if a team lists the same canonical step twice, it should still count once. Filter on `step in CANONICAL` AND a non-empty `tool` string.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Math check: alpha covers all 7 canonical = 105, capped to 100. Beta covers 6 (missing captions) = 90. Gamma covers exactly 3 (concept, composition, render) — the `totally-fake-step` is filtered by the canonical check, and audio is filtered because its tool is empty — so 3 × 15 = 45.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 220,
+          "concept": "score-pipeline",
+          "prompt": "Write `score_pipeline(steps)` that takes a list of step dicts and\nreturns an integer 0-100.\n\n- Canonical step names:\n  `[\"concept\", \"reference-gen\", \"composition\", \"audio\", \"captions\", \"render\", \"review\"]`\n- For each entry in `steps`, count it as \"covered\" if BOTH:\n  - its `step` field is in the canonical list, AND\n  - its `tool` field is a non-empty string.\n- Each unique canonical step covered = 15 points.\n- Cap the score at 100.\n- Return an `int`.\n\nThree teams run. Expected output:\n```\nteam alpha: 100\nteam beta:  90\nteam gamma: 45\n```\n",
+          "starter": "team_alpha = [\n    {\"step\": \"concept\",       \"tool\": \"Claude Opus\"},\n    {\"step\": \"reference-gen\", \"tool\": \"Veo 3\"},\n    {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n    {\"step\": \"audio\",         \"tool\": \"Kokoro TTS\"},\n    {\"step\": \"captions\",      \"tool\": \"Whisper\"},\n    {\"step\": \"render\",        \"tool\": \"npx hyperframes render\"},\n    {\"step\": \"review\",        \"tool\": \"Claude vision QA\"},\n]\n\nteam_beta = [\n    {\"step\": \"concept\",       \"tool\": \"Claude Opus\"},\n    {\"step\": \"reference-gen\", \"tool\": \"Veo 3\"},\n    {\"step\": \"composition\",   \"tool\": \"Remotion\"},\n    {\"step\": \"audio\",         \"tool\": \"ElevenLabs\"},\n    {\"step\": \"render\",        \"tool\": \"remotion lambda\"},\n    {\"step\": \"review\",        \"tool\": \"stakeholder meeting\"},\n    # missing: captions\n]\n\nteam_gamma = [\n    {\"step\": \"concept\",       \"tool\": \"Claude Opus\"},\n    {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n    {\"step\": \"render\",        \"tool\": \"local CPU\"},\n    {\"step\": \"totally-fake-step\", \"tool\": \"some random tool\"},  # not canonical\n    {\"step\": \"audio\",         \"tool\": \"\"},  # empty tool, doesn't count\n    # missing: reference-gen, captions, review (and audio doesn't count)\n]\n\n# define score_pipeline(steps) below\n\nprint(f\"team alpha: {score_pipeline(team_alpha)}\")\nprint(f\"team beta:  {score_pipeline(team_beta)}\")\nprint(f\"team gamma: {score_pipeline(team_gamma)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "team alpha: 100\nteam beta:  90\nteam gamma: 45\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "team_alpha = [\n    {\"step\": \"concept\",       \"tool\": \"Claude Opus\"},\n    {\"step\": \"reference-gen\", \"tool\": \"Veo 3\"},\n    {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n    {\"step\": \"audio\",         \"tool\": \"Kokoro TTS\"},\n    {\"step\": \"captions\",      \"tool\": \"Whisper\"},\n    {\"step\": \"render\",        \"tool\": \"npx hyperframes render\"},\n    {\"step\": \"review\",        \"tool\": \"Claude vision QA\"},\n]\n\nteam_beta = [\n    {\"step\": \"concept\",       \"tool\": \"Claude Opus\"},\n    {\"step\": \"reference-gen\", \"tool\": \"Veo 3\"},\n    {\"step\": \"composition\",   \"tool\": \"Remotion\"},\n    {\"step\": \"audio\",         \"tool\": \"ElevenLabs\"},\n    {\"step\": \"render\",        \"tool\": \"remotion lambda\"},\n    {\"step\": \"review\",        \"tool\": \"stakeholder meeting\"},\n]\n\nteam_gamma = [\n    {\"step\": \"concept\",       \"tool\": \"Claude Opus\"},\n    {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n    {\"step\": \"render\",        \"tool\": \"local CPU\"},\n    {\"step\": \"totally-fake-step\", \"tool\": \"some random tool\"},\n    {\"step\": \"audio\",         \"tool\": \"\"},\n]\n\nCANONICAL = [\"concept\", \"reference-gen\", \"composition\", \"audio\", \"captions\", \"render\", \"review\"]\n\ndef score_pipeline(steps):\n    covered = set()\n    for entry in steps:\n        name = entry.get(\"step\")\n        tool = entry.get(\"tool\", \"\")\n        if name in CANONICAL and isinstance(tool, str) and tool.strip():\n            covered.add(name)\n    return min(100, len(covered) * 15)\n\nprint(f\"team alpha: {score_pipeline(team_alpha)}\")\nprint(f\"team beta:  {score_pipeline(team_beta)}\")\nprint(f\"team gamma: {score_pipeline(team_gamma)}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "programmatic-design/the-ai-native-design-pipeline/s08-08-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 260,
+          "concept": "audit-five-team-pipelines",
+          "prompt": "Final drill. You're consulting for five teams. Audit each one's\npipeline against the canonical seven steps.\n\nWrite `audit_pipelines(teams)` that takes a list of team dicts and\nreturns a dict mapping each team's `name` to a verdict dict shaped\nlike:\n\n```python\n{\"score\": int, \"missing\": list[str]}\n```\n\nEach team dict has a `name` and a `steps` list (same shape as the\nprevious drill — each step has `step` and `tool` fields).\n\n- Use the same scoring rule: 15 points per UNIQUE canonical step\n  covered (`step` name in canonical list AND non-empty `tool`),\n  capped at 100.\n- `missing` is a list of canonical step names that were NOT covered.\n  Preserve canonical order:\n  `[\"concept\", \"reference-gen\", \"composition\", \"audio\", \"captions\", \"render\", \"review\"]`.\n- Five teams run. Expected output:\n```\nacme:        score=100 missing=[]\nbravo:       score=90  missing=['captions']\ncharlie:     score=75  missing=['audio', 'captions']\ndelta:       score=60  missing=['reference-gen', 'audio', 'captions']\necho:        score=45  missing=['reference-gen', 'audio', 'captions', 'review']\n```\n",
+          "starter": "teams = [\n    {\"name\": \"acme\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"Claude\"},\n        {\"step\": \"reference-gen\", \"tool\": \"Veo\"},\n        {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n        {\"step\": \"audio\",         \"tool\": \"Kokoro\"},\n        {\"step\": \"captions\",      \"tool\": \"Whisper\"},\n        {\"step\": \"render\",        \"tool\": \"hyperframes render\"},\n        {\"step\": \"review\",        \"tool\": \"vision QA\"},\n    ]},\n    {\"name\": \"bravo\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"GPT-5\"},\n        {\"step\": \"reference-gen\", \"tool\": \"Sora\"},\n        {\"step\": \"composition\",   \"tool\": \"Remotion\"},\n        {\"step\": \"audio\",         \"tool\": \"ElevenLabs\"},\n        {\"step\": \"render\",        \"tool\": \"lambda\"},\n        {\"step\": \"review\",        \"tool\": \"stakeholder review\"},\n    ]},\n    {\"name\": \"charlie\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"Claude\"},\n        {\"step\": \"reference-gen\", \"tool\": \"Veo\"},\n        {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n        {\"step\": \"render\",        \"tool\": \"hyperframes render\"},\n        {\"step\": \"review\",        \"tool\": \"team review\"},\n    ]},\n    {\"name\": \"delta\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"Claude\"},\n        {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n        {\"step\": \"render\",        \"tool\": \"hyperframes render\"},\n        {\"step\": \"review\",        \"tool\": \"team review\"},\n    ]},\n    {\"name\": \"echo\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"Claude\"},\n        {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n        {\"step\": \"render\",        \"tool\": \"hyperframes render\"},\n    ]},\n]\n\n# define audit_pipelines(teams) below\n\nresults = audit_pipelines(teams)\nfor t in teams:\n    r = results[t[\"name\"]]\n    print(f\"{t['name']+':':12s} score={r['score']:<3} missing={r['missing']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "acme:        score=100 missing=[]\nbravo:       score=90  missing=['captions']\ncharlie:     score=75  missing=['audio', 'captions']\ndelta:       score=60  missing=['reference-gen', 'audio', 'captions']\necho:        score=45  missing=['reference-gen', 'audio', 'captions', 'review']\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "teams = [\n    {\"name\": \"acme\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"Claude\"},\n        {\"step\": \"reference-gen\", \"tool\": \"Veo\"},\n        {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n        {\"step\": \"audio\",         \"tool\": \"Kokoro\"},\n        {\"step\": \"captions\",      \"tool\": \"Whisper\"},\n        {\"step\": \"render\",        \"tool\": \"hyperframes render\"},\n        {\"step\": \"review\",        \"tool\": \"vision QA\"},\n    ]},\n    {\"name\": \"bravo\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"GPT-5\"},\n        {\"step\": \"reference-gen\", \"tool\": \"Sora\"},\n        {\"step\": \"composition\",   \"tool\": \"Remotion\"},\n        {\"step\": \"audio\",         \"tool\": \"ElevenLabs\"},\n        {\"step\": \"render\",        \"tool\": \"lambda\"},\n        {\"step\": \"review\",        \"tool\": \"stakeholder review\"},\n    ]},\n    {\"name\": \"charlie\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"Claude\"},\n        {\"step\": \"reference-gen\", \"tool\": \"Veo\"},\n        {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n        {\"step\": \"render\",        \"tool\": \"hyperframes render\"},\n        {\"step\": \"review\",        \"tool\": \"team review\"},\n    ]},\n    {\"name\": \"delta\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"Claude\"},\n        {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n        {\"step\": \"render\",        \"tool\": \"hyperframes render\"},\n        {\"step\": \"review\",        \"tool\": \"team review\"},\n    ]},\n    {\"name\": \"echo\", \"steps\": [\n        {\"step\": \"concept\",       \"tool\": \"Claude\"},\n        {\"step\": \"composition\",   \"tool\": \"HyperFrames\"},\n        {\"step\": \"render\",        \"tool\": \"hyperframes render\"},\n    ]},\n]\n\nCANONICAL = [\"concept\", \"reference-gen\", \"composition\", \"audio\", \"captions\", \"render\", \"review\"]\n\ndef audit_pipelines(teams):\n    out = {}\n    for team in teams:\n        covered = set()\n        for entry in team[\"steps\"]:\n            name = entry.get(\"step\")\n            tool = entry.get(\"tool\", \"\")\n            if name in CANONICAL and isinstance(tool, str) and tool.strip():\n                covered.add(name)\n        score = min(100, len(covered) * 15)\n        missing = [s for s in CANONICAL if s not in covered]\n        out[team[\"name\"]] = {\"score\": score, \"missing\": missing}\n    return out\n\nresults = audit_pipelines(teams)\nfor t in teams:\n    r = results[t[\"name\"]]\n    print(f\"{t['name']+':':12s} score={r['score']:<3} missing={r['missing']}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 21
+    }
+  ],
+  "xpTotal": 66
+}

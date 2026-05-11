@@ -1,0 +1,111 @@
+xp: 5
+estSeconds: 220
+concept: score-pipeline
+prompt: |
+  Write `score_pipeline(steps)` that takes a list of step dicts and
+  returns an integer 0-100.
+
+  - Canonical step names:
+    `["concept", "reference-gen", "composition", "audio", "captions", "render", "review"]`
+  - For each entry in `steps`, count it as "covered" if BOTH:
+    - its `step` field is in the canonical list, AND
+    - its `tool` field is a non-empty string.
+  - Each unique canonical step covered = 15 points.
+  - Cap the score at 100.
+  - Return an `int`.
+
+  Three teams run. Expected output:
+  ```
+  team alpha: 100
+  team beta:  90
+  team gamma: 45
+  ```
+starter: |
+  team_alpha = [
+      {"step": "concept",       "tool": "Claude Opus"},
+      {"step": "reference-gen", "tool": "Veo 3"},
+      {"step": "composition",   "tool": "HyperFrames"},
+      {"step": "audio",         "tool": "Kokoro TTS"},
+      {"step": "captions",      "tool": "Whisper"},
+      {"step": "render",        "tool": "npx hyperframes render"},
+      {"step": "review",        "tool": "Claude vision QA"},
+  ]
+
+  team_beta = [
+      {"step": "concept",       "tool": "Claude Opus"},
+      {"step": "reference-gen", "tool": "Veo 3"},
+      {"step": "composition",   "tool": "Remotion"},
+      {"step": "audio",         "tool": "ElevenLabs"},
+      {"step": "render",        "tool": "remotion lambda"},
+      {"step": "review",        "tool": "stakeholder meeting"},
+      # missing: captions
+  ]
+
+  team_gamma = [
+      {"step": "concept",       "tool": "Claude Opus"},
+      {"step": "composition",   "tool": "HyperFrames"},
+      {"step": "render",        "tool": "local CPU"},
+      {"step": "totally-fake-step", "tool": "some random tool"},  # not canonical
+      {"step": "audio",         "tool": ""},  # empty tool, doesn't count
+      # missing: reference-gen, captions, review (and audio doesn't count)
+  ]
+
+  # define score_pipeline(steps) below
+
+  print(f"team alpha: {score_pipeline(team_alpha)}")
+  print(f"team beta:  {score_pipeline(team_beta)}")
+  print(f"team gamma: {score_pipeline(team_gamma)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    team alpha: 100
+    team beta:  90
+    team gamma: 45
+  normalize: collapse-trailing-newline
+solution: |
+  team_alpha = [
+      {"step": "concept",       "tool": "Claude Opus"},
+      {"step": "reference-gen", "tool": "Veo 3"},
+      {"step": "composition",   "tool": "HyperFrames"},
+      {"step": "audio",         "tool": "Kokoro TTS"},
+      {"step": "captions",      "tool": "Whisper"},
+      {"step": "render",        "tool": "npx hyperframes render"},
+      {"step": "review",        "tool": "Claude vision QA"},
+  ]
+
+  team_beta = [
+      {"step": "concept",       "tool": "Claude Opus"},
+      {"step": "reference-gen", "tool": "Veo 3"},
+      {"step": "composition",   "tool": "Remotion"},
+      {"step": "audio",         "tool": "ElevenLabs"},
+      {"step": "render",        "tool": "remotion lambda"},
+      {"step": "review",        "tool": "stakeholder meeting"},
+  ]
+
+  team_gamma = [
+      {"step": "concept",       "tool": "Claude Opus"},
+      {"step": "composition",   "tool": "HyperFrames"},
+      {"step": "render",        "tool": "local CPU"},
+      {"step": "totally-fake-step", "tool": "some random tool"},
+      {"step": "audio",         "tool": ""},
+  ]
+
+  CANONICAL = ["concept", "reference-gen", "composition", "audio", "captions", "render", "review"]
+
+  def score_pipeline(steps):
+      covered = set()
+      for entry in steps:
+          name = entry.get("step")
+          tool = entry.get("tool", "")
+          if name in CANONICAL and isinstance(tool, str) and tool.strip():
+              covered.add(name)
+      return min(100, len(covered) * 15)
+
+  print(f"team alpha: {score_pipeline(team_alpha)}")
+  print(f"team beta:  {score_pipeline(team_beta)}")
+  print(f"team gamma: {score_pipeline(team_gamma)}")
+hint:
+  - level: 1
+    body: 'Use a set to dedupe — if a team lists the same canonical step twice, it should still count once. Filter on `step in CANONICAL` AND a non-empty `tool` string.'
+  - level: 2
+    body: 'Math check: alpha covers all 7 canonical = 105, capped to 100. Beta covers 6 (missing captions) = 90. Gamma covers exactly 3 (concept, composition, render) — the `totally-fake-step` is filtered by the canonical check, and audio is filtered because its tool is empty — so 3 × 15 = 45.'

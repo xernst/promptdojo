@@ -1,0 +1,15 @@
+slug: hyperframes-and-remotion
+title: "HyperFrames and Remotion — the two tools that own this space"
+estMinutes: 16
+prerequisites:
+  - why-programmatic
+order:
+  - 01-the-two-tools.read.md
+  - 02-hyperframes-tour.read.md
+  - 03-hyperframes-cli.mc.yaml
+  - 04-remotion-tour.read.md
+  - 05-the-decision-tree.read.md
+  - 06-pick-the-tool.mc.yaml
+  - 07-claude-design-html.read.md
+  - 08-write-pick-tool.write.yaml
+  - 09-checkpoint.checkpoint.yaml

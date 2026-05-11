@@ -1,0 +1,76 @@
+xp: 8
+estSeconds: 240
+concept: route-five-projects
+prompt: |
+  Final drill. Five projects on your desk. Pick a tool for each.
+
+  Write `route_projects(projects)` that returns a dict mapping each
+  project's `name` to `"hyperframes"`, `"remotion"`, `"both"`, or
+  `"ai-gen-only"`.
+
+  Same four rules as the previous step, in order:
+
+  1. `complexity == "simple"` AND `render_target == "local"` →
+     `"ai-gen-only"`.
+  2. `team_familiarity_react` AND `render_target == "scale"` →
+     `"remotion"`.
+  3. `needs_text_reflow` OR NOT `team_familiarity_react` →
+     `"hyperframes"`.
+  4. Else → `"both"`.
+
+  Expected output:
+  ```
+  founder vision reel:    ai-gen-only
+  spotify wrapped clone:  remotion
+  brand kit promo:        hyperframes
+  multilingual product:   hyperframes
+  agency in-house team:   both
+  ```
+starter: |
+  projects = [
+      {"name": "founder vision reel",   "team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "local", "complexity": "simple"},
+      {"name": "spotify wrapped clone", "team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "scale", "complexity": "high"},
+      {"name": "brand kit promo",       "team_familiarity_react": False, "needs_text_reflow": False, "render_target": "local", "complexity": "medium"},
+      {"name": "multilingual product",  "team_familiarity_react": True,  "needs_text_reflow": True,  "render_target": "local", "complexity": "medium"},
+      {"name": "agency in-house team",  "team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "local", "complexity": "high"},
+  ]
+
+  # define route_projects(projects) below
+
+  out = route_projects(projects)
+  for p in projects:
+      print(f"{p['name']+':':24s}{out[p['name']]}")
+grader:
+  kind: stdout-equality
+  expected: |
+    founder vision reel:    ai-gen-only
+    spotify wrapped clone:  remotion
+    brand kit promo:        hyperframes
+    multilingual product:   hyperframes
+    agency in-house team:   both
+  normalize: collapse-trailing-newline
+solution: |
+  projects = [
+      {"name": "founder vision reel",   "team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "local", "complexity": "simple"},
+      {"name": "spotify wrapped clone", "team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "scale", "complexity": "high"},
+      {"name": "brand kit promo",       "team_familiarity_react": False, "needs_text_reflow": False, "render_target": "local", "complexity": "medium"},
+      {"name": "multilingual product",  "team_familiarity_react": True,  "needs_text_reflow": True,  "render_target": "local", "complexity": "medium"},
+      {"name": "agency in-house team",  "team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "local", "complexity": "high"},
+  ]
+
+  def pick(p):
+      if p["complexity"] == "simple" and p["render_target"] == "local":
+          return "ai-gen-only"
+      if p["team_familiarity_react"] and p["render_target"] == "scale":
+          return "remotion"
+      if p["needs_text_reflow"] or not p["team_familiarity_react"]:
+          return "hyperframes"
+      return "both"
+
+  def route_projects(projects):
+      return {p["name"]: pick(p) for p in projects}
+
+  out = route_projects(projects)
+  for p in projects:
+      print(f"{p['name']+':':24s}{out[p['name']]}")
+passThreshold: 0.66

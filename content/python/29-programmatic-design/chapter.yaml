@@ -1,0 +1,8 @@
+number: 29
+slug: programmatic-design
+title: "programmatic design — code-driven video and the new design pipeline"
+blurb: "ai generates raw assets; code stitches them into something shippable. hyperframes, remotion, claude design — when each tool wins, how they combine, and the data-driven workflows that turn one template into a hundred videos."
+lessons:
+  - 01-why-programmatic
+  - 02-hyperframes-and-remotion
+  - 03-the-ai-native-design-pipeline

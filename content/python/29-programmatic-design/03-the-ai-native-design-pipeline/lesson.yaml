@@ -1,0 +1,14 @@
+slug: the-ai-native-design-pipeline
+title: "The AI-native design pipeline — concept to shipped MP4 in one workflow"
+estMinutes: 18
+prerequisites:
+  - hyperframes-and-remotion
+order:
+  - 01-the-seven-steps.read.md
+  - 02-where-ai-fits-each-step.read.md
+  - 03-which-model-which-step.mc.yaml
+  - 04-website-to-hyperframes.read.md
+  - 05-the-cost-model.read.md
+  - 06-score-the-pipeline.read.md
+  - 07-write-score-pipeline.write.yaml
+  - 08-checkpoint.checkpoint.yaml

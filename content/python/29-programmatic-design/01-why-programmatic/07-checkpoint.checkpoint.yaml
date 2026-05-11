@@ -1,0 +1,76 @@
+xp: 8
+estSeconds: 220
+concept: route-five-real-briefs
+prompt: |
+  Final drill. You're the in-house creative engineer at a DTC brand.
+  Five briefs land in your inbox in one morning. Route each one.
+
+  Write `route_briefs(briefs)` that takes a list of brief dicts and
+  returns a dict mapping each brief's `name` to its classification
+  (`"ai-gen-only"`, `"code-driven"`, or `"hybrid"`).
+
+  Use the same rules as the previous step:
+
+  - All four signals point at the model → `"ai-gen-only"`.
+  - Any parametric signal (`rows > 1`) or data signal
+    (`data_source is not None`) → `"code-driven"`.
+  - Otherwise → `"hybrid"`.
+
+  Expected output:
+  ```
+  founder dream sequence: ai-gen-only
+  weekly sale ads:        code-driven
+  feature launch:         hybrid
+  customer testimonial:   hybrid
+  inventory dashboard:    code-driven
+  ```
+starter: |
+  briefs = [
+      {"name": "founder dream sequence", "rows": 1,   "needs_copy": False, "data_source": None,         "is_one_shot": True},
+      {"name": "weekly sale ads",        "rows": 24,  "needs_copy": True,  "data_source": "sale-feed",  "is_one_shot": False},
+      {"name": "feature launch",         "rows": 1,   "needs_copy": True,  "data_source": None,         "is_one_shot": False},
+      {"name": "customer testimonial",   "rows": 1,   "needs_copy": True,  "data_source": None,         "is_one_shot": False},
+      {"name": "inventory dashboard",    "rows": 1,   "needs_copy": True,  "data_source": "warehouse",  "is_one_shot": False},
+  ]
+
+  # define route_briefs(briefs) below
+
+  results = route_briefs(briefs)
+  for b in briefs:
+      print(f"{b['name']+':':24s}{results[b['name']]}")
+grader:
+  kind: stdout-equality
+  expected: |
+    founder dream sequence: ai-gen-only
+    weekly sale ads:        code-driven
+    feature launch:         hybrid
+    customer testimonial:   hybrid
+    inventory dashboard:    code-driven
+  normalize: collapse-trailing-newline
+solution: |
+  briefs = [
+      {"name": "founder dream sequence", "rows": 1,   "needs_copy": False, "data_source": None,         "is_one_shot": True},
+      {"name": "weekly sale ads",        "rows": 24,  "needs_copy": True,  "data_source": "sale-feed",  "is_one_shot": False},
+      {"name": "feature launch",         "rows": 1,   "needs_copy": True,  "data_source": None,         "is_one_shot": False},
+      {"name": "customer testimonial",   "rows": 1,   "needs_copy": True,  "data_source": None,         "is_one_shot": False},
+      {"name": "inventory dashboard",    "rows": 1,   "needs_copy": True,  "data_source": "warehouse",  "is_one_shot": False},
+  ]
+
+  def classify(b):
+      rows = b.get("rows", 1)
+      needs_copy = b.get("needs_copy", False)
+      data_source = b.get("data_source", None)
+      is_one_shot = b.get("is_one_shot", False)
+      if is_one_shot and rows == 1 and not needs_copy and data_source is None:
+          return "ai-gen-only"
+      if rows > 1 or data_source is not None:
+          return "code-driven"
+      return "hybrid"
+
+  def route_briefs(briefs):
+      return {b["name"]: classify(b) for b in briefs}
+
+  results = route_briefs(briefs)
+  for b in briefs:
+      print(f"{b['name']+':':24s}{results[b['name']]}")
+passThreshold: 0.66

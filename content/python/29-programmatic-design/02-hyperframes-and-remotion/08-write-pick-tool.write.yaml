@@ -1,0 +1,84 @@
+xp: 5
+estSeconds: 220
+concept: pick-tool
+prompt: |
+  Write `pick_tool(project)` that takes a project dict and returns one
+  of `"hyperframes"`, `"remotion"`, `"both"`, or `"ai-gen-only"`.
+
+  Input fields:
+
+  - `team_familiarity_react: bool`
+  - `needs_text_reflow: bool`
+  - `render_target: str` — either `"local"` or `"scale"`
+  - `complexity: str` — `"simple"`, `"medium"`, or `"high"`
+
+  Apply these rules in order:
+
+  1. If `complexity == "simple"` AND `render_target == "local"` →
+     return `"ai-gen-only"` (the framework is overkill).
+  2. Else if `team_familiarity_react` AND `render_target == "scale"` →
+     return `"remotion"` (React team + Lambda need).
+  3. Else if `needs_text_reflow` OR `not team_familiarity_react` →
+     return `"hyperframes"` (design-first team or reflow-heavy).
+  4. Else → return `"both"`.
+
+  Five projects run. Expected output:
+  ```
+  one-off mood reel:    ai-gen-only
+  5000 yearly recap:    remotion
+  designer brand reel:  hyperframes
+  reflow-heavy ads:     hyperframes
+  in-house mixed team:  both
+  ```
+starter: |
+  projects = [
+      ("one-off mood reel",   {"team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "local", "complexity": "simple"}),
+      ("5000 yearly recap",   {"team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "scale", "complexity": "medium"}),
+      ("designer brand reel", {"team_familiarity_react": False, "needs_text_reflow": False, "render_target": "local", "complexity": "medium"}),
+      ("reflow-heavy ads",    {"team_familiarity_react": True,  "needs_text_reflow": True,  "render_target": "local", "complexity": "medium"}),
+      ("in-house mixed team", {"team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "local", "complexity": "high"}),
+  ]
+
+  # define pick_tool(project) below
+
+  for name, p in projects:
+      print(f"{name+':':22s}{pick_tool(p)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    one-off mood reel:    ai-gen-only
+    5000 yearly recap:    remotion
+    designer brand reel:  hyperframes
+    reflow-heavy ads:     hyperframes
+    in-house mixed team:  both
+  normalize: collapse-trailing-newline
+solution: |
+  projects = [
+      ("one-off mood reel",   {"team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "local", "complexity": "simple"}),
+      ("5000 yearly recap",   {"team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "scale", "complexity": "medium"}),
+      ("designer brand reel", {"team_familiarity_react": False, "needs_text_reflow": False, "render_target": "local", "complexity": "medium"}),
+      ("reflow-heavy ads",    {"team_familiarity_react": True,  "needs_text_reflow": True,  "render_target": "local", "complexity": "medium"}),
+      ("in-house mixed team", {"team_familiarity_react": True,  "needs_text_reflow": False, "render_target": "local", "complexity": "high"}),
+  ]
+
+  def pick_tool(project):
+      complexity = project.get("complexity", "medium")
+      render_target = project.get("render_target", "local")
+      react = project.get("team_familiarity_react", False)
+      reflow = project.get("needs_text_reflow", False)
+
+      if complexity == "simple" and render_target == "local":
+          return "ai-gen-only"
+      if react and render_target == "scale":
+          return "remotion"
+      if reflow or not react:
+          return "hyperframes"
+      return "both"
+
+  for name, p in projects:
+      print(f"{name+':':22s}{pick_tool(p)}")
+hint:
+  - level: 1
+    body: 'Four branches, applied in order. The first branch (simple+local) is the escape hatch — no framework needed. After that, the React + scale combo is the Remotion lane. Then the reflow-or-no-react lane is HyperFrames. Everything else falls to "both".'
+  - level: 2
+    body: 'Order matters because rule 3 (`needs_text_reflow OR not react`) would otherwise swallow cases that rule 2 should claim. Always check the more specific rule first.'

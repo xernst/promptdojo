@@ -1,0 +1,80 @@
+xp: 5
+estSeconds: 200
+concept: classify-video-task
+prompt: |
+  Write `classify_video_task(task)` that takes a task dict and
+  returns one of `"ai-gen-only"`, `"code-driven"`, or `"hybrid"`.
+
+  Input fields (all optional, use `.get()` with sensible defaults):
+
+  - `rows: int` (default 1)
+  - `needs_copy: bool` (default False)
+  - `data_source: str | None` (default None)
+  - `is_one_shot: bool` (default False)
+
+  Rules, in order:
+
+  - If `is_one_shot` AND `rows == 1` AND NOT `needs_copy` AND
+    `data_source is None` → return `"ai-gen-only"`.
+  - Else if `rows > 1` OR `data_source is not None` → return
+    `"code-driven"`.
+  - Else → return `"hybrid"`.
+
+  Five briefs run. Expected output:
+  ```
+  fog shot:        ai-gen-only
+  channel intro:   hybrid
+  shopify ads:     code-driven
+  nfl reel:        code-driven
+  album loop:      ai-gen-only
+  ```
+starter: |
+  briefs = [
+      ("fog shot",      {"rows": 1, "needs_copy": False, "data_source": None,        "is_one_shot": True}),
+      ("channel intro", {"rows": 1, "needs_copy": True,  "data_source": None,        "is_one_shot": False}),
+      ("shopify ads",   {"rows": 100,"needs_copy": True, "data_source": "catalog.csv","is_one_shot": False}),
+      ("nfl reel",      {"rows": 1, "needs_copy": True,  "data_source": "nfl-api",   "is_one_shot": False}),
+      ("album loop",    {"rows": 1, "needs_copy": False, "data_source": None,        "is_one_shot": True}),
+  ]
+
+  # define classify_video_task(task) below
+
+  for name, task in briefs:
+      print(f"{name+':':16s} {classify_video_task(task)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    fog shot:        ai-gen-only
+    channel intro:   hybrid
+    shopify ads:     code-driven
+    nfl reel:        code-driven
+    album loop:      ai-gen-only
+  normalize: collapse-trailing-newline
+solution: |
+  briefs = [
+      ("fog shot",      {"rows": 1, "needs_copy": False, "data_source": None,        "is_one_shot": True}),
+      ("channel intro", {"rows": 1, "needs_copy": True,  "data_source": None,        "is_one_shot": False}),
+      ("shopify ads",   {"rows": 100,"needs_copy": True, "data_source": "catalog.csv","is_one_shot": False}),
+      ("nfl reel",      {"rows": 1, "needs_copy": True,  "data_source": "nfl-api",   "is_one_shot": False}),
+      ("album loop",    {"rows": 1, "needs_copy": False, "data_source": None,        "is_one_shot": True}),
+  ]
+
+  def classify_video_task(task):
+      rows = task.get("rows", 1)
+      needs_copy = task.get("needs_copy", False)
+      data_source = task.get("data_source", None)
+      is_one_shot = task.get("is_one_shot", False)
+
+      if is_one_shot and rows == 1 and not needs_copy and data_source is None:
+          return "ai-gen-only"
+      if rows > 1 or data_source is not None:
+          return "code-driven"
+      return "hybrid"
+
+  for name, task in briefs:
+      print(f"{name+':':16s} {classify_video_task(task)}")
+hint:
+  - level: 1
+    body: 'Three branches in order. The first branch requires ALL four signals to point at the model. The second branch requires ANY one parametric/data signal. The third branch is the default fall-through ("hybrid").'
+  - level: 2
+    body: 'Use `task.get("rows", 1)` so missing fields don''t crash. The order of branches matters — check `ai-gen-only` first (most restrictive), then `code-driven`, then default to `hybrid`.'

@@ -1,0 +1,35 @@
+xp: 2
+estSeconds: 55
+concept: hyperframes-cli-commands
+code: |
+  # five commands, three of them are real HyperFrames CLI commands. two are made up.
+
+  commands = {
+      "A": "npx hyperframes init my-video",
+      "B": "npx hyperframes lint",
+      "C": "npx hyperframes compile-to-bytecode",
+      "D": "npx hyperframes render --quality draft",
+      "E": "npx hyperframes flatten-keyframes",
+  }
+  for k, v in commands.items():
+      print(f"{k}: {v}")
+prompt: |
+  Three of those commands are real HyperFrames CLI commands. Two
+  are made up. Which THREE are real?
+options:
+  - id: a_b_d
+    label: "A (init), B (lint), and D (render --quality draft)"
+  - id: a_c_e
+    label: "A (init), C (compile-to-bytecode), and E (flatten-keyframes)"
+    explain: "C and E are inventions. HyperFrames has no compile-to-bytecode or flatten-keyframes commands. The real CLI is: init, lint, preview, render, transcribe, tts, doctor, browser, info, upgrade, compositions, docs, benchmark."
+  - id: b_d_e
+    label: "B (lint), D (render --quality draft), and E (flatten-keyframes)"
+    explain: "B and D are real. E is invented — HyperFrames does not have a flatten-keyframes command."
+  - id: a_b_e
+    label: "A (init), B (lint), and E (flatten-keyframes)"
+    explain: "A and B are real. E is invented."
+answerIds:
+  - a_b_d
+hint:
+  - level: 1
+    body: 'The real HyperFrames CLI verbs are: init, lint, preview, render, transcribe, tts, doctor, browser, info, upgrade, compositions, docs, benchmark. `compile-to-bytecode` and `flatten-keyframes` were never part of the tool.'

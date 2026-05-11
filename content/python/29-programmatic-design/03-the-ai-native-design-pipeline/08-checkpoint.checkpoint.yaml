@@ -1,0 +1,146 @@
+xp: 8
+estSeconds: 260
+concept: audit-five-team-pipelines
+prompt: |
+  Final drill. You're consulting for five teams. Audit each one's
+  pipeline against the canonical seven steps.
+
+  Write `audit_pipelines(teams)` that takes a list of team dicts and
+  returns a dict mapping each team's `name` to a verdict dict shaped
+  like:
+
+  ```python
+  {"score": int, "missing": list[str]}
+  ```
+
+  Each team dict has a `name` and a `steps` list (same shape as the
+  previous drill — each step has `step` and `tool` fields).
+
+  - Use the same scoring rule: 15 points per UNIQUE canonical step
+    covered (`step` name in canonical list AND non-empty `tool`),
+    capped at 100.
+  - `missing` is a list of canonical step names that were NOT covered.
+    Preserve canonical order:
+    `["concept", "reference-gen", "composition", "audio", "captions", "render", "review"]`.
+  - Five teams run. Expected output:
+  ```
+  acme:        score=100 missing=[]
+  bravo:       score=90  missing=['captions']
+  charlie:     score=75  missing=['audio', 'captions']
+  delta:       score=60  missing=['reference-gen', 'audio', 'captions']
+  echo:        score=45  missing=['reference-gen', 'audio', 'captions', 'review']
+  ```
+starter: |
+  teams = [
+      {"name": "acme", "steps": [
+          {"step": "concept",       "tool": "Claude"},
+          {"step": "reference-gen", "tool": "Veo"},
+          {"step": "composition",   "tool": "HyperFrames"},
+          {"step": "audio",         "tool": "Kokoro"},
+          {"step": "captions",      "tool": "Whisper"},
+          {"step": "render",        "tool": "hyperframes render"},
+          {"step": "review",        "tool": "vision QA"},
+      ]},
+      {"name": "bravo", "steps": [
+          {"step": "concept",       "tool": "GPT-5"},
+          {"step": "reference-gen", "tool": "Sora"},
+          {"step": "composition",   "tool": "Remotion"},
+          {"step": "audio",         "tool": "ElevenLabs"},
+          {"step": "render",        "tool": "lambda"},
+          {"step": "review",        "tool": "stakeholder review"},
+      ]},
+      {"name": "charlie", "steps": [
+          {"step": "concept",       "tool": "Claude"},
+          {"step": "reference-gen", "tool": "Veo"},
+          {"step": "composition",   "tool": "HyperFrames"},
+          {"step": "render",        "tool": "hyperframes render"},
+          {"step": "review",        "tool": "team review"},
+      ]},
+      {"name": "delta", "steps": [
+          {"step": "concept",       "tool": "Claude"},
+          {"step": "composition",   "tool": "HyperFrames"},
+          {"step": "render",        "tool": "hyperframes render"},
+          {"step": "review",        "tool": "team review"},
+      ]},
+      {"name": "echo", "steps": [
+          {"step": "concept",       "tool": "Claude"},
+          {"step": "composition",   "tool": "HyperFrames"},
+          {"step": "render",        "tool": "hyperframes render"},
+      ]},
+  ]
+
+  # define audit_pipelines(teams) below
+
+  results = audit_pipelines(teams)
+  for t in teams:
+      r = results[t["name"]]
+      print(f"{t['name']+':':12s} score={r['score']:<3} missing={r['missing']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    acme:        score=100 missing=[]
+    bravo:       score=90  missing=['captions']
+    charlie:     score=75  missing=['audio', 'captions']
+    delta:       score=60  missing=['reference-gen', 'audio', 'captions']
+    echo:        score=45  missing=['reference-gen', 'audio', 'captions', 'review']
+  normalize: collapse-trailing-newline
+solution: |
+  teams = [
+      {"name": "acme", "steps": [
+          {"step": "concept",       "tool": "Claude"},
+          {"step": "reference-gen", "tool": "Veo"},
+          {"step": "composition",   "tool": "HyperFrames"},
+          {"step": "audio",         "tool": "Kokoro"},
+          {"step": "captions",      "tool": "Whisper"},
+          {"step": "render",        "tool": "hyperframes render"},
+          {"step": "review",        "tool": "vision QA"},
+      ]},
+      {"name": "bravo", "steps": [
+          {"step": "concept",       "tool": "GPT-5"},
+          {"step": "reference-gen", "tool": "Sora"},
+          {"step": "composition",   "tool": "Remotion"},
+          {"step": "audio",         "tool": "ElevenLabs"},
+          {"step": "render",        "tool": "lambda"},
+          {"step": "review",        "tool": "stakeholder review"},
+      ]},
+      {"name": "charlie", "steps": [
+          {"step": "concept",       "tool": "Claude"},
+          {"step": "reference-gen", "tool": "Veo"},
+          {"step": "composition",   "tool": "HyperFrames"},
+          {"step": "render",        "tool": "hyperframes render"},
+          {"step": "review",        "tool": "team review"},
+      ]},
+      {"name": "delta", "steps": [
+          {"step": "concept",       "tool": "Claude"},
+          {"step": "composition",   "tool": "HyperFrames"},
+          {"step": "render",        "tool": "hyperframes render"},
+          {"step": "review",        "tool": "team review"},
+      ]},
+      {"name": "echo", "steps": [
+          {"step": "concept",       "tool": "Claude"},
+          {"step": "composition",   "tool": "HyperFrames"},
+          {"step": "render",        "tool": "hyperframes render"},
+      ]},
+  ]
+
+  CANONICAL = ["concept", "reference-gen", "composition", "audio", "captions", "render", "review"]
+
+  def audit_pipelines(teams):
+      out = {}
+      for team in teams:
+          covered = set()
+          for entry in team["steps"]:
+              name = entry.get("step")
+              tool = entry.get("tool", "")
+              if name in CANONICAL and isinstance(tool, str) and tool.strip():
+                  covered.add(name)
+          score = min(100, len(covered) * 15)
+          missing = [s for s in CANONICAL if s not in covered]
+          out[team["name"]] = {"score": score, "missing": missing}
+      return out
+
+  results = audit_pipelines(teams)
+  for t in teams:
+      r = results[t["name"]]
+      print(f"{t['name']+':':12s} score={r['score']:<3} missing={r['missing']}")
+passThreshold: 0.66

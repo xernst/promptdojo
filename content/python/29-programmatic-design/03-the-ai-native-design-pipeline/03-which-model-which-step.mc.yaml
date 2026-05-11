@@ -1,0 +1,34 @@
+xp: 2
+estSeconds: 60
+concept: route-model-to-step
+code: |
+  # four steps, four model picks. one team got every pick wrong.
+
+  team_picks = {
+      "reference-gen": "Claude Opus",       # text model for video gen
+      "captions":      "Veo 3",             # video model for transcription
+      "render":        "GPT-5 vision",      # vision model for mechanical render
+      "concept":       "Whisper large-v3",  # transcription model for concept work
+  }
+  for step, pick in team_picks.items():
+      print(f"{step:14s} -> {pick}")
+prompt: |
+  Look at the editor. Every pick is the wrong tool. What's the correct
+  general pattern of model-to-step routing?
+options:
+  - id: route_by_modality
+    label: "Route by modality — video gen for video, transcription for captions, reasoning for concept, mechanical CLI for render"
+  - id: route_by_cost
+    label: "Pick the cheapest model that runs everywhere"
+    explain: "Cheapest model for every step is a false economy. Whisper for concept work produces gibberish; a reasoning model for video gen produces nothing usable. Match the model to the task's modality."
+  - id: one_model_for_all
+    label: "Use one frontier model (Claude or GPT-5) for every step"
+    explain: "A reasoning text model can't generate video, can't transcribe audio reliably, and can't render an MP4. One model for all steps is the mistake the team in the editor made."
+  - id: never_use_models
+    label: "Use only deterministic code — never call models inside a pipeline"
+    explain: "That removes steps 2 (reference-gen) and 4 (audio narration) entirely. The pipeline collapses back to stock footage and hired voice actors. The whole AI-native unlock is gone."
+answerIds:
+  - route_by_modality
+hint:
+  - level: 1
+    body: 'The right pattern: a model whose training matches the step. Veo for video. Whisper for transcription. Claude/GPT for reasoning concept work. The mistake is using one model class for all four.'

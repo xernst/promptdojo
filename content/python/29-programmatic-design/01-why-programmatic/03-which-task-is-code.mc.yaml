@@ -1,0 +1,34 @@
+xp: 2
+estSeconds: 55
+concept: code-job-vs-model-job
+code: |
+  briefs = {
+      "A": "A 5-second cinematic shot of fog rolling over mountains at dawn.",
+      "B": "A 30-second YouTube channel intro, same every video, with the host's name and channel logo overlaid in their brand red.",
+      "C": "A 'top 10 plays of the week' NFL reel that pulls scores from the league API and ships every Monday.",
+      "D": "A dreamlike abstract loop for a chill-hop album cover, no copy, no captions.",
+  }
+  for k, v in briefs.items():
+      print(f"{k}: {v}")
+prompt: |
+  Which TWO briefs are clearly code jobs (programmatic video), not
+  AI-gen-only? Code wins when the deliverable is parametric, data-driven,
+  or requires reproducibility. Model wins when the deliverable is one
+  novel scene with no structured inputs.
+options:
+  - id: b_and_c
+    label: "B (channel intro) and C (NFL reel)"
+  - id: a_and_d
+    label: "A (fog shot) and D (abstract loop)"
+    explain: "Both are exactly what AI gen models are best at — single novel scenes with no copy, no data, no template. These are model jobs."
+  - id: a_and_c
+    label: "A (fog shot) and C (NFL reel)"
+    explain: "Half right. NFL reel is data-driven, definitely code. But the fog shot has no template, no parametric inputs, no data — pure model job."
+  - id: c_and_d
+    label: "C (NFL reel) and D (abstract loop)"
+    explain: "Half right. NFL reel is code. But the abstract loop is a model job — no copy, no data, just a vibe."
+answerIds:
+  - b_and_c
+hint:
+  - level: 1
+    body: 'Code wins when the brief implies a TEMPLATE (same every time, copy stays put) or a DATA SOURCE (scores, prices, names that change per render). Model wins when the brief is "imagine a beautiful scene."'
