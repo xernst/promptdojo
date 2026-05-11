@@ -140,7 +140,7 @@ export default function HealthClient() {
         <div className="t-mono-meta text-amber-300">/api/health unreachable</div>
         <p className="mt-2 text-[13px] text-ink-300">
           either the function isn&apos;t deployed yet or the network is in the way.
-          the static site is fine — the dynamic surface is what this page measures.
+          the static site is fine. the dynamic surface is what this page measures.
         </p>
         <p className="mt-2 font-mono text-[11px] text-ink-500">{state.message}</p>
       </div>

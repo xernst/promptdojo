@@ -219,11 +219,11 @@ export default function RoastClient() {
                 no hits. this is a tight prompt.
               </h3>
               <p className="mt-2 text-[13px] text-ink-300">
-                this rule set is heuristic — it catches the patterns that
+                this rule set is heuristic. it catches the patterns that
                 trip cursor and claude most often, not every possible flaw.
-                if the model still replies with vibes after a clean roast,
-                the bug is probably in the context (chapter 22) or the
-                eval gap (chapter 21), not the prompt.
+                if the model still misreads a clean prompt, the bug is
+                probably in the context (chapter 22) or the eval gap
+                (chapter 21), not the prompt.
               </p>
             </div>
           )}

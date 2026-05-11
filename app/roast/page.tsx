@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://promptdojo.dev/roast/" },
   openGraph: {
     type: "website",
-    title: "roast my prompt — promptdojo",
+    title: "roast my prompt · promptdojo",
     description:
       "paste a prompt. get a brutal, specific critique. no api key, no signup.",
     url: "https://promptdojo.dev/roast/",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "roast my prompt — promptdojo",
+    title: "roast my prompt · promptdojo",
     description:
       "paste a prompt. get a brutal critique. no signup. then fix it.",
     creator: "@TFisPython",
@@ -42,9 +42,9 @@ export default function RoastPage() {
       </h1>
       <p className="t-body mt-6 text-ink-300">
         paste any prompt you&apos;ve been sending to claude, cursor, or chatgpt.
-        in under a second this page tells you exactly why the model keeps
-        replying with vibes instead of work. no api key, no signup, no
-        telemetry — the audit runs in your browser.
+        in under a second this page tells you exactly what the model is
+        about to misread, in what way, and how to tighten it. no api key,
+        no signup, no telemetry. the audit runs in your browser.
       </p>
       <RoastClient />
       <div className="mt-16 dojo-card-highlight">
@@ -55,7 +55,7 @@ export default function RoastPage() {
         <p className="t-body mt-4 text-ink-300">
           promptdojo is the free open-source python school for pms, marketers,
           and ops folks who use cursor every day. chapter 19 is the full
-          version of this page — every rule, with runnable examples, in
+          version of this page. every rule, with runnable examples, in
           your browser.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">

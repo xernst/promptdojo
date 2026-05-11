@@ -50,7 +50,7 @@ const RULES: Rule[] = [
   },
   {
     id: "vague-opener",
-    title: "vague opener — 'help me' isn't a task",
+    title: "vague opener. 'help me' isn't a task",
     severity: "high",
     fix: "open with an imperative verb: rewrite, summarize, classify, translate, extract.",
     check: (_raw, lower) => {
@@ -62,7 +62,7 @@ const RULES: Rule[] = [
   },
   {
     id: "no-examples",
-    title: "no examples — the model is guessing what 'good' looks like",
+    title: "no examples. the model is guessing what 'good' looks like",
     severity: "high",
     fix: "show one input → output pair. 'like this: \\\"foo\\\" → \\\"FOO\\\"'.",
     check: (_raw, lower) => {
@@ -95,7 +95,7 @@ const RULES: Rule[] = [
   },
   {
     id: "hedging",
-    title: "hedging — you don't actually know what you want",
+    title: "hedging. you don't actually know what you want",
     severity: "med",
     fix: "decide. 'maybe a list' becomes 'a bulleted list of 5 items'.",
     check: (_raw, lower) => {
@@ -107,7 +107,7 @@ const RULES: Rule[] = [
   },
   {
     id: "vague-nouns",
-    title: "vague nouns — 'something', 'thing', 'stuff'",
+    title: "vague nouns: 'something', 'thing', 'stuff'",
     severity: "med",
     fix: "name the noun. 'a tweet', 'a slack message', 'a python function', 'a sql query'.",
     check: (_raw, lower) => {
@@ -117,7 +117,7 @@ const RULES: Rule[] = [
   },
   {
     id: "no-format",
-    title: "no output format — model picks one for you, often wrong",
+    title: "no output format. model picks one for you, often wrong",
     severity: "high",
     fix: "specify shape: 'as a json array of objects with name and score', 'in markdown table', 'one line each'.",
     check: (_raw, lower) => {
@@ -130,7 +130,7 @@ const RULES: Rule[] = [
   },
   {
     id: "no-audience",
-    title: "no audience — model defaults to 'general adult internet'",
+    title: "no audience. model defaults to 'general adult internet'",
     severity: "med",
     fix: "name the reader. 'for a 5-year-old', 'for an executive', 'for a senior backend engineer'.",
     check: (_raw, lower) => {
@@ -139,7 +139,7 @@ const RULES: Rule[] = [
   },
   {
     id: "no-constraint",
-    title: "no length cap — model writes until it gets bored",
+    title: "no length cap. model writes until it gets bored",
     severity: "med",
     fix: "cap it. 'under 100 words', 'exactly 3 bullets', 'one tweet (280 chars)'.",
     check: (_raw, lower) => {
@@ -151,7 +151,7 @@ const RULES: Rule[] = [
   },
   {
     id: "multi-task-soup",
-    title: "multi-task soup — the model will half-do all of them",
+    title: "multi-task soup. the model will half-do all of them",
     severity: "high",
     fix: "one task per prompt. if you need three things, send three prompts (or one prompt with explicit steps 1, 2, 3).",
     check: (raw, lower) => {
@@ -172,7 +172,7 @@ const RULES: Rule[] = [
   },
   {
     id: "all-caps",
-    title: "shouting — caps don't make the model try harder",
+    title: "shouting. caps don't make the model try harder",
     severity: "low",
     fix: "lowercase it. urgency comes from constraints, not capslock.",
     check: (raw) => {
@@ -212,7 +212,7 @@ const RULES: Rule[] = [
   },
   {
     id: "wishful-think",
-    title: "wishful thinking — 'be creative' / 'think outside the box'",
+    title: "wishful thinking: 'be creative', 'think outside the box'",
     severity: "low",
     fix: "creativity is a constraint, not a vibe. 'pick the third-most-obvious angle', 'avoid analogies to sports'.",
     check: (_raw, lower) => {
