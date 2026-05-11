@@ -1,7 +1,7 @@
 {
   "number": 22,
   "slug": "context-and-retrieval",
-  "title": "Context and retrieval — feeding the model real data",
+  "title": "context and retrieval — feeding the model real data",
   "blurb": "rag without the overengineering. chunking, embeddings, vector search, and the small set of patterns that make a model answer from your data instead of its training set.",
   "overview": "## The chapter that turns a chatbot into a useful one\n\nThere's a moment that happens to every PM, ops lead, and indie hacker who ships their first LLM feature. The model works on toy questions. Then a real user asks it about your product, your customer history, your internal docs, and the model says something fluent, confident, and completely wrong. It made it up.\n\nThe fix is not \"a better model.\" The fix is feeding the model the right context before you ask the question. That craft has a name: retrieval-augmented generation, RAG, the most-talked-about and most-poorly-implemented pattern in production AI today.\n\nMost RAG tutorials show you a 30-line script with FAISS and call it done. That script is not what's running in any company that has revenue. The companies that get RAG right have spent months on the boring parts the tutorials skip: how you chunk a document, what you do when chunks have headers and code blocks mixed, how you handle the user asking about three different things in one question, what you do when the top result is wrong but only by a paragraph, how you keep the embedding cost from eating your margin.\n\nThis chapter is the production-grade version. By the end you'll have shipped a small RAG pipeline that actually answers from your data, you'll know which patterns scale and which collapse, and you'll be able to read other people's RAG code and spot the demo-ware from the production code in about 30 seconds.\n\n## What you'll actually do here\n\nChunk a real document into retrievable pieces. Embed the chunks with a real embedding model. Store the vectors somewhere queryable. Take a user question, embed it, find the closest chunks, stuff those chunks into a prompt, and ask the model. Then break it. On purpose. Then fix it.\n\nThe lessons cover the four moves that separate working RAG from broken RAG:\n\n1. Chunking that respects structure. A markdown file is not a stream of tokens. Headers, code blocks, and lists are signal. Bad chunkers shred them. Good chunkers honor them.\n2. Embedding that fits the budget. The model you use to embed determines cost and quality. The smart move is rarely the biggest model.\n3. Retrieval that finds the right thing. Cosine similarity finds the closest vector. The closest vector is not always the right answer. You'll learn to read the distance numbers and judge whether the retrieval was lucky or correct.\n4. Prompting that uses the context you fetched. Stuffing chunks into a prompt is not enough. The model still has to be told what to do with them.\n\n## What AI gets wrong about RAG when it writes the code for you\n\nCursor will write you a working-looking RAG script in about 90 seconds. Most of the time it ships these specific mistakes you'll learn to spot:\n\n- Chunking by character count, splitting mid-sentence and mid-code-block\n- Embedding the user question with one model and the documents with another, so the vectors don't compare cleanly\n- Returning the top result regardless of how distant it is, which means a totally unrelated chunk gets fed to the model\n- Stuffing every chunk it retrieves, blowing the context window and the bill\n- No deduplication, so when the same paragraph appears in two documents it dominates retrieval\n\nEach of these has a screenshot in the lessons. You see the bug, you predict what the model will do, you fix it. Same pattern as the rest of promptdojo.\n\n## The thing the tutorials never tell you\n\nProduction RAG is mostly evaluation, not retrieval. The teams that ship working RAG do not optimize chunk size. They build a small set of test questions where they know the right answer is in chunk 47 of document 12, and they measure what percent of the time their pipeline actually retrieves chunk 47. Below 80 percent? The chunking is wrong. The embedding is wrong. The retrieval ranking is wrong. Something is wrong, and you find it by measuring, not by tweaking.\n\nThis chapter pairs with chapter 21, where you wrote evals for model output. Here you write evals for retrieval. Same discipline, different surface. The combination is what makes the difference between \"we have a chatbot\" and \"the chatbot is shipping.\"\n\n## Where this fits in your week\n\nIf you're shipping any LLM feature where the user asks about your stuff (your products, your docs, your customer history, your tickets, your handbook), this is the chapter that gates whether the feature works at scale. Without retrieval, the model only knows what it was trained on. With retrieval done well, it knows what your company knows.\n\nBy step 9 you'll have a working RAG pipeline you can adapt to any small corpus, plus the eval pattern to keep it honest as you grow it.\n",
   "lessons": [
@@ -263,7 +263,280 @@
         }
       ],
       "xpTotal": 32
+    },
+    {
+      "slug": "embedding-that-fits-the-budget",
+      "title": "Embedding that fits the budget — pick a model that matches your corpus",
+      "estMinutes": 12,
+      "prerequisites": [
+        "chunking-that-respects-structure"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "context-and-retrieval/embedding-that-fits-the-budget/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 130,
+          "concept": "embedding-cost-vs-quality",
+          "body": "# Embedding is where the bill starts\n\nChunking is one-time work. Embedding is the cost that scales with\nyour corpus AND with your traffic — every chunk gets embedded once,\nevery user query gets embedded on every request. Pick the wrong\nmodel and a side project that should cost $4/month costs $400.\n\nRun the editor. We're faking the API with a stub `embed()` so this\nruns in your browser. The real call is one line of code:\n\n```python\n# real version — needs an OpenAI key, doesn't run here.\nfrom openai import OpenAI\nclient = OpenAI()\nvec = client.embeddings.create(\n    model=\"text-embedding-3-small\",\n    input=\"cancel my subscription\",\n).data[0].embedding  # list of 1536 floats\n```\n\nSame shape: text in, list of floats out. The numbers mean nothing\nto you. They mean \"where this text sits in semantic space\" to a\nvector database.\n\n## The cost table that actually matters\n\n| Model | Dims | Cost per 1M tokens | Where it shines |\n|---|---|---|---|\n| `text-embedding-3-small` (OpenAI) | 1536 | **$0.02** | Default. 95% of use cases. |\n| `text-embedding-3-large` (OpenAI) | 3072 | $0.13 | Hard retrieval (legal, code, multilingual). 6.5× the cost. |\n| `voyage-3` (Voyage AI) | 1024 | $0.06 | Highest benchmark scores on MTEB. |\n| `all-MiniLM-L6-v2` (sentence-transformers) | 384 | **$0 (local)** | Free if you run it yourself. Slower at query time. |\n| `cohere-embed-v3` | 1024 | $0.10 | Strong on long documents. |\n\nThat is roughly the entire embedding market. The interesting line\nis the first one: `text-embedding-3-small` at **$0.02 per million\ntokens** is the default you should reach for first. A chunk of 200\ntokens costs $0.000004 to embed. A 10,000-chunk corpus costs **4\ncents** to embed end-to-end.\n\n## The rule of thumb\n\n- **Corpus under 100k chunks, English, general topics**:\n  `text-embedding-3-small`. Done. Move on.\n- **Specialized domain** (legal, medical, code, non-English):\n  start with `text-embedding-3-small`, build a 50-question eval\n  set (see chapter 21), measure retrieval accuracy. Only upgrade\n  to `large` if you're below 80%.\n- **Privacy-sensitive or air-gapped**: `all-MiniLM-L6-v2` running\n  locally via sentence-transformers. Free, no data leaves your box.\n- **Massive corpus** (10M+ chunks): the $0.02 vs $0.13 gap becomes\n  real money. Use `small` unless your eval set proves you need more.\n\n## The mistake nobody catches\n\nThe trap that bites every team: **you must embed your documents\nand your queries with the same model**. If you embed 10k chunks\nwith `text-embedding-3-small` and then a junior engineer embeds the\nuser query with `text-embedding-3-large`, the vectors aren't in the\nsame space. Cosine similarity returns garbage. Retrieval picks\nrandom chunks. The model gets fed nonsense. You get a Slack message\nabout \"RAG hallucinating again.\"\n\nStep 6 is exactly this bug. You'll fix it.\n\n## What you'll build\n\nA tiny similarity engine using cosine math by hand (Pyodide has no\nnumpy in the default kernel, so we use stdlib). By the end you've\ngot `rank_by_similarity(query_vec, doc_vecs)` and a 5-FAQ retrieval\npipeline that returns the top-2 closest matches to a question.",
+          "cta": "Got it",
+          "code": "# an embedding is a list of numbers that captures meaning. similar\n# text → similar numbers. we'll fake the real API call here — pyodide\n# can't reach OpenAI, but the SHAPE is identical to the real thing.\n\ndef embed(text):\n    # fake 8-dim embedding. deterministic. real call returns 1536 or 3072 floats.\n    return [(hash(text + str(i)) % 1000) / 1000 for i in range(8)]\n\nfor phrase in [\"cancel my subscription\", \"how do I unsubscribe\", \"today's weather\"]:\n    vec = embed(phrase)\n    preview = [round(x, 3) for x in vec[:4]]\n    print(f\"{phrase!r:35} -> {preview}... (8 dims)\")\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "context-and-retrieval/embedding-that-fits-the-budget/s02-02-which-model-fits",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Default to `text-embedding-3-small` unless you have a specific reason not to. The two reasons to upgrade: (1) specialized domain where accuracy is critical and budget allows (legal, medical, code), or (2) eval data showing small fails on your corpus. Tiny corpora and massive ones both default to small for different reasons (cost doesn't matter / cost matters a lot).",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 65,
+          "concept": "pick-embedding-by-corpus",
+          "prompt": "Match each project to the right embedding choice. Remember the\ncost table: `text-embedding-3-small` is $0.02/1M tokens (default),\n`text-embedding-3-large` is $0.13/1M (6.5× more), local\nsentence-transformers is free but slower.\n\nWhich option correctly matches ALL FOUR projects?\n",
+          "options": [
+            {
+              "id": "correct",
+              "label": "A=large (accuracy), B=small (scale), C=small (default), D=small (multilingual works in small)"
+            },
+            {
+              "id": "large_everything",
+              "label": "All four → text-embedding-3-large for best quality",
+              "explain": "6.5× the cost for marginal gains. C is 50 pages — large is overkill. D is 100M reviews — large would cost 6.5× more for no business reason. Default to small, upgrade only with eval evidence."
+            },
+            {
+              "id": "small_everything",
+              "label": "All four → text-embedding-3-small to save money",
+              "explain": "A is legal contracts where misretrieval has real consequences. That's the one case where the eval set probably shows large outperforms. Don't blanket-cheap your way into a bad legal RAG."
+            },
+            {
+              "id": "local_for_a",
+              "label": "A=local sentence-transformers (privacy), B=large, C=large, D=small",
+              "explain": "Backwards. A wants the highest accuracy and the budget is flexible. B and C don't need large. Local makes sense only when the legal team specifically demands air-gapped processing."
+            }
+          ],
+          "answerIds": [
+            "correct"
+          ],
+          "shuffle": false,
+          "code": "# four real RAG projects. each has a different corpus, budget, and\n# privacy profile. which embedding tier fits each one?\n\nprojects = {\n    \"A\": \"10,000 internal legal contracts. accuracy critical. budget flexible.\",\n    \"B\": \"5,000,000 support tickets. general English. cost matters at scale.\",\n    \"C\": \"50 marketing landing pages. tiny corpus. shipping tomorrow.\",\n    \"D\": \"100,000,000 product reviews. multilingual. need cheapest workable option.\",\n}\nfor k, v in projects.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "context-and-retrieval/embedding-that-fits-the-budget/s03-03-the-vector-space",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 150,
+          "concept": "cosine-similarity-intuition",
+          "body": "# Cosine similarity in 60 seconds\n\nYou don't need linear algebra to use embeddings. You need one\nfunction. It's called cosine similarity and it answers one question:\n\n> Do these two vectors point in roughly the same direction?\n\nThat's it. Two pieces of text that mean similar things produce\nvectors that point similar directions. Two unrelated pieces of\ntext produce vectors pointing different directions.\n\nThe formula is three lines of stdlib Python — run the editor.\n\n## What the numbers mean\n\n| Score | Interpretation |\n|---|---|\n| 1.0 | Identical direction (vectors of the same text) |\n| 0.85–0.99 | Strong semantic match — usually a hit |\n| 0.5–0.85 | Related topic, possibly the right chunk |\n| 0.2–0.5 | Tangentially related — probably noise |\n| Below 0.2 | Unrelated — definitely noise |\n\nThese ranges shift with the model. `text-embedding-3-small` tends\nto give higher absolute scores than `voyage-3`. **Always look at\nthe relative order, not the absolute number.** The top-K matters,\nthe score is a sanity check.\n\n## Why \"cosine\" and not regular distance?\n\nTwo reasons. First, embeddings have hundreds or thousands of\ndimensions, and in high-dimensional space, *direction* carries\nmeaning while *magnitude* mostly carries length (more tokens →\nbigger vector). You want direction.\n\nSecond, cosine is bounded — it's always between -1 and 1, so you\ncan compare scores across queries. Euclidean distance is unbounded\nand depends on vector length.\n\n## The pre-flight you have to remember\n\nCosine similarity assumes vectors are pointing **out from the\norigin**. If one vector is at the origin (all zeros) the formula\ndivides by zero. In practice this means:\n\n- Don't embed empty strings.\n- Don't embed strings of only whitespace.\n- Trim and validate your input before calling the API.\n\nA surprising number of RAG bugs are \"we embedded an empty string\nonce and now the index has a zero vector that matches every query\nequally poorly.\"\n\n## What you'll do next\n\nStep 4: given three vectors and a query, predict which one is\nclosest. Step 5: fill in the cosine formula yourself. Step 6 and 7:\nfix two bugs every junior engineer ships. Step 8: write the ranker.\nStep 9: build a tiny FAQ search engine end-to-end.",
+          "cta": "Got it",
+          "code": "# cosine similarity = \"do these two vectors point in the same direction?\"\n# 1.0 = identical direction. 0.0 = perpendicular. -1.0 = opposite.\n# for embeddings, you almost always see values between 0 and 1.\n\nimport math\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    norm_a = math.sqrt(sum(x * x for x in a))\n    norm_b = math.sqrt(sum(y * y for y in b))\n    return dot / (norm_a * norm_b)\n\n# three faked embeddings. think of these as \"where the meaning lives.\"\nquery = [0.9, 0.1, 0.0, 0.0]  # \"reset password\"\n\ncandidates = {\n    \"reset my password\":            [0.85, 0.15, 0.05, 0.0],   # near twin\n    \"cancel my subscription\":       [0.1, 0.9, 0.1, 0.0],      # totally different\n    \"I forgot my login credentials\": [0.7, 0.3, 0.1, 0.05],    # related, not identical\n}\n\nfor text, vec in candidates.items():\n    score = cosine(query, vec)\n    print(f\"{score:.4f}  {text}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "predict",
+          "id": "context-and-retrieval/embedding-that-fits-the-budget/s04-04-predict-the-closest",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Cosine compares direction. `doc_a` points the same way as `query` (both heavy on axis 1). `doc_b` points perpendicular (heavy on axis 2). `doc_c` shares zero direction with the query (axes 3 and 4 only). So `doc_a` wins easily, `doc_b` is moderate, `doc_c` is exactly 0.0.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Score 1: `(0.8*0.9 + 0.2*0.1) / (sqrt(0.68) * sqrt(0.82)) ≈ 0.9910`. Score 2: ~0.3482. Score 3: 0.0000 (the dot product is zero — `query` has zero on axes 3 and 4, `doc_c` has zero on axes 1 and 2). Closest: doc_a.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 80,
+          "concept": "closest-vector-by-cosine",
+          "code": "# three \"document\" embeddings and one \"query\" embedding.\n# predict which document is closest by cosine similarity.\n\nimport math\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    na = math.sqrt(sum(x * x for x in a))\n    nb = math.sqrt(sum(y * y for y in b))\n    return dot / (na * nb)\n\nvectors = {\n    \"doc_a\": [0.9, 0.1, 0.0, 0.0],   # \"reset password\"\n    \"doc_b\": [0.1, 0.9, 0.0, 0.0],   # \"cancel subscription\"\n    \"doc_c\": [0.0, 0.0, 0.9, 0.1],   # \"export data\"\n}\nquery = [0.8, 0.2, 0.0, 0.0]          # \"forgot my password\"\n\nfor name, vec in vectors.items():\n    print(f\"{name}: {cosine(query, vec):.4f}\")\n\nbest = max(vectors.items(), key=lambda kv: cosine(query, kv[1]))\nprint(f\"closest: {best[0]}\")\n",
+          "prompt": "Look at the four vectors in the editor. The query vector\n`[0.8, 0.2, 0.0, 0.0]` is dominated by the first dimension —\nweight 0.8 on axis 1, weak elsewhere.\n\nWhich doc shares that pattern? Predict the exact stdout: three\nsimilarity scores (4 decimal places each) and the name of the\nclosest doc.\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "doc_a: 0.9910\ndoc_b: 0.3482\ndoc_c: 0.0000\nclosest: doc_a\n",
+            "normalize": "collapse-trailing-newline"
+          }
+        },
+        {
+          "type": "fill",
+          "id": "context-and-retrieval/embedding-that-fits-the-budget/s05-05-fill-the-cosine-formula",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The dot product is exactly the same pattern as `norm_a`'s inner sum, but you multiply `a[i] * b[i]` instead of `a[i] * a[i]`. The norm of `b` mirrors `norm_a` — just swap `a` for `b`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\ndot = sum(x * y for x, y in zip(a, b))\nnorm_b = math.sqrt(sum(x * x for x in b))\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 70,
+          "concept": "cosine-formula-components",
+          "prompt": "Cosine similarity has two pieces: the **dot product** of two\nvectors (numerator) divided by the **product of their norms**\n(denominator). Fill in the two expressions.\n\n- The dot product is the sum over `i` of `a[i] * b[i]`.\n- The norm of a vector is `sqrt(sum of squares)`.\n\nExpected output:\n```\n0.9910\n```\n",
+          "code": "import math\n\na = [0.8, 0.2, 0.0, 0.0]\nb = [0.9, 0.1, 0.0, 0.0]\n\ndot = ___\nnorm_a = math.sqrt(sum(x * x for x in a))\nnorm_b = ___\n\ncosine = dot / (norm_a * norm_b)\nprint(f\"{cosine:.4f}\")\n",
+          "blanks": [
+            {
+              "id": "dot_product",
+              "accept": [
+                "sum(x * y for x, y in zip(a, b))",
+                "sum(x*y for x, y in zip(a, b))",
+                "sum(x*y for x,y in zip(a,b))",
+                "sum(a[i] * b[i] for i in range(len(a)))",
+                "sum(a[i]*b[i] for i in range(len(a)))"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            },
+            {
+              "id": "norm_b",
+              "accept": [
+                "math.sqrt(sum(x * x for x in b))",
+                "math.sqrt(sum(x*x for x in b))",
+                "math.sqrt(sum(y * y for y in b))",
+                "math.sqrt(sum(y*y for y in b))"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "id": "context-and-retrieval/embedding-that-fits-the-budget/s06-06-fix-the-wrong-embedding-model",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Look at the doc embedding step — it uses `embed_a`. The query is using `embed_b`. The vectors aren't in the same space. Change the query line to use the same function as the docs.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\nquery_vec = embed_a(\"reset my password\")\n```\nRule of thumb: route every embedding through ONE function in your codebase. If `embed_query()` and `embed_doc()` exist as separate functions, they're an accident waiting to happen — wrap them both around the same model call.\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 110,
+          "concept": "same-model-for-both-sides",
+          "brokenCode": "import math\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    na = math.sqrt(sum(x * x for x in a))\n    nb = math.sqrt(sum(y * y for y in b))\n    return dot / (na * nb)\n\n# \"model A\" — password-ish on dim 0, cancel-ish on dim 1, export-ish on dim 2.\ndef embed_a(text):\n    t = text.lower()\n    v = [0.0, 0.0, 0.0, 0.0]\n    if \"password\" in t or \"reset\" in t: v[0] = 1.0\n    if \"cancel\" in t or \"subscription\" in t: v[1] = 1.0\n    if \"export\" in t or \"data\" in t: v[2] = 1.0\n    if not any(v): v[3] = 1.0\n    return v\n\n# \"model B\" — same words but mapped to DIFFERENT axes. different vector space.\ndef embed_b(text):\n    t = text.lower()\n    v = [0.0, 0.0, 0.0, 0.0]\n    if \"password\" in t or \"reset\" in t: v[2] = 1.0\n    if \"cancel\" in t or \"subscription\" in t: v[3] = 1.0\n    if \"export\" in t or \"data\" in t: v[0] = 1.0\n    if not any(v): v[1] = 1.0\n    return v\n\ndocs = [\"reset my password\", \"cancel my subscription\", \"export my data\"]\ndoc_vecs = [embed_a(d) for d in docs]\n\n# bug: query embedded with the WRONG model. mixes vector spaces.\nquery_vec = embed_b(\"reset my password\")\n\nfor text, vec in zip(docs, doc_vecs):\n    print(f\"{cosine(query_vec, vec):.4f}  {text}\")\n",
+          "prompt": "This is the bug that ships to production most often: the query\ngets embedded with one model, the documents with another. Cosine\nsimilarity is meaningless across two different vector spaces — you\nget garbage retrieval.\n\nIn the editor, two stub \"models\" (`embed_a` and `embed_b`) mimic\nthe OpenAI vs Voyage situation: same input, completely different\noutput spaces. The docs were embedded with `embed_a`. The query\nwas accidentally embedded with `embed_b`.\n\nFix it so the query is embedded with the SAME model as the docs.\nThe user asks \"reset my password\" — the matching doc should\nreturn a cosine of 1.0.\n\nExpected output:\n```\n1.0000  reset my password\n0.0000  cancel my subscription\n0.0000  export my data\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "1.0000  reset my password\n0.0000  cancel my subscription\n0.0000  export my data\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            30
+          ],
+          "revealAfter": 6
+        },
+        {
+          "type": "fix",
+          "id": "context-and-retrieval/embedding-that-fits-the-budget/s07-07-fix-the-missing-normalization",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Divide the dot product by `norm(a) * norm(b)`, where `norm(v) = math.sqrt(sum(x*x for x in v))`. Without that step, you're not computing cosine — you're computing raw dot product, which prefers bigger vectors regardless of direction.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\ndef similarity(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    na = math.sqrt(sum(x * x for x in a))\n    nb = math.sqrt(sum(y * y for y in b))\n    return dot / (na * nb)\n```\nTip: some embedding APIs return pre-normalized vectors (all of magnitude 1.0). With those, dot product IS cosine. But never assume — measure the norm of a few sample vectors first.\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 110,
+          "concept": "normalize-before-cosine",
+          "brokenCode": "import math\n\n# bug: this is JUST the dot product. no normalization. distorts retrieval.\ndef similarity(a, b):\n    return sum(x * y for x, y in zip(a, b))\n\nquery = [1.0, 0.0, 0.0]\ndocs = {\n    \"doc_match\": [0.5, 0.0, 0.0],   # exact direction, small magnitude\n    \"doc_long\":  [0.6, 0.6, 0.6],   # wrong direction, big magnitude\n}\n\nscores = {name: similarity(query, vec) for name, vec in docs.items()}\nfor name, score in scores.items():\n    print(f\"{name}: {score:.4f}\")\n\nwinner = max(scores.items(), key=lambda kv: kv[1])[0]\nprint(f\"winner: {winner}\")\n",
+          "prompt": "Someone wrote a \"fast similarity\" that's just the dot product —\nthey skipped the normalization step. It compiles, it runs, and it\nRETRIEVES THE WRONG DOCUMENT.\n\nWhy: dot product without normalization rewards big vectors. A\ndoc that points the wrong direction but has a bigger magnitude\nbeats a doc that points the right direction with a smaller\nmagnitude.\n\nIn the editor, `doc_match` is an exact-direction match for the\nquery (cosine = 1.0). `doc_long` points a totally different\ndirection but has a bigger magnitude. The broken function thinks\n`doc_long` is closer. Fix the function to divide by the norms.\n\nExpected output:\n```\ndoc_match: 1.0000\ndoc_long:  0.5774\nwinner: doc_match\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "doc_match: 1.0000\ndoc_long: 0.5774\nwinner: doc_match\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            4,
+            5
+          ],
+          "revealAfter": 6
+        },
+        {
+          "type": "write",
+          "id": "context-and-retrieval/embedding-that-fits-the-budget/s08-08-write-the-similarity-ranker",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Three steps: (1) compute cosine of `query_vec` against each entry in `doc_vecs`, keeping track of the index, (2) sort by descending score, (3) return just the indices. `enumerate(doc_vecs)` gives you `(i, vec)` pairs to start with.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "```python\nscored = [(i, cosine(query_vec, v)) for i, v in enumerate(doc_vecs)]\nscored.sort(key=lambda t: -t[1])\nreturn [i for i, _ in scored]\n```\nThe `key=lambda t: -t[1]` trick sorts descending without needing `reverse=True`. Equivalent.\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "rank-by-cosine-similarity",
+          "prompt": "Write `rank_by_similarity(query_vec, doc_vecs)` that returns a\nlist of doc INDICES sorted by descending cosine similarity to the\nquery. The highest-scoring doc comes first.\n\n- Input: a query vector and a list of doc vectors (all the same dim).\n- Output: list of indices into `doc_vecs`, sorted best-first.\n- Use cosine similarity (dot product / product of norms).\n\nA query and four docs run for you. The query points heavily in\nthe first dimension. Doc 1 matches it closely. Doc 3 is the\nnext-closest. Docs 2 and 0 point elsewhere.\n\nExpected output:\n```\n[1, 3, 2, 0]\n```\n",
+          "starter": "import math\n\n# write rank_by_similarity(query_vec, doc_vecs) below\n\nquery = [0.9, 0.1, 0.0, 0.0]\ndoc_vecs = [\n    [0.1, 0.9, 0.0, 0.1],    # 0 — cancel subscription (off direction)\n    [0.85, 0.15, 0.05, 0.0], # 1 — reset password (near twin of query)\n    [0.2, 0.1, 0.8, 0.3],    # 2 — enterprise pricing (off direction)\n    [0.5, 0.5, 0.2, 0.4],    # 3 — partial match\n]\nprint(rank_by_similarity(query, doc_vecs))\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "[1, 3, 2, 0]",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "import math\n\ndef rank_by_similarity(query_vec, doc_vecs):\n    def cosine(a, b):\n        dot = sum(x * y for x, y in zip(a, b))\n        na = math.sqrt(sum(x * x for x in a))\n        nb = math.sqrt(sum(y * y for y in b))\n        return dot / (na * nb)\n\n    scored = [(i, cosine(query_vec, v)) for i, v in enumerate(doc_vecs)]\n    scored.sort(key=lambda t: -t[1])\n    return [i for i, _ in scored]\n\nquery = [0.9, 0.1, 0.0, 0.0]\ndoc_vecs = [\n    [0.1, 0.9, 0.0, 0.1],\n    [0.85, 0.15, 0.05, 0.0],\n    [0.2, 0.1, 0.8, 0.3],\n    [0.5, 0.5, 0.2, 0.4],\n]\nprint(rank_by_similarity(query, doc_vecs))\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "context-and-retrieval/embedding-that-fits-the-budget/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 220,
+          "concept": "embedding-pipeline-end-to-end",
+          "prompt": "Final drill. Wire it all together into a tiny FAQ search engine —\nthe same shape as a real RAG retrieval step, just with stub\nembeddings instead of an API call.\n\nBuild `top_k(query_vec, faqs, k)`:\n\n- `faqs` is a list of `(text, vec)` tuples — 5 of them in the\n  starter.\n- `query_vec` is a pre-computed embedding for the user's question.\n- Compute cosine similarity between `query_vec` and each FAQ vec.\n- Return the `k` highest-scoring FAQs as `(text, score)` tuples,\n  best first.\n\nThe starter calls your function with `k=2` to return the top-2\nclosest FAQs to the question \"I forgot my password.\"\n\nReal-world framing: this is the retrieval step of RAG. In\nproduction you'd swap the hand-picked vectors for real OpenAI\nembeddings, swap the list of 5 for thousands of chunks in a\nvector database, and feed the top-K results into the prompt you\nsend to the model.\n\nExpected output:\n```\nquery: 'I forgot my password'\ntop 2 matches:\n  0.9963  how do I reset my password?\n  0.2457  how do I upgrade my plan?\n```\n",
+          "starter": "import math\n\n# write top_k(query_vec, faqs, k) below\n\nfaqs = [\n    (\"how do I reset my password?\",      [0.9, 0.1, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0]),\n    (\"how do I cancel my subscription?\", [0.1, 0.9, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0]),\n    (\"how do I upgrade my plan?\",        [0.1, 0.7, 0.2, 0.0, 0.0, 0.1, 0.0, 0.1]),\n    (\"how do I export my data?\",         [0.0, 0.0, 0.9, 0.1, 0.0, 0.0, 0.1, 0.0]),\n    (\"what are your business hours?\",    [0.0, 0.0, 0.0, 0.0, 0.9, 0.1, 0.0, 0.1]),\n]\n\nquery_text = \"I forgot my password\"\nquery_vec  = [0.85, 0.1, 0.0, 0.0, 0.15, 0.0, 0.0, 0.05]\n\nresults = top_k(query_vec, faqs, 2)\n\nprint(f\"query: {query_text!r}\")\nprint(\"top 2 matches:\")\nfor text, score in results:\n    print(f\"  {score:.4f}  {text}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "query: 'I forgot my password'\ntop 2 matches:\n  0.9963  how do I reset my password?\n  0.2457  how do I upgrade my plan?\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "import math\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    na = math.sqrt(sum(x * x for x in a))\n    nb = math.sqrt(sum(y * y for y in b))\n    return dot / (na * nb)\n\ndef top_k(query_vec, faqs, k):\n    scored = [(text, cosine(query_vec, vec)) for text, vec in faqs]\n    scored.sort(key=lambda t: -t[1])\n    return scored[:k]\n\nfaqs = [\n    (\"how do I reset my password?\",      [0.9, 0.1, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0]),\n    (\"how do I cancel my subscription?\", [0.1, 0.9, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0]),\n    (\"how do I upgrade my plan?\",        [0.1, 0.7, 0.2, 0.0, 0.0, 0.1, 0.0, 0.1]),\n    (\"how do I export my data?\",         [0.0, 0.0, 0.9, 0.1, 0.0, 0.0, 0.1, 0.0]),\n    (\"what are your business hours?\",    [0.0, 0.0, 0.0, 0.0, 0.9, 0.1, 0.0, 0.1]),\n]\n\nquery_text = \"I forgot my password\"\nquery_vec  = [0.85, 0.1, 0.0, 0.0, 0.15, 0.0, 0.0, 0.05]\n\nresults = top_k(query_vec, faqs, 2)\n\nprint(f\"query: {query_text!r}\")\nprint(\"top 2 matches:\")\nfor text, score in results:\n    print(f\"  {score:.4f}  {text}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 32
     }
   ],
-  "xpTotal": 32
+  "xpTotal": 64
 }

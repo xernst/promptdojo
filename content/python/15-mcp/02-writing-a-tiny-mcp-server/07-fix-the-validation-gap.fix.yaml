@@ -1,0 +1,60 @@
+xp: 4
+estSeconds: 110
+concept: validate-args-before-call
+prompt: |
+  The dispatcher below calls the handler without checking whether
+  the required arguments are present. If a required key is missing,
+  the handler crashes with a `KeyError` deep in user code — instead
+  of returning a clean MCP error.
+
+  Fix it: before calling the handler, check each name in
+  `tool["inputSchema"]["required"]` against `args`. If any are
+  missing, return the MCP error envelope with text
+  `missing required arg: <name>` (the first missing one is fine).
+
+  Expected output:
+  ```
+  True
+  missing required arg: city
+  ```
+brokenCode: |
+  def call_tool(name, args, registry):
+      tool = registry[name]
+      # TODO: validate args against tool["inputSchema"]["required"] here
+      text = tool["handler"](args)
+      return {"isError": False, "content": [{"type": "text", "text": text}]}
+
+  registry = {
+      "get_weather": {
+          "inputSchema": {
+              "type": "object",
+              "properties": {"city": {"type": "string"}},
+              "required": ["city"],
+          },
+          "handler": lambda args: f"68F in {args['city']}",
+      },
+  }
+
+  result = call_tool("get_weather", {}, registry)
+  print(result["isError"])
+  print(result["content"][0]["text"])
+bugLines:
+  - 3
+grader:
+  kind: stdout-equality
+  expected: |
+    True
+    missing required arg: city
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Loop over `tool["inputSchema"]["required"]`. If a key is not in `args`, return the MCP error envelope before calling the handler.'
+  - level: 2
+    body: |
+      Replace line 3 with:
+      ```
+      for key in tool["inputSchema"]["required"]:
+          if key not in args:
+              return {"isError": True, "content": [{"type": "text", "text": f"missing required arg: {key}"}]}
+      ```
+revealAfter: 5

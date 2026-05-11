@@ -1,0 +1,48 @@
+xp: 3
+estSeconds: 75
+concept: list-tools-shape
+code: |
+  TOOL_REGISTRY = {
+      "create_ticket": {
+          "description": "Create a support ticket.",
+          "inputSchema": {
+              "type": "object",
+              "properties": {"subject": {"type": "string"}},
+              "required": ["subject"],
+          },
+          "handler": lambda args: f"ticket created: {args['subject']}",
+      },
+      "close_ticket": {
+          "description": "Close a support ticket by id.",
+          "inputSchema": {
+              "type": "object",
+              "properties": {"id": {"type": "string"}},
+              "required": ["id"],
+          },
+          "handler": lambda args: f"closed {args['id']}",
+      },
+  }
+
+  def list_tools(registry):
+      return [
+          {"name": name, "description": meta["description"]}
+          for name, meta in registry.items()
+      ]
+
+  for tool in list_tools(TOOL_REGISTRY):
+      print(f"{tool['name']} - {tool['description']}")
+prompt: |
+  Read the editor. A two-tool registry, plus a `list_tools(registry)`
+  that maps it to `{name, description}` pairs. What does the loop
+  print?
+grader:
+  kind: stdout-equality
+  expected: |
+    create_ticket - Create a support ticket.
+    close_ticket - Close a support ticket by id.
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The registry has two entries. `list_tools` returns one dict per entry with `name` and `description`. The loop prints them in insertion order.'
+  - level: 2
+    body: 'Line 1: `create_ticket - Create a support ticket.` Line 2: `close_ticket - Close a support ticket by id.`'

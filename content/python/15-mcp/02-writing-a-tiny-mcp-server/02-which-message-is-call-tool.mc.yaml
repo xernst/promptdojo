@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 60
+concept: mcp-message-types
+code: |
+  # four JSON-RPC messages an MCP client sends. only ONE actually
+  # invokes a tool with arguments.
+  messages = [
+      {"method": "initialize", "params": {"protocolVersion": "2025-06-18"}},
+      {"method": "ping"},
+      {"method": "tools/list"},
+      {"method": "tools/call", "params": {"name": "search_docs", "arguments": {"query": "refund policy"}}},
+  ]
+
+  for m in messages:
+      print(m["method"])
+prompt: |
+  Claude Code connects to your MCP server. It sends four messages
+  in sequence (see the editor). Which message is the one that asks
+  the server to actually RUN a tool with arguments?
+options:
+  - id: a
+    label: "`initialize`"
+    explain: "`initialize` is the handshake at connection start. It exchanges protocol versions and capabilities — no tools run."
+  - id: b
+    label: "`ping`"
+    explain: "`ping` is a liveness check. The server replies empty. No tool execution."
+  - id: c
+    label: "`tools/list`"
+    explain: "`tools/list` asks the server to describe its tools (names, descriptions, schemas). The server enumerates the registry — but doesn't execute any handler."
+  - id: d
+    label: "`tools/call`"
+answerIds:
+  - d

@@ -22,6 +22,10 @@ export default function HeaderDrawer({ open, onClose }: Props) {
 
   useEffect(() => {
     if (!open) return;
+    // Move keyboard focus into the panel on open so screen-reader users
+    // hear the dialog announce instead of staying on the hamburger button.
+    // Per master review P0 — Drawer focus trap.
+    panelRef.current?.focus();
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -44,7 +48,8 @@ export default function HeaderDrawer({ open, onClose }: Props) {
     >
       <div
         ref={panelRef}
-        className="ml-auto flex h-full w-full max-w-xs flex-col gap-6 border-l border-ink-800 bg-ink-950 p-6"
+        tabIndex={-1}
+        className="ml-auto flex h-full w-full max-w-xs flex-col gap-6 border-l border-ink-800 bg-ink-950 p-6 outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-baseline justify-between">
@@ -72,6 +77,13 @@ export default function HeaderDrawer({ open, onClose }: Props) {
             className="text-ink-300 hover:text-green-400"
           >
             the curriculum
+          </Link>
+          <Link
+            href="/roast"
+            onClick={onClose}
+            className="text-green-400 hover:text-green-300"
+          >
+            roast my prompt
           </Link>
           <Link
             href="/about"

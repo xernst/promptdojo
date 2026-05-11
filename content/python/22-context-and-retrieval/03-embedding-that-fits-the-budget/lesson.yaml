@@ -1,0 +1,15 @@
+slug: embedding-that-fits-the-budget
+title: "Embedding that fits the budget — pick a model that matches your corpus"
+estMinutes: 12
+prerequisites:
+  - chunking-that-respects-structure
+order:
+  - 01-intro.read.md
+  - 02-which-model-fits.mc.yaml
+  - 03-the-vector-space.read.md
+  - 04-predict-the-closest.predict.yaml
+  - 05-fill-the-cosine-formula.fill.yaml
+  - 06-fix-the-wrong-embedding-model.fix.yaml
+  - 07-fix-the-missing-normalization.fix.yaml
+  - 08-write-the-similarity-ranker.write.yaml
+  - 09-checkpoint.checkpoint.yaml

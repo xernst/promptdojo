@@ -1,0 +1,40 @@
+xp: 3
+estSeconds: 80
+concept: tool-input-schema
+prompt: |
+  You're registering a `send_email` tool. It needs two required
+  string arguments: `to` and `subject`. The schema below has two
+  blanks — the top-level type discriminator and the required-list.
+
+  Blank 1 (the type every MCP input schema uses): ___
+  Blank 2 (the list of keys that MUST be present): ___
+code: |
+  schema = {
+      "type": "___type___",
+      "properties": {
+          "to": {"type": "string"},
+          "subject": {"type": "string"},
+      },
+      "required": ___required___,
+  }
+
+  print(schema["type"])
+  print(schema["required"])
+blanks:
+  - id: type
+    accept:
+      - '"object"'
+      - "'object'"
+    caseSensitive: true
+  - id: required
+    accept:
+      - '["to", "subject"]'
+      - "['to', 'subject']"
+      - '["to","subject"]'
+      - "['to','subject']"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Every MCP tool schema is an OBJECT at the top. The `required` value is a python LIST of string keys that must appear in `arguments`.'
+  - level: 2
+    body: 'Blank 1: `"object"`. Blank 2: `["to", "subject"]`.'

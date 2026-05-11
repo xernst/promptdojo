@@ -1,0 +1,39 @@
+xp: 3
+estSeconds: 70
+concept: cost-formula
+prompt: |
+  This is the formula every LLM invoice reduces to. Input and
+  output are billed separately, each at a per-1M-token rate.
+
+  Fill in the two divisors so the formula correctly converts token
+  counts to dollars at a per-million rate.
+
+  Expected output:
+  ```
+  cost: $0.068
+  ```
+code: |
+  in_tokens  = 2000
+  out_tokens = 500
+  in_rate    = 15.0   # $15 per 1M input tokens (opus 4.7)
+  out_rate   = 75.0   # $75 per 1M output tokens (opus 4.7)
+
+  cost = (in_tokens / ___) * in_rate + (out_tokens / ___) * out_rate
+
+  print(f"cost: ${cost:.3f}")
+blanks:
+  - id: in_divisor
+    accept:
+      - "1_000_000"
+      - "1000000"
+    caseSensitive: false
+  - id: out_divisor
+    accept:
+      - "1_000_000"
+      - "1000000"
+    caseSensitive: false
+hint:
+  - level: 1
+    body: 'Rates are quoted as "$X per 1,000,000 tokens." To convert tokens to millions-of-tokens, divide by 1,000,000.'
+  - level: 2
+    body: 'Both blanks are `1_000_000`. The full formula: `cost = (in_tokens / 1_000_000) * in_rate + (out_tokens / 1_000_000) * out_rate`. Underscores in numeric literals are Python sugar for readability — `1_000_000 == 1000000`.'

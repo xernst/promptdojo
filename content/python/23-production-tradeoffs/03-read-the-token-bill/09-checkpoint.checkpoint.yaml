@@ -1,0 +1,113 @@
+xp: 8
+estSeconds: 240
+concept: monthly-cost-projector
+prompt: |
+  Final drill. You're about to ship a feature that runs once per
+  user message. Before you click deploy, you want a monthly cost
+  projection grounded in **representative prompts and outputs** —
+  not a back-of-envelope guess.
+
+  Build `project_monthly_cost(prompts, expected_outputs, daily_volume, in_rate, out_rate, days=30)` that:
+
+  - Pairs each prompt with its expected output (same length lists).
+  - Computes the per-call cost for each pair using `estimate_tokens`
+    (chars / 4) and the input/output rate formula.
+  - Averages those per-call costs to get a representative cost per call.
+  - Returns a dict
+    `{"avg_cost_per_call": <float>, "daily_spend": <float>, "monthly_spend": <float>}`
+    with all values rounded to 4 decimals (monthly to 2).
+
+  One scenario runs for you — a triage bot sampling three real prompt
+  shapes (summarize, classify, extract). Expected output:
+  ```
+  avg cost/call: $0.0013
+  daily spend:   $6.53
+  monthly spend: $195.75
+  ```
+starter: |
+  def estimate_tokens(text):
+      return len(text) // 4
+
+  PROMPTS = [
+      "Summarize this customer ticket in one sentence so a support engineer can triage it: "
+      + "Customer reports that the mobile app has been crashing repeatedly since the 4.1 release; they have reinstalled, cleared cache, and tried a different network. " * 8,
+
+      "Classify the sentiment of the following product review as positive, neutral, or negative and explain why in one sentence: "
+      + "I tried the new dashboard feature today and while it loads quickly I found the chart legends confusing and the filter menu is buried two levels deep. " * 8,
+
+      "Extract structured data (name, company, email, role) from this email signature block and return it as JSON: "
+      + "John Doe / Director of Operations / Acme Corp / john.doe@acme.example / +1-555-0100 / Boston, MA. " * 8,
+  ]
+  EXPECTED_OUTPUTS = [
+      "Customer reports persistent mobile app crashes since the 4.1 release despite reinstalling, clearing cache, and switching networks.",
+      "Mixed review: positive on load speed but negative on chart legends and filter discoverability.",
+      '{"name": "John Doe", "company": "Acme Corp", "email": "john.doe@acme.example", "role": "Director of Operations"}',
+  ]
+
+  # define project_monthly_cost(prompts, expected_outputs, daily_volume, in_rate, out_rate, days=30) below
+  # use estimate_tokens. average the per-call costs, then scale to daily and monthly.
+
+  result = project_monthly_cost(
+      PROMPTS, EXPECTED_OUTPUTS,
+      daily_volume=5000,
+      in_rate=3.0,
+      out_rate=15.0,
+  )
+
+  print(f"avg cost/call: ${result['avg_cost_per_call']:.4f}")
+  print(f"daily spend:   ${result['daily_spend']:.2f}")
+  print(f"monthly spend: ${result['monthly_spend']:.2f}")
+grader:
+  kind: stdout-equality
+  expected: |
+    avg cost/call: $0.0013
+    daily spend:   $6.53
+    monthly spend: $195.75
+  normalize: collapse-trailing-newline
+solution: |
+  def estimate_tokens(text):
+      return len(text) // 4
+
+  PROMPTS = [
+      "Summarize this customer ticket in one sentence so a support engineer can triage it: "
+      + "Customer reports that the mobile app has been crashing repeatedly since the 4.1 release; they have reinstalled, cleared cache, and tried a different network. " * 8,
+
+      "Classify the sentiment of the following product review as positive, neutral, or negative and explain why in one sentence: "
+      + "I tried the new dashboard feature today and while it loads quickly I found the chart legends confusing and the filter menu is buried two levels deep. " * 8,
+
+      "Extract structured data (name, company, email, role) from this email signature block and return it as JSON: "
+      + "John Doe / Director of Operations / Acme Corp / john.doe@acme.example / +1-555-0100 / Boston, MA. " * 8,
+  ]
+  EXPECTED_OUTPUTS = [
+      "Customer reports persistent mobile app crashes since the 4.1 release despite reinstalling, clearing cache, and switching networks.",
+      "Mixed review: positive on load speed but negative on chart legends and filter discoverability.",
+      '{"name": "John Doe", "company": "Acme Corp", "email": "john.doe@acme.example", "role": "Director of Operations"}',
+  ]
+
+  def project_monthly_cost(prompts, expected_outputs, daily_volume, in_rate, out_rate, days=30):
+      total = 0.0
+      for prompt, output in zip(prompts, expected_outputs):
+          in_tokens  = estimate_tokens(prompt)
+          out_tokens = estimate_tokens(output)
+          cost = (in_tokens / 1_000_000) * in_rate + (out_tokens / 1_000_000) * out_rate
+          total += cost
+      avg = total / len(prompts)
+      daily   = avg * daily_volume
+      monthly = daily * days
+      return {
+          "avg_cost_per_call": round(avg, 4),
+          "daily_spend":       round(daily, 4),
+          "monthly_spend":     round(monthly, 2),
+      }
+
+  result = project_monthly_cost(
+      PROMPTS, EXPECTED_OUTPUTS,
+      daily_volume=5000,
+      in_rate=3.0,
+      out_rate=15.0,
+  )
+
+  print(f"avg cost/call: ${result['avg_cost_per_call']:.4f}")
+  print(f"daily spend:   ${result['daily_spend']:.2f}")
+  print(f"monthly spend: ${result['monthly_spend']:.2f}")
+passThreshold: 0.66

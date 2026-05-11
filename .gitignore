@@ -72,6 +72,7 @@ next-env.d.ts
 # Not for the public repo
 LAUNCH.sh
 LAUNCH_TWEETS.md
+LAUNCH_TWEETS_V2.md
 fake_vault/
 workspace/
 sample_data/

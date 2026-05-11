@@ -1,0 +1,50 @@
+xp: 4
+estSeconds: 100
+concept: output-is-more-expensive-than-input
+prompt: |
+  This estimator uses ONE rate for both input and output tokens.
+  But output is 5× the price of input on most Anthropic models —
+  so this code under-estimates the real bill by ~60% on a typical
+  chat workload.
+
+  Real numbers: Claude Sonnet 4.6 is $3/1M input, $15/1M output.
+  Fix the code to track the two rates separately and apply the
+  correct rate to each side.
+
+  Expected output:
+  ```
+  estimated cost: $0.036
+  ```
+brokenCode: |
+  in_tokens  = 2000
+  out_tokens = 2000
+
+  # bug: one rate applied to both input and output. output is
+  # actually 5x the input rate ($15/1M vs $3/1M) — this UNDERESTIMATES.
+  RATE = 3.0  # $3 per 1M
+
+  cost = (in_tokens / 1_000_000) * RATE + (out_tokens / 1_000_000) * RATE
+
+  print(f"estimated cost: ${cost:.3f}")
+bugLines:
+  - 6
+  - 8
+grader:
+  kind: stdout-equality
+  expected: "estimated cost: $0.036"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Define two rates: IN_RATE = 3.0, OUT_RATE = 15.0. Apply IN_RATE to in_tokens and OUT_RATE to out_tokens.'
+  - level: 2
+    body: |
+      Replace the rate definition and the cost formula:
+
+      ```python
+      IN_RATE  = 3.0
+      OUT_RATE = 15.0
+      cost = (in_tokens / 1_000_000) * IN_RATE + (out_tokens / 1_000_000) * OUT_RATE
+      ```
+
+      Math: 2000 × $3/1M + 2000 × $15/1M = $0.006 + $0.030 = $0.036.
+revealAfter: 5

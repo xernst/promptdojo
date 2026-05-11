@@ -1,0 +1,43 @@
+xp: 3
+estSeconds: 70
+concept: class-naming
+prompt: |
+  Two trace signatures. Fill in the class name each one describes.
+
+  Use the exact class names from the taxonomy:
+  `"retrieval"`, `"prompt"`, `"hallucination"`, `"parse"`.
+
+  Expected output:
+  ```
+  empty retrieval, confident answer: hallucination
+  raw_output != output_after_postprocess: parse
+  ```
+code: |
+  # signature 1: retrieved_chunks is empty, but the model still
+  # answered confidently with a specific fact. no grounding, no
+  # citation, just made up.
+  class_for_empty_retrieval = ___
+
+  # signature 2: raw_output is correct JSON, but
+  # output_after_postprocess has a different value. something in
+  # the post-processing layer mangled it.
+  class_for_postprocess_diff = ___
+
+  print(f"empty retrieval, confident answer: {class_for_empty_retrieval}")
+  print(f"raw_output != output_after_postprocess: {class_for_postprocess_diff}")
+blanks:
+  - id: class_for_empty_retrieval
+    accept:
+      - '"hallucination"'
+      - "'hallucination'"
+    caseSensitive: true
+  - id: class_for_postprocess_diff
+    accept:
+      - '"parse"'
+      - "'parse'"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: 'Empty retrieval + confident answer means the model had nothing to ground in and answered anyway — that''s the hallucination class. Raw differs from post-processed means the bug is in the code between the model and the user — that''s the parse class.'
+  - level: 2
+    body: 'First blank: `"hallucination"`. Second blank: `"parse"`. Both as Python strings.'

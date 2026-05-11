@@ -1,0 +1,89 @@
+xp: 5
+estSeconds: 160
+concept: dispatch-by-tool-name
+prompt: |
+  Write `call_tool(name, args, registry)` — the full dispatcher.
+  It must:
+
+  1. If `name` is not in `registry`, return the MCP error envelope
+     with text `unknown tool: <name>`.
+  2. Otherwise, loop over `tool["inputSchema"]["required"]` and
+     return an error envelope with text `missing required arg: <key>`
+     for the first missing required arg.
+  3. If everything validates, call `tool["handler"](args)` and wrap
+     the return value as the MCP success envelope.
+
+  All envelopes have the shape:
+  ```
+  {"isError": bool, "content": [{"type": "text", "text": str}]}
+  ```
+
+  Expected output:
+  ```
+  ok hello alex
+  err missing required arg: name
+  err unknown tool: ghost
+  ```
+starter: |
+  REGISTRY = {
+      "greet": {
+          "inputSchema": {
+              "type": "object",
+              "properties": {"name": {"type": "string"}},
+              "required": ["name"],
+          },
+          "handler": lambda args: f"hello {args['name']}",
+      },
+  }
+
+  # define call_tool(name, args, registry) below
+
+
+  def show(result):
+      tag = "err" if result["isError"] else "ok"
+      print(f"{tag} {result['content'][0]['text']}")
+
+  show(call_tool("greet", {"name": "alex"}, REGISTRY))
+  show(call_tool("greet", {}, REGISTRY))
+  show(call_tool("ghost", {}, REGISTRY))
+grader:
+  kind: stdout-equality
+  expected: |
+    ok hello alex
+    err missing required arg: name
+    err unknown tool: ghost
+  normalize: collapse-trailing-newline
+solution: |
+  REGISTRY = {
+      "greet": {
+          "inputSchema": {
+              "type": "object",
+              "properties": {"name": {"type": "string"}},
+              "required": ["name"],
+          },
+          "handler": lambda args: f"hello {args['name']}",
+      },
+  }
+
+  def call_tool(name, args, registry):
+      if name not in registry:
+          return {"isError": True, "content": [{"type": "text", "text": f"unknown tool: {name}"}]}
+      tool = registry[name]
+      for key in tool["inputSchema"]["required"]:
+          if key not in args:
+              return {"isError": True, "content": [{"type": "text", "text": f"missing required arg: {key}"}]}
+      text = tool["handler"](args)
+      return {"isError": False, "content": [{"type": "text", "text": text}]}
+
+  def show(result):
+      tag = "err" if result["isError"] else "ok"
+      print(f"{tag} {result['content'][0]['text']}")
+
+  show(call_tool("greet", {"name": "alex"}, REGISTRY))
+  show(call_tool("greet", {}, REGISTRY))
+  show(call_tool("ghost", {}, REGISTRY))
+hint:
+  - level: 1
+    body: 'Three branches, in order: unknown tool → return error envelope. Missing required arg → return error envelope. Otherwise → call handler, wrap in success envelope.'
+  - level: 2
+    body: 'Check `name not in registry` first. Then loop `for key in tool["inputSchema"]["required"]` and check `if key not in args`. Finally `tool["handler"](args)` and wrap as `{"isError": False, "content": [{"type": "text", "text": text}]}`.'

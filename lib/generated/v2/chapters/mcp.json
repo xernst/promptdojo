@@ -1,7 +1,7 @@
 {
   "number": 15,
   "slug": "mcp",
-  "title": "MCP — the Model Context Protocol",
+  "title": "mcp — the model context protocol",
   "blurb": "mcp is the new standard for plugging tools and data sources into ai agents. learn what an mcp server actually is, how claude code lists tools, and why this is replacing one-off integrations everywhere.",
   "overview": "## The protocol that ate the AI tooling world in eighteen months\n\nIn November 2024 Anthropic open-sourced something called the Model Context Protocol. It was a small JSON-RPC spec for letting AI applications talk to tool providers — read your filesystem, query your database, list your GitHub PRs, whatever. The kind of thing every agent maker had been hand-rolling since GPT-4 launched.\n\nEighteen months later, MCP is in Claude Desktop, Claude Code, Cursor, Continue, Zed, VS Code's GitHub Copilot, ChatGPT, Vercel's AI SDK, and a hundred third-party MCP servers ranging from official Anthropic releases to one-person passion projects. If you connect Cursor to your Linear workspace today, you're using MCP. If Claude Code reads your filesystem, that's MCP. If your agent calls a Postgres database, increasingly that's MCP too.\n\nThis chapter is what MCP actually is, the three roles and three primitives every MCP server speaks, and why it's the standard you can't avoid in 2026.\n\n## Why this matters even if you never write an MCP server\n\nYou don't need to ship MCP servers to need this chapter. You need this chapter because every agent runtime you'll ever use is going to be an MCP host, every tool catalog you'll ever read is going to include MCP servers, and \"what tools does this agent have access to\" is going to be answered with \"look at the MCP config\" for the foreseeable future. PMs and ops folks who can read an MCP config and reason about which server exposes which tool will out-debug the ones who can't. It's the new \"what does this curl command do.\"\n\n## The mental model: hosts, clients, servers, primitives\n\nThree roles:\n\n- **Host** — the AI app you actually use: Claude Desktop, Claude Code, Cursor, Continue. The host runs the model and orchestrates everything.\n- **Client** — a connector inside the host. The host runs one client per server connection. If you've connected Cursor to four MCP servers, that's four clients running in parallel inside Cursor's host process.\n- **Server** — a process that exposes capabilities. The official filesystem server. The git server. GitHub's official MCP server. A custom Postgres server you wrote in an afternoon.\n\nThree things a server can expose:\n\n- **Tools** — functions the model can call. *List my open PRs. Read this file. Query this database.* Tools are the primary primitive; this lesson focuses here.\n- **Resources** — data the model can read on request. Files. URLs. Database rows. Read-only context the host can pull in when the model asks.\n- **Prompts** — reusable prompt templates the host offers to the user. The \"/explain-this-stack-trace\" slash command in your editor is often a prompt primitive.\n\nCommunication is JSON-RPC 2.0 over stdio (when the server is a subprocess) or Streamable HTTP (when the server is a remote service). Two methods do most of the work: `tools/list` (which the client calls on connect to discover what's available) and `tools/call` (which the client invokes when the model wants to run a specific tool).\n\nThat's the whole protocol surface for 95% of real agent work.\n\n## Why MCP took over so fast\n\nTwo reasons. First, the hand-rolled \"let Claude read my Linear\" integrations from 2023 were hell. Different auth, different schemas, different glue code per tool, and no shared abstraction. MCP gave the industry a single shape, and the network effect kicked in: every server you write works with every host that speaks MCP, automatically.\n\nSecond, the spec was small enough to fit in a normal engineer's head. JSON-RPC plus three primitives plus a discovery flow is something you can read in an afternoon and start writing servers for. That's a different bar than the OpenAI plugin spec, which never broke out, or LangChain's tool abstraction, which is library-specific.\n\n## What AI specifically gets wrong about MCP\n\nThree patterns:\n\n1. **Confusing client and server.** Your editor *is* the host. Your Postgres connector *is* the server. Reversing them in configuration breaks everything, and Cursor's autocomplete sometimes does it. Step 2 of this chapter is exactly this distinction.\n\n2. **Forgetting the input schema on a tool definition.** Every MCP tool advertises a JSON Schema (`inputSchema`) for its arguments. If the schema's missing or sloppy, the model can't reliably call the tool — it's guessing. The schema *is* the model's user manual. Step 6 is fixing this.\n\n3. **Treating tool results as plain strings.** A `tools/call` response wraps the result in a `content` array of typed blocks (text, image, etc.) — same shape as a Claude assistant message. AI sometimes ships code that does `result.text` instead of `result[\"content\"][0][\"text\"]`. Crashes the moment a tool returns anything more interesting than a string. Step 7 fixes it.\n\n## What you'll be able to do at the end\n\nNine steps. By the end you'll be able to:\n\n- Read any MCP server's `tools/list` output and reason about what it exposes.\n- Construct a `tools/call` request by hand against any MCP server's schema.\n- Read a `tools/call` response (`content` array, `isError` flag, structured content) cleanly.\n- Spot the three \"AI ships this wrong\" MCP patterns and fix them.\n- Read the rest of an MCP server's surface — resources, prompts, sampling — well enough to evaluate whether a given third-party server is a good fit for your agent.\n\nChapter 16 (agent loops) builds the dispatch loop that calls these tools. Chapter 22 (capstone) wires both together into a working agent.\n\nPress *Start chapter* below.\n",
   "lessons": [
@@ -253,7 +253,270 @@
         }
       ],
       "xpTotal": 32
+    },
+    {
+      "slug": "writing-a-tiny-mcp-server",
+      "title": "Writing a tiny MCP server — registries, dispatch, and the response shape",
+      "estMinutes": 14,
+      "prerequisites": [
+        "what-mcp-is"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "mcp/writing-a-tiny-mcp-server/s01-01-intro",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 110,
+          "concept": "tool-handler-shape",
+          "body": "# Writing a server means writing a dispatcher\n\nThe first lesson taught you what an MCP server IS — a process that\nadvertises tools and runs them on request. This lesson teaches you\nto write one. Not a toy: the exact shape you'd port to a real\nstdio JSON-RPC server when you wrap it for Claude Code or Cursor.\n\nA \"tool handler\" sounds heavy. It isn't. A tool handler is just a\nfunction:\n\n```python\ndef handler(args: dict) -> str:\n    # do the work, return a string\n    ...\n```\n\nEverything else is plumbing around that function.\n\n## The three pieces every MCP server has\n\n**1. A tool registry.** A data structure (usually a dict) that maps\ntool names to their metadata: description, input schema, handler\nfunction. When the client calls `tools/list`, you serialize the\nregistry — minus the handler — and send it back.\n\n**2. A dispatcher.** A function — call it `call_tool(name, args)` —\nthat looks up the tool by name in the registry, validates the args\nagainst the schema, runs the handler, and wraps the return value in\nthe MCP response envelope.\n\n**3. A response shape.** Every `tools/call` response is the same\ndict: `{\"content\": [{\"type\": \"text\", \"text\": \"...\"}], \"isError\": false}`.\nSame shape on success. Same shape on failure (with `isError: true`).\nThe model treats either case as just another content block.\n\nThat's the whole server. Real MCP servers add JSON-RPC framing,\nstdio transport, the `initialize` handshake, and notification\nplumbing — but the *dispatch logic* is what you actually write. The\ntransport is a thin wrapper that most SDKs handle for you.\n\n## Why this matters for your own use case\n\nThe interesting part of an MCP server you'd build — a knowledge-base\nlookup, a CRM query, a customer-search tool — is the handler\nfunction. The schema and registry are five lines of boilerplate. The\ndispatch is ten. You spend 90% of your time on the actual API call\nor DB query inside the handler. MCP is the cheapest possible wrapper\naround \"I have a function I want Claude to call.\"\n\n## Where it goes wrong\n\n- **No registry at all.** People hardcode tool names into giant\n  `if/elif` chains. Works for two tools, breaks at ten. The registry\n  is the boring abstraction that pays off later.\n- **Mutating the registry at call time.** Handlers should be pure\n  with respect to the registry — never edit `TOOL_REGISTRY` from\n  inside a handler. State belongs in your DB or in module-level\n  variables the handler reads.\n- **Returning the raw value instead of the envelope.** If your\n  handler returns `42`, the dispatcher has to wrap it as\n  `{\"content\": [{\"type\": \"text\", \"text\": \"42\"}], \"isError\": false}`.\n  The model expects content blocks, not bare values.\n\n> **Browser note:** real MCP servers run as a subprocess speaking\n> JSON-RPC over stdio (or HTTP). Pyodide can't fork processes, so\n> we simulate the message dispatch in-memory: a python function that\n> takes a dict, returns a dict. The shapes match exactly. When you\n> port this to a real server, the only change is wiring the dict in\n> and out of the JSON-RPC transport.\n\nRun the editor. A one-tool registry, a dispatcher, and a real MCP\nresponse envelope. This is the whole skeleton — every server you\nwrite from now on grows from this shape.",
+          "cta": "Got it",
+          "code": "# the three pieces every MCP server needs:\n# 1. a tool registry (what `tools/list` returns)\n# 2. a dispatcher (what `tools/call` runs)\n# 3. a response shape (the content/isError envelope)\n\nTOOL_REGISTRY = {\n    \"get_weather\": {\n        \"description\": \"Get the current weather for a city.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"city\": {\"type\": \"string\"}},\n            \"required\": [\"city\"],\n        },\n        \"handler\": lambda args: f\"It's 68F and sunny in {args['city']}.\",\n    },\n}\n\ndef call_tool(name, args):\n    tool = TOOL_REGISTRY[name]\n    text = tool[\"handler\"](args)\n    return {\"content\": [{\"type\": \"text\", \"text\": text}], \"isError\": False}\n\nresponse = call_tool(\"get_weather\", {\"city\": \"Seattle\"})\nprint(response[\"content\"][0][\"text\"])\n",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "mcp/writing-a-tiny-mcp-server/s02-02-which-message-is-call-tool",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 60,
+          "concept": "mcp-message-types",
+          "prompt": "Claude Code connects to your MCP server. It sends four messages\nin sequence (see the editor). Which message is the one that asks\nthe server to actually RUN a tool with arguments?\n",
+          "options": [
+            {
+              "id": "a",
+              "label": "`initialize`",
+              "explain": "`initialize` is the handshake at connection start. It exchanges protocol versions and capabilities — no tools run."
+            },
+            {
+              "id": "b",
+              "label": "`ping`",
+              "explain": "`ping` is a liveness check. The server replies empty. No tool execution."
+            },
+            {
+              "id": "c",
+              "label": "`tools/list`",
+              "explain": "`tools/list` asks the server to describe its tools (names, descriptions, schemas). The server enumerates the registry — but doesn't execute any handler."
+            },
+            {
+              "id": "d",
+              "label": "`tools/call`"
+            }
+          ],
+          "answerIds": [
+            "d"
+          ],
+          "shuffle": false,
+          "code": "# four JSON-RPC messages an MCP client sends. only ONE actually\n# invokes a tool with arguments.\nmessages = [\n    {\"method\": \"initialize\", \"params\": {\"protocolVersion\": \"2025-06-18\"}},\n    {\"method\": \"ping\"},\n    {\"method\": \"tools/list\"},\n    {\"method\": \"tools/call\", \"params\": {\"name\": \"search_docs\", \"arguments\": {\"query\": \"refund policy\"}}},\n]\n\nfor m in messages:\n    print(m[\"method\"])\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "mcp/writing-a-tiny-mcp-server/s03-03-the-tool-registry",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "register-tools-with-schemas",
+          "body": "# The registry is the heart of the server\n\nWhen Claude Code connects to your server and asks `tools/list`,\nwhat it gets back is *literally* the registry — minus the handler\nfunctions, which don't survive the wire. The registry is both the\ncatalog the model reads and the dispatch table you call into.\n\n## What goes in a tool entry\n\nThree fields, every time:\n\n- **`description`** — natural language the model reads to pick the\n  right tool. This is your one chance to teach Claude when to call\n  this tool and when not to. \"Get the current weather for a city\"\n  is better than \"weather function.\" Bad descriptions are the #1\n  reason a model ignores a tool it should be using.\n- **`inputSchema`** — JSON Schema describing the arguments. At\n  minimum: `{\"type\": \"object\", \"properties\": {...}, \"required\": [...]}`.\n  This is the contract. The model uses it to construct valid\n  arguments; the server uses it to validate incoming calls.\n- **`handler`** — the python function that does the actual work.\n  Takes a dict of args, returns a string (or anything the dispatcher\n  can stringify into a content block).\n\n## Why the handler isn't on the wire\n\n`tools/list` returns JSON. JSON can't carry a python function. So\nwhen you serialize the registry for the client, you drop the\nhandler and keep only the description + schema. The handler stays\nserver-side; the dispatcher reaches into it on `tools/call`.\n\nThe `list_tools()` function in the editor does exactly this strip.\n\n## JSON Schema in 30 seconds\n\nYou only ever need a tiny slice of JSON Schema for MCP:\n\n```python\n{\n    \"type\": \"object\",          # always \"object\" for tool args\n    \"properties\": {            # a dict of arg-name -> type-spec\n        \"city\": {\"type\": \"string\"},\n        \"units\": {\"type\": \"string\", \"enum\": [\"c\", \"f\"]},\n    },\n    \"required\": [\"city\"],      # which keys MUST be present\n}\n```\n\nThat's 95% of the JSON Schema you'll write for tools. `enum`\nconstrains a string to a fixed set. `type: \"number\"` and\n`type: \"boolean\"` cover the rest. Nested objects work, but you\nrarely need them.\n\n## A trap: registering tools at import time\n\nIf your handler imports a slow library or hits an API, doing that\nat registration time blows up server startup. Best practice:\n**register the metadata at import; do the expensive work inside the\nhandler.** That way `tools/list` always returns fast and your slow\nwork only happens when a tool actually runs.\n\nRun the editor. We define a two-tool registry and print what\n`tools/list` would return.",
+          "cta": "Got it",
+          "code": "# a real MCP server's TOOL_REGISTRY. two tools, each with\n# description + input schema + handler.\nTOOL_REGISTRY = {\n    \"get_weather\": {\n        \"description\": \"Get the current weather for a city.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"city\": {\"type\": \"string\"},\n                \"units\": {\"type\": \"string\", \"enum\": [\"c\", \"f\"]},\n            },\n            \"required\": [\"city\"],\n        },\n        \"handler\": lambda args: f\"68F and sunny in {args['city']}.\",\n    },\n    \"search_docs\": {\n        \"description\": \"Search the internal knowledge base.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"query\": {\"type\": \"string\"},\n            },\n            \"required\": [\"query\"],\n        },\n        \"handler\": lambda args: f\"3 docs matched '{args['query']}'.\",\n    },\n}\n\ndef list_tools(registry):\n    # strip the handler — the wire format doesn't carry python functions\n    return [\n        {\"name\": name, \"description\": meta[\"description\"], \"inputSchema\": meta[\"inputSchema\"]}\n        for name, meta in registry.items()\n    ]\n\nfor tool in list_tools(TOOL_REGISTRY):\n    print(f\"{tool['name']}: {tool['description']}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "predict",
+          "id": "mcp/writing-a-tiny-mcp-server/s04-04-predict-the-list-tools-output",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The registry has two entries. `list_tools` returns one dict per entry with `name` and `description`. The loop prints them in insertion order.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Line 1: `create_ticket - Create a support ticket.` Line 2: `close_ticket - Close a support ticket by id.`",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 75,
+          "concept": "list-tools-shape",
+          "code": "TOOL_REGISTRY = {\n    \"create_ticket\": {\n        \"description\": \"Create a support ticket.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"subject\": {\"type\": \"string\"}},\n            \"required\": [\"subject\"],\n        },\n        \"handler\": lambda args: f\"ticket created: {args['subject']}\",\n    },\n    \"close_ticket\": {\n        \"description\": \"Close a support ticket by id.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"id\": {\"type\": \"string\"}},\n            \"required\": [\"id\"],\n        },\n        \"handler\": lambda args: f\"closed {args['id']}\",\n    },\n}\n\ndef list_tools(registry):\n    return [\n        {\"name\": name, \"description\": meta[\"description\"]}\n        for name, meta in registry.items()\n    ]\n\nfor tool in list_tools(TOOL_REGISTRY):\n    print(f\"{tool['name']} - {tool['description']}\")\n",
+          "prompt": "Read the editor. A two-tool registry, plus a `list_tools(registry)`\nthat maps it to `{name, description}` pairs. What does the loop\nprint?\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "create_ticket - Create a support ticket.\nclose_ticket - Close a support ticket by id.\n",
+            "normalize": "collapse-trailing-newline"
+          }
+        },
+        {
+          "type": "fill",
+          "id": "mcp/writing-a-tiny-mcp-server/s05-05-fill-the-input-schema",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Every MCP tool schema is an OBJECT at the top. The `required` value is a python LIST of string keys that must appear in `arguments`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Blank 1: `\"object\"`. Blank 2: `[\"to\", \"subject\"]`.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 80,
+          "concept": "tool-input-schema",
+          "prompt": "You're registering a `send_email` tool. It needs two required\nstring arguments: `to` and `subject`. The schema below has two\nblanks — the top-level type discriminator and the required-list.\n\nBlank 1 (the type every MCP input schema uses): ___\nBlank 2 (the list of keys that MUST be present): ___\n",
+          "code": "schema = {\n    \"type\": \"___type___\",\n    \"properties\": {\n        \"to\": {\"type\": \"string\"},\n        \"subject\": {\"type\": \"string\"},\n    },\n    \"required\": ___required___,\n}\n\nprint(schema[\"type\"])\nprint(schema[\"required\"])\n",
+          "blanks": [
+            {
+              "id": "type",
+              "accept": [
+                "\"object\"",
+                "'object'"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            },
+            {
+              "id": "required",
+              "accept": [
+                "[\"to\", \"subject\"]",
+                "['to', 'subject']",
+                "[\"to\",\"subject\"]",
+                "['to','subject']"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "id": "mcp/writing-a-tiny-mcp-server/s06-06-fix-the-missing-error-response",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The `except` branch returns a bare string. The print lines downstream expect a dict with `isError` and `content` keys. Match the success-case envelope shape, but flip `isError` to `True`.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Replace line 6 with: `return {\"isError\": True, \"content\": [{\"type\": \"text\", \"text\": str(e)}]}`",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 100,
+          "concept": "mcp-error-response-shape",
+          "brokenCode": "def call_tool(name, args, registry):\n    tool = registry[name]\n    try:\n        text = tool[\"handler\"](args)\n        return {\"isError\": False, \"content\": [{\"type\": \"text\", \"text\": text}]}\n    except Exception as e:\n        return str(e)\n\nregistry = {\n    \"explode\": {\"handler\": lambda args: (_ for _ in ()).throw(ValueError(\"boom\"))},\n}\nresult = call_tool(\"explode\", {}, registry)\nprint(result[\"isError\"])\nprint(result[\"content\"][0][\"text\"])\n",
+          "prompt": "Cursor wrote a `call_tool` dispatcher. When the handler raises an\nexception, the dispatcher returns just the exception's string —\nnot an MCP error envelope. The client has no way to tell this was\nan error vs. a normal result.\n\nFix line 11 so that on exception, the dispatcher returns the\nproper MCP error shape:\n\n```python\n{\"isError\": True, \"content\": [{\"type\": \"text\", \"text\": str(e)}]}\n```\n\nExpected output:\n```\nTrue\nboom\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "True\nboom\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            6
+          ],
+          "revealAfter": 4
+        },
+        {
+          "type": "fix",
+          "id": "mcp/writing-a-tiny-mcp-server/s07-07-fix-the-validation-gap",
+          "xp": 4,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Loop over `tool[\"inputSchema\"][\"required\"]`. If a key is not in `args`, return the MCP error envelope before calling the handler.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Replace line 3 with:\n```\nfor key in tool[\"inputSchema\"][\"required\"]:\n    if key not in args:\n        return {\"isError\": True, \"content\": [{\"type\": \"text\", \"text\": f\"missing required arg: {key}\"}]}\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 110,
+          "concept": "validate-args-before-call",
+          "brokenCode": "def call_tool(name, args, registry):\n    tool = registry[name]\n    # TODO: validate args against tool[\"inputSchema\"][\"required\"] here\n    text = tool[\"handler\"](args)\n    return {\"isError\": False, \"content\": [{\"type\": \"text\", \"text\": text}]}\n\nregistry = {\n    \"get_weather\": {\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"city\": {\"type\": \"string\"}},\n            \"required\": [\"city\"],\n        },\n        \"handler\": lambda args: f\"68F in {args['city']}\",\n    },\n}\n\nresult = call_tool(\"get_weather\", {}, registry)\nprint(result[\"isError\"])\nprint(result[\"content\"][0][\"text\"])\n",
+          "prompt": "The dispatcher below calls the handler without checking whether\nthe required arguments are present. If a required key is missing,\nthe handler crashes with a `KeyError` deep in user code — instead\nof returning a clean MCP error.\n\nFix it: before calling the handler, check each name in\n`tool[\"inputSchema\"][\"required\"]` against `args`. If any are\nmissing, return the MCP error envelope with text\n`missing required arg: <name>` (the first missing one is fine).\n\nExpected output:\n```\nTrue\nmissing required arg: city\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "True\nmissing required arg: city\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            3
+          ],
+          "revealAfter": 5
+        },
+        {
+          "type": "write",
+          "id": "mcp/writing-a-tiny-mcp-server/s08-08-write-the-call-tool-dispatcher",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Three branches, in order: unknown tool → return error envelope. Missing required arg → return error envelope. Otherwise → call handler, wrap in success envelope.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Check `name not in registry` first. Then loop `for key in tool[\"inputSchema\"][\"required\"]` and check `if key not in args`. Finally `tool[\"handler\"](args)` and wrap as `{\"isError\": False, \"content\": [{\"type\": \"text\", \"text\": text}]}`.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 160,
+          "concept": "dispatch-by-tool-name",
+          "prompt": "Write `call_tool(name, args, registry)` — the full dispatcher.\nIt must:\n\n1. If `name` is not in `registry`, return the MCP error envelope\n   with text `unknown tool: <name>`.\n2. Otherwise, loop over `tool[\"inputSchema\"][\"required\"]` and\n   return an error envelope with text `missing required arg: <key>`\n   for the first missing required arg.\n3. If everything validates, call `tool[\"handler\"](args)` and wrap\n   the return value as the MCP success envelope.\n\nAll envelopes have the shape:\n```\n{\"isError\": bool, \"content\": [{\"type\": \"text\", \"text\": str}]}\n```\n\nExpected output:\n```\nok hello alex\nerr missing required arg: name\nerr unknown tool: ghost\n```\n",
+          "starter": "REGISTRY = {\n    \"greet\": {\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"name\": {\"type\": \"string\"}},\n            \"required\": [\"name\"],\n        },\n        \"handler\": lambda args: f\"hello {args['name']}\",\n    },\n}\n\n# define call_tool(name, args, registry) below\n\n\ndef show(result):\n    tag = \"err\" if result[\"isError\"] else \"ok\"\n    print(f\"{tag} {result['content'][0]['text']}\")\n\nshow(call_tool(\"greet\", {\"name\": \"alex\"}, REGISTRY))\nshow(call_tool(\"greet\", {}, REGISTRY))\nshow(call_tool(\"ghost\", {}, REGISTRY))\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "ok hello alex\nerr missing required arg: name\nerr unknown tool: ghost\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "REGISTRY = {\n    \"greet\": {\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"name\": {\"type\": \"string\"}},\n            \"required\": [\"name\"],\n        },\n        \"handler\": lambda args: f\"hello {args['name']}\",\n    },\n}\n\ndef call_tool(name, args, registry):\n    if name not in registry:\n        return {\"isError\": True, \"content\": [{\"type\": \"text\", \"text\": f\"unknown tool: {name}\"}]}\n    tool = registry[name]\n    for key in tool[\"inputSchema\"][\"required\"]:\n        if key not in args:\n            return {\"isError\": True, \"content\": [{\"type\": \"text\", \"text\": f\"missing required arg: {key}\"}]}\n    text = tool[\"handler\"](args)\n    return {\"isError\": False, \"content\": [{\"type\": \"text\", \"text\": text}]}\n\ndef show(result):\n    tag = \"err\" if result[\"isError\"] else \"ok\"\n    print(f\"{tag} {result['content'][0]['text']}\")\n\nshow(call_tool(\"greet\", {\"name\": \"alex\"}, REGISTRY))\nshow(call_tool(\"greet\", {}, REGISTRY))\nshow(call_tool(\"ghost\", {}, REGISTRY))\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "mcp/writing-a-tiny-mcp-server/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 190,
+          "concept": "full-tiny-mcp-loop",
+          "prompt": "Final drill. You're prototyping an MCP server before wrapping it\nin JSON-RPC stdio — this is the dispatch shape you'll port.\n\nBuild the whole tiny server. Two functions:\n\n- `list_tools(registry)` — returns a list of\n  `{\"name\": ..., \"description\": ...}` dicts (one per tool), in\n  registry insertion order. No handlers in the output.\n- `call_tool(name, args, registry)` — the dispatcher from the\n  previous step. Unknown tool → error envelope with\n  `unknown tool: <name>`. Missing required arg → error envelope\n  with `missing required arg: <key>`. Success → wrap handler\n  return value in the success envelope.\n\nThen exercise it: list tools, call each with valid args, and call\nwith an unregistered name.\n\nExpected output:\n```\n[{'name': 'add', 'description': 'Add two numbers.'}, {'name': 'shout', 'description': 'Uppercase a string.'}]\n5\nHELLO\nunknown tool: ghost\n```\n",
+          "starter": "REGISTRY = {\n    \"add\": {\n        \"description\": \"Add two numbers.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"a\": {\"type\": \"number\"}, \"b\": {\"type\": \"number\"}},\n            \"required\": [\"a\", \"b\"],\n        },\n        \"handler\": lambda args: str(args[\"a\"] + args[\"b\"]),\n    },\n    \"shout\": {\n        \"description\": \"Uppercase a string.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"text\": {\"type\": \"string\"}},\n            \"required\": [\"text\"],\n        },\n        \"handler\": lambda args: args[\"text\"].upper(),\n    },\n}\n\n# define list_tools(registry) and call_tool(name, args, registry) below\n\n\nprint(list_tools(REGISTRY))\nprint(call_tool(\"add\", {\"a\": 2, \"b\": 3}, REGISTRY)[\"content\"][0][\"text\"])\nprint(call_tool(\"shout\", {\"text\": \"hello\"}, REGISTRY)[\"content\"][0][\"text\"])\nprint(call_tool(\"ghost\", {}, REGISTRY)[\"content\"][0][\"text\"])\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "[{'name': 'add', 'description': 'Add two numbers.'}, {'name': 'shout', 'description': 'Uppercase a string.'}]\n5\nHELLO\nunknown tool: ghost\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "REGISTRY = {\n    \"add\": {\n        \"description\": \"Add two numbers.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"a\": {\"type\": \"number\"}, \"b\": {\"type\": \"number\"}},\n            \"required\": [\"a\", \"b\"],\n        },\n        \"handler\": lambda args: str(args[\"a\"] + args[\"b\"]),\n    },\n    \"shout\": {\n        \"description\": \"Uppercase a string.\",\n        \"inputSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\"text\": {\"type\": \"string\"}},\n            \"required\": [\"text\"],\n        },\n        \"handler\": lambda args: args[\"text\"].upper(),\n    },\n}\n\ndef list_tools(registry):\n    return [\n        {\"name\": name, \"description\": meta[\"description\"]}\n        for name, meta in registry.items()\n    ]\n\ndef call_tool(name, args, registry):\n    if name not in registry:\n        return {\"isError\": True, \"content\": [{\"type\": \"text\", \"text\": f\"unknown tool: {name}\"}]}\n    tool = registry[name]\n    for key in tool[\"inputSchema\"][\"required\"]:\n        if key not in args:\n            return {\"isError\": True, \"content\": [{\"type\": \"text\", \"text\": f\"missing required arg: {key}\"}]}\n    text = tool[\"handler\"](args)\n    return {\"isError\": False, \"content\": [{\"type\": \"text\", \"text\": text}]}\n\nprint(list_tools(REGISTRY))\nprint(call_tool(\"add\", {\"a\": 2, \"b\": 3}, REGISTRY)[\"content\"][0][\"text\"])\nprint(call_tool(\"shout\", {\"text\": \"hello\"}, REGISTRY)[\"content\"][0][\"text\"])\nprint(call_tool(\"ghost\", {}, REGISTRY)[\"content\"][0][\"text\"])\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 32
     }
   ],
-  "xpTotal": 32
+  "xpTotal": 64
 }

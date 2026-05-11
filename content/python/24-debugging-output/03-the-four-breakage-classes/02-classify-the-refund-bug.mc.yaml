@@ -1,0 +1,44 @@
+xp: 2
+estSeconds: 65
+concept: classify-from-symptom
+code: |
+  # the support ticket
+  ticket = "Your AI assistant told me my refund was processed. It hasn't been."
+
+  # the trace says:
+  trace_summary = {
+      "rendered_prompt": "Look up the refund status for the user's most recent ticket and answer.",
+      "tools_called": ["search_tickets"],
+      "retrieved_chunks": [
+          "ticket_id=84211, account=ALT-CUST-04, status=refunded, amount=$48.20"
+      ],
+      "raw_output": "Yes — your refund of $48.20 was processed.",
+      "output_after_postprocess": "Yes — your refund of $48.20 was processed.",
+  }
+
+  # the customer's actual account is CUST-04. retrieval pulled ALT-CUST-04.
+  print(trace_summary)
+prompt: |
+  A chatbot told a customer their refund was processed. It wasn't.
+  The trace shows retrieval pulled ticket `ALT-CUST-04` instead of
+  the customer's actual account `CUST-04` — different customer,
+  similar ID. The model read the ticket and answered honestly from it.
+
+  Which class is this?
+options:
+  - id: retrieval
+    label: "Class 1 — retrieval gave wrong context"
+  - id: prompt
+    label: "Class 2 — prompt was ambiguous"
+    explain: "The prompt was clear: 'look up the refund status'. The model did exactly that. The data it received was wrong, not the instructions."
+  - id: hallucination
+    label: "Class 3 — true hallucination"
+    explain: "The model didn't invent anything. It read a real ticket from retrieval and reported what it said. The ticket was just the wrong one."
+  - id: parse
+    label: "Class 4 — downstream code mangled the output"
+    explain: "`raw_output` and `output_after_postprocess` match exactly. Nothing mangled the model's output. The bug is upstream."
+answerIds:
+  - retrieval
+hint:
+  - level: 1
+    body: 'The model''s output is consistent with what retrieval handed it. The retrieved chunk is from the wrong account. That points at one layer.'

@@ -1,0 +1,80 @@
+xp: 4
+estSeconds: 110
+concept: same-model-for-both-sides
+prompt: |
+  This is the bug that ships to production most often: the query
+  gets embedded with one model, the documents with another. Cosine
+  similarity is meaningless across two different vector spaces — you
+  get garbage retrieval.
+
+  In the editor, two stub "models" (`embed_a` and `embed_b`) mimic
+  the OpenAI vs Voyage situation: same input, completely different
+  output spaces. The docs were embedded with `embed_a`. The query
+  was accidentally embedded with `embed_b`.
+
+  Fix it so the query is embedded with the SAME model as the docs.
+  The user asks "reset my password" — the matching doc should
+  return a cosine of 1.0.
+
+  Expected output:
+  ```
+  1.0000  reset my password
+  0.0000  cancel my subscription
+  0.0000  export my data
+  ```
+brokenCode: |
+  import math
+
+  def cosine(a, b):
+      dot = sum(x * y for x, y in zip(a, b))
+      na = math.sqrt(sum(x * x for x in a))
+      nb = math.sqrt(sum(y * y for y in b))
+      return dot / (na * nb)
+
+  # "model A" — password-ish on dim 0, cancel-ish on dim 1, export-ish on dim 2.
+  def embed_a(text):
+      t = text.lower()
+      v = [0.0, 0.0, 0.0, 0.0]
+      if "password" in t or "reset" in t: v[0] = 1.0
+      if "cancel" in t or "subscription" in t: v[1] = 1.0
+      if "export" in t or "data" in t: v[2] = 1.0
+      if not any(v): v[3] = 1.0
+      return v
+
+  # "model B" — same words but mapped to DIFFERENT axes. different vector space.
+  def embed_b(text):
+      t = text.lower()
+      v = [0.0, 0.0, 0.0, 0.0]
+      if "password" in t or "reset" in t: v[2] = 1.0
+      if "cancel" in t or "subscription" in t: v[3] = 1.0
+      if "export" in t or "data" in t: v[0] = 1.0
+      if not any(v): v[1] = 1.0
+      return v
+
+  docs = ["reset my password", "cancel my subscription", "export my data"]
+  doc_vecs = [embed_a(d) for d in docs]
+
+  # bug: query embedded with the WRONG model. mixes vector spaces.
+  query_vec = embed_b("reset my password")
+
+  for text, vec in zip(docs, doc_vecs):
+      print(f"{cosine(query_vec, vec):.4f}  {text}")
+bugLines:
+  - 30
+grader:
+  kind: stdout-equality
+  expected: |
+    1.0000  reset my password
+    0.0000  cancel my subscription
+    0.0000  export my data
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: "Look at the doc embedding step — it uses `embed_a`. The query is using `embed_b`. The vectors aren't in the same space. Change the query line to use the same function as the docs."
+  - level: 2
+    body: |
+      ```python
+      query_vec = embed_a("reset my password")
+      ```
+      Rule of thumb: route every embedding through ONE function in your codebase. If `embed_query()` and `embed_doc()` exist as separate functions, they're an accident waiting to happen — wrap them both around the same model call.
+revealAfter: 6

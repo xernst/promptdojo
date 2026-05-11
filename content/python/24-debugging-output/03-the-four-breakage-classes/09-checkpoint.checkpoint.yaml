@@ -1,0 +1,114 @@
+xp: 8
+estSeconds: 240
+concept: classify-three-traces
+prompt: |
+  Final drill. You got three user-reported failures from the support
+  inbox this morning. Each has a trace attached. Classify them so
+  the right team gets the right ticket — retrieval team, prompt
+  team, ML team (hallucination), or backend team (parse).
+
+  Write `classify_failure(trace)` using the same priority order
+  from the previous step:
+
+  1. retrieved_chunks non-empty + retrieved_chunks_match_query False
+     → `"retrieval"`
+  2. raw_output != output_after_postprocess → `"parse"`
+  3. retrieved_chunks empty → `"hallucination"`
+  4. else → `"prompt"`
+
+  Then print one line per trace in this format:
+  `ticket_<id>: <class>`
+
+  Expected output:
+  ```
+  ticket_8821: retrieval
+  ticket_8822: prompt
+  ticket_8823: parse
+  ```
+starter: |
+  # three real failures from this morning's support inbox.
+
+  ticket_8821 = {
+      "id": 8821,
+      "complaint": "Chatbot told me my refund was processed. It wasn't.",
+      "rendered_prompt": "Look up the user's refund status.",
+      "retrieved_chunks": ["ticket from ALT-CUST-04 (wrong account)"],
+      "retrieved_chunks_match_query": False,
+      "raw_output": "Your refund was processed.",
+      "output_after_postprocess": "Your refund was processed.",
+  }
+
+  ticket_8822 = {
+      "id": 8822,
+      "complaint": "I asked for the top 3 highlights and got 12.",
+      "rendered_prompt": "Give me the highlights from this report.",
+      "retrieved_chunks": ["the full report text"],
+      "retrieved_chunks_match_query": True,
+      "raw_output": "1. ... 2. ... 3. ... 4. ... 5. ... 6. ... 7. ... 8. ... 9. ... 10. ... 11. ... 12. ...",
+      "output_after_postprocess": "1. ... 2. ... 3. ... 4. ... 5. ... 6. ... 7. ... 8. ... 9. ... 10. ... 11. ... 12. ...",
+  }
+
+  ticket_8823 = {
+      "id": 8823,
+      "complaint": "The refund amount shows as 48.20 with no currency unit.",
+      "rendered_prompt": "Return the refund as JSON with the amount including the currency symbol.",
+      "retrieved_chunks": ["correct ticket for CUST-04"],
+      "retrieved_chunks_match_query": True,
+      "raw_output": '{"refund": "$48.20"}',
+      "output_after_postprocess": '{"refund": "48.20"}',
+  }
+
+  # define classify_failure(trace) below
+
+  for t in [ticket_8821, ticket_8822, ticket_8823]:
+      print(f"ticket_{t['id']}: {classify_failure(t)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    ticket_8821: retrieval
+    ticket_8822: prompt
+    ticket_8823: parse
+  normalize: collapse-trailing-newline
+solution: |
+  ticket_8821 = {
+      "id": 8821,
+      "complaint": "Chatbot told me my refund was processed. It wasn't.",
+      "rendered_prompt": "Look up the user's refund status.",
+      "retrieved_chunks": ["ticket from ALT-CUST-04 (wrong account)"],
+      "retrieved_chunks_match_query": False,
+      "raw_output": "Your refund was processed.",
+      "output_after_postprocess": "Your refund was processed.",
+  }
+
+  ticket_8822 = {
+      "id": 8822,
+      "complaint": "I asked for the top 3 highlights and got 12.",
+      "rendered_prompt": "Give me the highlights from this report.",
+      "retrieved_chunks": ["the full report text"],
+      "retrieved_chunks_match_query": True,
+      "raw_output": "1. ... 2. ... 3. ... 4. ... 5. ... 6. ... 7. ... 8. ... 9. ... 10. ... 11. ... 12. ...",
+      "output_after_postprocess": "1. ... 2. ... 3. ... 4. ... 5. ... 6. ... 7. ... 8. ... 9. ... 10. ... 11. ... 12. ...",
+  }
+
+  ticket_8823 = {
+      "id": 8823,
+      "complaint": "The refund amount shows as 48.20 with no currency unit.",
+      "rendered_prompt": "Return the refund as JSON with the amount including the currency symbol.",
+      "retrieved_chunks": ["correct ticket for CUST-04"],
+      "retrieved_chunks_match_query": True,
+      "raw_output": '{"refund": "$48.20"}',
+      "output_after_postprocess": '{"refund": "48.20"}',
+  }
+
+  def classify_failure(trace):
+      if trace["retrieved_chunks"] and not trace["retrieved_chunks_match_query"]:
+          return "retrieval"
+      if trace["raw_output"] != trace["output_after_postprocess"]:
+          return "parse"
+      if not trace["retrieved_chunks"]:
+          return "hallucination"
+      return "prompt"
+
+  for t in [ticket_8821, ticket_8822, ticket_8823]:
+      print(f"ticket_{t['id']}: {classify_failure(t)}")
+passThreshold: 0.66

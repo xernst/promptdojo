@@ -1,0 +1,40 @@
+xp: 2
+estSeconds: 60
+concept: input-vs-output-cost-shape
+code: |
+  # claude sonnet 4.6 — $3/1M input, $15/1M output. output is 5x.
+  IN_RATE, OUT_RATE = 3.0, 15.0
+
+  shapes = {
+      "A: small-in / small-out": (200,   100),    # quick classification
+      "B: big-in / small-out":   (8000,  100),    # summarize a doc
+      "C: small-in / big-out":   (200,   8000),   # generate a long article
+      "D: big-in / big-out":     (8000,  8000),   # analyze a doc + write a report
+  }
+
+  for name, (tin, tout) in shapes.items():
+      cost = IN_RATE * tin / 1_000_000 + OUT_RATE * tout / 1_000_000
+      print(f"{name}: ${cost:.4f}")
+prompt: |
+  Four prompt shapes, all running on Claude Sonnet 4.6
+  ($3/1M input, $15/1M output). Which costs the MOST per call?
+
+  Be careful — output is 5× the price of input, so token count alone
+  doesn't tell you the answer.
+options:
+  - id: big_in_small_out
+    label: "B: big-in (8000) / small-out (100) — summarize a long doc"
+    explain: "8000 input tokens × $3/1M = $0.024. Plus 100 output × $15/1M = $0.0015. Total: $0.0255. Big input only, cheap output."
+  - id: small_in_big_out
+    label: "C: small-in (200) / big-out (8000) — generate a long article"
+    explain: "200 × $3/1M = $0.0006. 8000 × $15/1M = $0.12. Total: $0.1206. More than 4× the cost of shape B — because output is the expensive side."
+  - id: big_in_big_out
+    label: "D: big-in (8000) / big-out (8000) — analyze + write a report"
+  - id: small_in_small_out
+    label: "A: small-in (200) / small-out (100) — quick classification"
+    explain: "200 × $3/1M + 100 × $15/1M = $0.0021. Cheapest shape — both sides small."
+answerIds:
+  - big_in_big_out
+hint:
+  - level: 1
+    body: 'Compute each: cost = (in × $3 + out × $15) / 1,000,000. Output is 5× more expensive per token, so whichever shape has the most output dominates.'

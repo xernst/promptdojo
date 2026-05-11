@@ -1,0 +1,108 @@
+xp: 8
+estSeconds: 190
+concept: full-tiny-mcp-loop
+prompt: |
+  Final drill. You're prototyping an MCP server before wrapping it
+  in JSON-RPC stdio — this is the dispatch shape you'll port.
+
+  Build the whole tiny server. Two functions:
+
+  - `list_tools(registry)` — returns a list of
+    `{"name": ..., "description": ...}` dicts (one per tool), in
+    registry insertion order. No handlers in the output.
+  - `call_tool(name, args, registry)` — the dispatcher from the
+    previous step. Unknown tool → error envelope with
+    `unknown tool: <name>`. Missing required arg → error envelope
+    with `missing required arg: <key>`. Success → wrap handler
+    return value in the success envelope.
+
+  Then exercise it: list tools, call each with valid args, and call
+  with an unregistered name.
+
+  Expected output:
+  ```
+  [{'name': 'add', 'description': 'Add two numbers.'}, {'name': 'shout', 'description': 'Uppercase a string.'}]
+  5
+  HELLO
+  unknown tool: ghost
+  ```
+starter: |
+  REGISTRY = {
+      "add": {
+          "description": "Add two numbers.",
+          "inputSchema": {
+              "type": "object",
+              "properties": {"a": {"type": "number"}, "b": {"type": "number"}},
+              "required": ["a", "b"],
+          },
+          "handler": lambda args: str(args["a"] + args["b"]),
+      },
+      "shout": {
+          "description": "Uppercase a string.",
+          "inputSchema": {
+              "type": "object",
+              "properties": {"text": {"type": "string"}},
+              "required": ["text"],
+          },
+          "handler": lambda args: args["text"].upper(),
+      },
+  }
+
+  # define list_tools(registry) and call_tool(name, args, registry) below
+
+
+  print(list_tools(REGISTRY))
+  print(call_tool("add", {"a": 2, "b": 3}, REGISTRY)["content"][0]["text"])
+  print(call_tool("shout", {"text": "hello"}, REGISTRY)["content"][0]["text"])
+  print(call_tool("ghost", {}, REGISTRY)["content"][0]["text"])
+grader:
+  kind: stdout-equality
+  expected: |
+    [{'name': 'add', 'description': 'Add two numbers.'}, {'name': 'shout', 'description': 'Uppercase a string.'}]
+    5
+    HELLO
+    unknown tool: ghost
+  normalize: collapse-trailing-newline
+solution: |
+  REGISTRY = {
+      "add": {
+          "description": "Add two numbers.",
+          "inputSchema": {
+              "type": "object",
+              "properties": {"a": {"type": "number"}, "b": {"type": "number"}},
+              "required": ["a", "b"],
+          },
+          "handler": lambda args: str(args["a"] + args["b"]),
+      },
+      "shout": {
+          "description": "Uppercase a string.",
+          "inputSchema": {
+              "type": "object",
+              "properties": {"text": {"type": "string"}},
+              "required": ["text"],
+          },
+          "handler": lambda args: args["text"].upper(),
+      },
+  }
+
+  def list_tools(registry):
+      return [
+          {"name": name, "description": meta["description"]}
+          for name, meta in registry.items()
+      ]
+
+  def call_tool(name, args, registry):
+      if name not in registry:
+          return {"isError": True, "content": [{"type": "text", "text": f"unknown tool: {name}"}]}
+      tool = registry[name]
+      for key in tool["inputSchema"]["required"]:
+          if key not in args:
+              return {"isError": True, "content": [{"type": "text", "text": f"missing required arg: {key}"}]}
+      text = tool["handler"](args)
+      return {"isError": False, "content": [{"type": "text", "text": text}]}
+
+  print(list_tools(REGISTRY))
+  print(call_tool("add", {"a": 2, "b": 3}, REGISTRY)["content"][0]["text"])
+  print(call_tool("shout", {"text": "hello"}, REGISTRY)["content"][0]["text"])
+  print(call_tool("ghost", {}, REGISTRY)["content"][0]["text"])
+passThreshold: 0.66

@@ -1,0 +1,54 @@
+xp: 3
+estSeconds: 90
+concept: walk-a-trace
+code: |
+  # the trace from a real failure.
+  # rendered_prompt is clear. retrieval returned nothing.
+  # raw_output and output_after_postprocess are identical.
+  # the model still answered, confidently.
+
+  trace = {
+      "rendered_prompt": "When did Acme sign their enterprise contract with us?",
+      "tools_called": ["search_contracts"],
+      "retrieved_chunks": [],
+      "raw_output": "Acme signed their enterprise contract on March 14, 2024.",
+      "output_after_postprocess": "Acme signed their enterprise contract on March 14, 2024.",
+  }
+
+  # walk it.
+  print(f"retrieved_chunks empty?    {trace['retrieved_chunks'] == []}")
+  print(f"prompt clear?              True")
+  print(f"raw == postprocessed?      {trace['raw_output'] == trace['output_after_postprocess']}")
+  print(f"model answered anyway?     True")
+
+  # which class is this?
+  print("class: hallucination")
+prompt: |
+  Read the trace in the editor. The prompt is clear. The retriever
+  returned zero chunks. The raw output and post-processed output
+  are identical. The model still produced a confident, specific
+  date answer.
+
+  Predict the output of the script — specifically the final
+  `class:` line.
+
+  Expected output:
+  ```
+  retrieved_chunks empty?    True
+  prompt clear?              True
+  raw == postprocessed?      True
+  model answered anyway?     True
+  class: hallucination
+  ```
+grader:
+  kind: stdout-equality
+  expected: |
+    retrieved_chunks empty?    True
+    prompt clear?              True
+    raw == postprocessed?      True
+    model answered anyway?     True
+    class: hallucination
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Walk the priority order. retrieved_chunks is empty (no class-1 evidence). prompt is unambiguous (no class-2 evidence). raw matches postprocessed (no class-4 evidence). The model still answered with a specific date. That last fact is the signature of class 3 — the model invented an answer because retrieval gave it nothing to ground in.'

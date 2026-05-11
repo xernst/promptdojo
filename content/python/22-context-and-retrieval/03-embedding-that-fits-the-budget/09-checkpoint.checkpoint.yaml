@@ -1,0 +1,95 @@
+xp: 8
+estSeconds: 220
+concept: embedding-pipeline-end-to-end
+prompt: |
+  Final drill. Wire it all together into a tiny FAQ search engine —
+  the same shape as a real RAG retrieval step, just with stub
+  embeddings instead of an API call.
+
+  Build `top_k(query_vec, faqs, k)`:
+
+  - `faqs` is a list of `(text, vec)` tuples — 5 of them in the
+    starter.
+  - `query_vec` is a pre-computed embedding for the user's question.
+  - Compute cosine similarity between `query_vec` and each FAQ vec.
+  - Return the `k` highest-scoring FAQs as `(text, score)` tuples,
+    best first.
+
+  The starter calls your function with `k=2` to return the top-2
+  closest FAQs to the question "I forgot my password."
+
+  Real-world framing: this is the retrieval step of RAG. In
+  production you'd swap the hand-picked vectors for real OpenAI
+  embeddings, swap the list of 5 for thousands of chunks in a
+  vector database, and feed the top-K results into the prompt you
+  send to the model.
+
+  Expected output:
+  ```
+  query: 'I forgot my password'
+  top 2 matches:
+    0.9963  how do I reset my password?
+    0.2457  how do I upgrade my plan?
+  ```
+starter: |
+  import math
+
+  # write top_k(query_vec, faqs, k) below
+
+  faqs = [
+      ("how do I reset my password?",      [0.9, 0.1, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0]),
+      ("how do I cancel my subscription?", [0.1, 0.9, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0]),
+      ("how do I upgrade my plan?",        [0.1, 0.7, 0.2, 0.0, 0.0, 0.1, 0.0, 0.1]),
+      ("how do I export my data?",         [0.0, 0.0, 0.9, 0.1, 0.0, 0.0, 0.1, 0.0]),
+      ("what are your business hours?",    [0.0, 0.0, 0.0, 0.0, 0.9, 0.1, 0.0, 0.1]),
+  ]
+
+  query_text = "I forgot my password"
+  query_vec  = [0.85, 0.1, 0.0, 0.0, 0.15, 0.0, 0.0, 0.05]
+
+  results = top_k(query_vec, faqs, 2)
+
+  print(f"query: {query_text!r}")
+  print("top 2 matches:")
+  for text, score in results:
+      print(f"  {score:.4f}  {text}")
+grader:
+  kind: stdout-equality
+  expected: |
+    query: 'I forgot my password'
+    top 2 matches:
+      0.9963  how do I reset my password?
+      0.2457  how do I upgrade my plan?
+  normalize: collapse-trailing-newline
+solution: |
+  import math
+
+  def cosine(a, b):
+      dot = sum(x * y for x, y in zip(a, b))
+      na = math.sqrt(sum(x * x for x in a))
+      nb = math.sqrt(sum(y * y for y in b))
+      return dot / (na * nb)
+
+  def top_k(query_vec, faqs, k):
+      scored = [(text, cosine(query_vec, vec)) for text, vec in faqs]
+      scored.sort(key=lambda t: -t[1])
+      return scored[:k]
+
+  faqs = [
+      ("how do I reset my password?",      [0.9, 0.1, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0]),
+      ("how do I cancel my subscription?", [0.1, 0.9, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0]),
+      ("how do I upgrade my plan?",        [0.1, 0.7, 0.2, 0.0, 0.0, 0.1, 0.0, 0.1]),
+      ("how do I export my data?",         [0.0, 0.0, 0.9, 0.1, 0.0, 0.0, 0.1, 0.0]),
+      ("what are your business hours?",    [0.0, 0.0, 0.0, 0.0, 0.9, 0.1, 0.0, 0.1]),
+  ]
+
+  query_text = "I forgot my password"
+  query_vec  = [0.85, 0.1, 0.0, 0.0, 0.15, 0.0, 0.0, 0.05]
+
+  results = top_k(query_vec, faqs, 2)
+
+  print(f"query: {query_text!r}")
+  print("top 2 matches:")
+  for text, score in results:
+      print(f"  {score:.4f}  {text}")
+passThreshold: 0.66

@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/curriculum`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE}/about`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE}/changelog`, changeFrequency: "weekly", priority: 0.5 },
+    { url: `${SITE}/roast`, changeFrequency: "monthly", priority: 0.9 },
   ];
 
   for (const entry of toc.chapters) {

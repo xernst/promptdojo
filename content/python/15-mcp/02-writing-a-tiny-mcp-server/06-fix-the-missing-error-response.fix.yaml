@@ -1,0 +1,50 @@
+xp: 4
+estSeconds: 100
+concept: mcp-error-response-shape
+prompt: |
+  Cursor wrote a `call_tool` dispatcher. When the handler raises an
+  exception, the dispatcher returns just the exception's string —
+  not an MCP error envelope. The client has no way to tell this was
+  an error vs. a normal result.
+
+  Fix line 11 so that on exception, the dispatcher returns the
+  proper MCP error shape:
+
+  ```python
+  {"isError": True, "content": [{"type": "text", "text": str(e)}]}
+  ```
+
+  Expected output:
+  ```
+  True
+  boom
+  ```
+brokenCode: |
+  def call_tool(name, args, registry):
+      tool = registry[name]
+      try:
+          text = tool["handler"](args)
+          return {"isError": False, "content": [{"type": "text", "text": text}]}
+      except Exception as e:
+          return str(e)
+
+  registry = {
+      "explode": {"handler": lambda args: (_ for _ in ()).throw(ValueError("boom"))},
+  }
+  result = call_tool("explode", {}, registry)
+  print(result["isError"])
+  print(result["content"][0]["text"])
+bugLines:
+  - 6
+grader:
+  kind: stdout-equality
+  expected: |
+    True
+    boom
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The `except` branch returns a bare string. The print lines downstream expect a dict with `isError` and `content` keys. Match the success-case envelope shape, but flip `isError` to `True`.'
+  - level: 2
+    body: 'Replace line 6 with: `return {"isError": True, "content": [{"type": "text", "text": str(e)}]}`'
+revealAfter: 4

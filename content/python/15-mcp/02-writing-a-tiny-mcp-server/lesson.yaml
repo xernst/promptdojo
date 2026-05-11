@@ -1,0 +1,15 @@
+slug: writing-a-tiny-mcp-server
+title: "Writing a tiny MCP server — registries, dispatch, and the response shape"
+estMinutes: 14
+prerequisites:
+  - what-mcp-is
+order:
+  - 01-intro.read.md
+  - 02-which-message-is-call-tool.mc.yaml
+  - 03-the-tool-registry.read.md
+  - 04-predict-the-list-tools-output.predict.yaml
+  - 05-fill-the-input-schema.fill.yaml
+  - 06-fix-the-missing-error-response.fix.yaml
+  - 07-fix-the-validation-gap.fix.yaml
+  - 08-write-the-call-tool-dispatcher.write.yaml
+  - 09-checkpoint.checkpoint.yaml

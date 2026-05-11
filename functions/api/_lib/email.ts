@@ -24,10 +24,13 @@ export async function sendEmail(
   const from = env.RESEND_FROM_EMAIL ?? DEFAULT_FROM;
 
   if (!apiKey) {
+    // Stub mode: log only the envelope, never the body. The body
+    // contains the magic-link URL — if this is deployed without
+    // RESEND_API_KEY by accident, we don't want live tokens persisted
+    // in Cloudflare's log drain.
     console.log("[email:stub] no RESEND_API_KEY set —", {
       to: args.to,
       subject: args.subject,
-      text: args.text,
     });
     return { ok: true };
   }
@@ -46,6 +49,9 @@ export async function sendEmail(
         text: args.text,
         html: args.html,
       }),
+      // Cap the upstream call so a hung Resend doesn't burn the
+      // function's 30s budget while the user waits for "ok".
+      signal: AbortSignal.timeout(8_000),
     });
     if (!res.ok) {
       const body = await res.text().catch(() => "");
@@ -54,7 +60,11 @@ export async function sendEmail(
     }
     return { ok: true };
   } catch (err) {
-    console.error("[email] network error", err);
-    return { ok: false, error: "network error sending email" };
+    const isTimeout = err instanceof DOMException && err.name === "TimeoutError";
+    console.error("[email] network error", isTimeout ? "timeout" : err);
+    return {
+      ok: false,
+      error: isTimeout ? "email service timed out" : "network error sending email",
+    };
   }
 }

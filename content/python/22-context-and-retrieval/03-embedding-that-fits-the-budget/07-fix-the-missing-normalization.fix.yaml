@@ -1,0 +1,67 @@
+xp: 4
+estSeconds: 110
+concept: normalize-before-cosine
+prompt: |
+  Someone wrote a "fast similarity" that's just the dot product —
+  they skipped the normalization step. It compiles, it runs, and it
+  RETRIEVES THE WRONG DOCUMENT.
+
+  Why: dot product without normalization rewards big vectors. A
+  doc that points the wrong direction but has a bigger magnitude
+  beats a doc that points the right direction with a smaller
+  magnitude.
+
+  In the editor, `doc_match` is an exact-direction match for the
+  query (cosine = 1.0). `doc_long` points a totally different
+  direction but has a bigger magnitude. The broken function thinks
+  `doc_long` is closer. Fix the function to divide by the norms.
+
+  Expected output:
+  ```
+  doc_match: 1.0000
+  doc_long:  0.5774
+  winner: doc_match
+  ```
+brokenCode: |
+  import math
+
+  # bug: this is JUST the dot product. no normalization. distorts retrieval.
+  def similarity(a, b):
+      return sum(x * y for x, y in zip(a, b))
+
+  query = [1.0, 0.0, 0.0]
+  docs = {
+      "doc_match": [0.5, 0.0, 0.0],   # exact direction, small magnitude
+      "doc_long":  [0.6, 0.6, 0.6],   # wrong direction, big magnitude
+  }
+
+  scores = {name: similarity(query, vec) for name, vec in docs.items()}
+  for name, score in scores.items():
+      print(f"{name}: {score:.4f}")
+
+  winner = max(scores.items(), key=lambda kv: kv[1])[0]
+  print(f"winner: {winner}")
+bugLines:
+  - 4
+  - 5
+grader:
+  kind: stdout-equality
+  expected: |
+    doc_match: 1.0000
+    doc_long: 0.5774
+    winner: doc_match
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: "Divide the dot product by `norm(a) * norm(b)`, where `norm(v) = math.sqrt(sum(x*x for x in v))`. Without that step, you're not computing cosine — you're computing raw dot product, which prefers bigger vectors regardless of direction."
+  - level: 2
+    body: |
+      ```python
+      def similarity(a, b):
+          dot = sum(x * y for x, y in zip(a, b))
+          na = math.sqrt(sum(x * x for x in a))
+          nb = math.sqrt(sum(y * y for y in b))
+          return dot / (na * nb)
+      ```
+      Tip: some embedding APIs return pre-normalized vectors (all of magnitude 1.0). With those, dot product IS cosine. But never assume — measure the norm of a few sample vectors first.
+revealAfter: 6

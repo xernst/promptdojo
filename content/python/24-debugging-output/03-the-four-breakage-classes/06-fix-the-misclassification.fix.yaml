@@ -1,0 +1,63 @@
+xp: 4
+estSeconds: 110
+concept: dont-blame-the-model
+prompt: |
+  The `classify_failure(trace)` below is the lazy default: it
+  returns `"hallucination"` for every failure. That's the worst
+  habit on a debugging team — "the model hallucinated" is what you
+  say when you don't want to read the trace.
+
+  Fix the function to check the trace fields in priority order:
+
+  1. If `retrieved_chunks` is non-empty AND
+     `retrieved_chunks_match_query` is `False`, return `"retrieval"`.
+  2. Else if `raw_output != output_after_postprocess`, return
+     `"parse"`.
+  3. Else if `retrieved_chunks` is empty, return `"hallucination"`.
+  4. Else return `"prompt"`.
+
+  The trace in the editor is a class-1 retrieval bug (retrieval
+  returned the wrong account's ticket). The fixed function should
+  return `"retrieval"`.
+
+  Expected output:
+  ```
+  class: retrieval
+  ```
+brokenCode: |
+  trace = {
+      "rendered_prompt": "Look up the user's refund status.",
+      "retrieved_chunks": ["ticket from wrong account"],
+      "retrieved_chunks_match_query": False,
+      "raw_output": "Your refund was processed.",
+      "output_after_postprocess": "Your refund was processed.",
+  }
+
+  def classify_failure(trace):
+      # bug: every failure gets blamed on the model. lazy.
+      return "hallucination"
+
+  print(f"class: {classify_failure(trace)}")
+bugLines:
+  - 10
+grader:
+  kind: stdout-equality
+  expected: "class: retrieval"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'Replace the single-line body with four if-checks in priority order. Check retrieved_chunks first (class 1), then raw vs postprocessed (class 4), then empty retrieved_chunks (class 3), then fall through to prompt (class 2).'
+  - level: 2
+    body: |
+      Replace the body of `classify_failure` with:
+
+      ```python
+      if trace["retrieved_chunks"] and not trace["retrieved_chunks_match_query"]:
+          return "retrieval"
+      if trace["raw_output"] != trace["output_after_postprocess"]:
+          return "parse"
+      if not trace["retrieved_chunks"]:
+          return "hallucination"
+      return "prompt"
+      ```
+revealAfter: 4

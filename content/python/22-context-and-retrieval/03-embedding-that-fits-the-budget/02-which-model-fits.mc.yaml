@@ -1,0 +1,39 @@
+xp: 2
+estSeconds: 65
+concept: pick-embedding-by-corpus
+code: |
+  # four real RAG projects. each has a different corpus, budget, and
+  # privacy profile. which embedding tier fits each one?
+
+  projects = {
+      "A": "10,000 internal legal contracts. accuracy critical. budget flexible.",
+      "B": "5,000,000 support tickets. general English. cost matters at scale.",
+      "C": "50 marketing landing pages. tiny corpus. shipping tomorrow.",
+      "D": "100,000,000 product reviews. multilingual. need cheapest workable option.",
+  }
+  for k, v in projects.items():
+      print(f"{k}: {v}")
+prompt: |
+  Match each project to the right embedding choice. Remember the
+  cost table: `text-embedding-3-small` is $0.02/1M tokens (default),
+  `text-embedding-3-large` is $0.13/1M (6.5× more), local
+  sentence-transformers is free but slower.
+
+  Which option correctly matches ALL FOUR projects?
+options:
+  - id: correct
+    label: "A=large (accuracy), B=small (scale), C=small (default), D=small (multilingual works in small)"
+  - id: large_everything
+    label: "All four → text-embedding-3-large for best quality"
+    explain: "6.5× the cost for marginal gains. C is 50 pages — large is overkill. D is 100M reviews — large would cost 6.5× more for no business reason. Default to small, upgrade only with eval evidence."
+  - id: small_everything
+    label: "All four → text-embedding-3-small to save money"
+    explain: "A is legal contracts where misretrieval has real consequences. That's the one case where the eval set probably shows large outperforms. Don't blanket-cheap your way into a bad legal RAG."
+  - id: local_for_a
+    label: "A=local sentence-transformers (privacy), B=large, C=large, D=small"
+    explain: "Backwards. A wants the highest accuracy and the budget is flexible. B and C don't need large. Local makes sense only when the legal team specifically demands air-gapped processing."
+answerIds:
+  - correct
+hint:
+  - level: 1
+    body: "Default to `text-embedding-3-small` unless you have a specific reason not to. The two reasons to upgrade: (1) specialized domain where accuracy is critical and budget allows (legal, medical, code), or (2) eval data showing small fails on your corpus. Tiny corpora and massive ones both default to small for different reasons (cost doesn't matter / cost matters a lot)."

@@ -1,0 +1,48 @@
+xp: 3
+estSeconds: 80
+concept: closest-vector-by-cosine
+code: |
+  # three "document" embeddings and one "query" embedding.
+  # predict which document is closest by cosine similarity.
+
+  import math
+
+  def cosine(a, b):
+      dot = sum(x * y for x, y in zip(a, b))
+      na = math.sqrt(sum(x * x for x in a))
+      nb = math.sqrt(sum(y * y for y in b))
+      return dot / (na * nb)
+
+  vectors = {
+      "doc_a": [0.9, 0.1, 0.0, 0.0],   # "reset password"
+      "doc_b": [0.1, 0.9, 0.0, 0.0],   # "cancel subscription"
+      "doc_c": [0.0, 0.0, 0.9, 0.1],   # "export data"
+  }
+  query = [0.8, 0.2, 0.0, 0.0]          # "forgot my password"
+
+  for name, vec in vectors.items():
+      print(f"{name}: {cosine(query, vec):.4f}")
+
+  best = max(vectors.items(), key=lambda kv: cosine(query, kv[1]))
+  print(f"closest: {best[0]}")
+prompt: |
+  Look at the four vectors in the editor. The query vector
+  `[0.8, 0.2, 0.0, 0.0]` is dominated by the first dimension —
+  weight 0.8 on axis 1, weak elsewhere.
+
+  Which doc shares that pattern? Predict the exact stdout: three
+  similarity scores (4 decimal places each) and the name of the
+  closest doc.
+grader:
+  kind: stdout-equality
+  expected: |
+    doc_a: 0.9910
+    doc_b: 0.3482
+    doc_c: 0.0000
+    closest: doc_a
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: "Cosine compares direction. `doc_a` points the same way as `query` (both heavy on axis 1). `doc_b` points perpendicular (heavy on axis 2). `doc_c` shares zero direction with the query (axes 3 and 4 only). So `doc_a` wins easily, `doc_b` is moderate, `doc_c` is exactly 0.0."
+  - level: 2
+    body: "Score 1: `(0.8*0.9 + 0.2*0.1) / (sqrt(0.68) * sqrt(0.82)) ≈ 0.9910`. Score 2: ~0.3482. Score 3: 0.0000 (the dot product is zero — `query` has zero on axes 3 and 4, `doc_c` has zero on axes 1 and 2). Closest: doc_a."

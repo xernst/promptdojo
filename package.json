@@ -17,6 +17,7 @@
     "check:content:v1": "node scripts/build-content.mjs",
     "check:content:v2": "node scripts/build-content-v2.mjs",
     "validate:solutions": "node scripts/validate-solutions.mjs",
+    "lint:curriculum": "node scripts/curriculum-lint.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm check:content:v2 && pnpm validate:solutions && pnpm build",
     "check:full": "pnpm lint && pnpm typecheck && pnpm check:content:v1 && pnpm check:content:v2 && pnpm validate:solutions && pnpm build",
     "smoke": "node scripts/smoke.mjs"

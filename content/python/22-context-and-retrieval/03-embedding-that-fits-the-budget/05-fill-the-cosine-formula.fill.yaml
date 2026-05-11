@@ -1,0 +1,52 @@
+xp: 3
+estSeconds: 70
+concept: cosine-formula-components
+prompt: |
+  Cosine similarity has two pieces: the **dot product** of two
+  vectors (numerator) divided by the **product of their norms**
+  (denominator). Fill in the two expressions.
+
+  - The dot product is the sum over `i` of `a[i] * b[i]`.
+  - The norm of a vector is `sqrt(sum of squares)`.
+
+  Expected output:
+  ```
+  0.9910
+  ```
+code: |
+  import math
+
+  a = [0.8, 0.2, 0.0, 0.0]
+  b = [0.9, 0.1, 0.0, 0.0]
+
+  dot = ___
+  norm_a = math.sqrt(sum(x * x for x in a))
+  norm_b = ___
+
+  cosine = dot / (norm_a * norm_b)
+  print(f"{cosine:.4f}")
+blanks:
+  - id: dot_product
+    accept:
+      - "sum(x * y for x, y in zip(a, b))"
+      - "sum(x*y for x, y in zip(a, b))"
+      - "sum(x*y for x,y in zip(a,b))"
+      - "sum(a[i] * b[i] for i in range(len(a)))"
+      - "sum(a[i]*b[i] for i in range(len(a)))"
+    caseSensitive: true
+  - id: norm_b
+    accept:
+      - "math.sqrt(sum(x * x for x in b))"
+      - "math.sqrt(sum(x*x for x in b))"
+      - "math.sqrt(sum(y * y for y in b))"
+      - "math.sqrt(sum(y*y for y in b))"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: "The dot product is exactly the same pattern as `norm_a`'s inner sum, but you multiply `a[i] * b[i]` instead of `a[i] * a[i]`. The norm of `b` mirrors `norm_a` — just swap `a` for `b`."
+  - level: 2
+    body: |
+      ```python
+      dot = sum(x * y for x, y in zip(a, b))
+      norm_b = math.sqrt(sum(x * x for x in b))
+      ```

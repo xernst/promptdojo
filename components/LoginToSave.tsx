@@ -50,10 +50,6 @@ function writeProgress(payload: unknown) {
   window.dispatchEvent(new CustomEvent(PROGRESS_EVENT));
 }
 
-function isProgressEmpty(payload: unknown): boolean {
-  return countSteps(payload) === 0;
-}
-
 function countSteps(payload: unknown): number {
   if (!payload || typeof payload !== "object") return 0;
   const obj = payload as {
@@ -330,6 +326,7 @@ export default function LoginToSave() {
                 {status === "logged-in" ? "you're signed in" : "save your spot"}
               </h2>
               <button
+                type="button"
                 onClick={closeModal}
                 className="font-mono text-xs text-ink-500 hover:text-ink-300"
                 aria-label="close"

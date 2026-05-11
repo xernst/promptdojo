@@ -44,7 +44,11 @@ export const onRequestPost = async (ctx: Ctx): Promise<Response> => {
 
   let body: { email?: unknown; next?: unknown };
   try {
-    body = (await ctx.request.json()) as { email?: unknown; next?: unknown };
+    const parsed = (await ctx.request.json()) as unknown;
+    if (!parsed || typeof parsed !== "object") {
+      return json({ ok: false, error: "invalid request" }, 400);
+    }
+    body = parsed as { email?: unknown; next?: unknown };
   } catch {
     return json({ ok: false, error: "invalid request" }, 400);
   }

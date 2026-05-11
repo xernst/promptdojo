@@ -57,6 +57,16 @@ export const onRequestGet = async (ctx: Ctx): Promise<Response> => {
     );
   }
 
+  // Single-use — delete BEFORE we evaluate the payload. A malformed
+  // entry still gets cleared so an attacker can't keep probing the
+  // same key during its TTL window. KV TTL is the backstop if delete
+  // fails — log and continue so a flaky KV doesn't 500 the sign-in.
+  try {
+    await ctx.env.AUTH_KV.delete(`auth:${token}`);
+  } catch (err) {
+    console.warn("[auth:verify] AUTH_KV.delete failed (TTL is backstop):", err);
+  }
+
   let parsed: { email?: string; next?: string | null };
   try {
     parsed = JSON.parse(raw) as { email?: string; next?: string | null };
@@ -65,10 +75,6 @@ export const onRequestGet = async (ctx: Ctx): Promise<Response> => {
   }
   const email = parsed.email;
   if (!email) return htmlError("malformed token.", 500);
-
-  // Single-use — delete before issuing the cookie so a leaked token
-  // can't be replayed.
-  await ctx.env.AUTH_KV.delete(`auth:${token}`);
 
   const cookieValue = await signSession(email, ctx.env.SESSION_SECRET);
 

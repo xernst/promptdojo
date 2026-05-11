@@ -1,0 +1,15 @@
+slug: read-the-token-bill
+title: "Read the token bill — what your LLM feature actually costs"
+estMinutes: 12
+prerequisites:
+  - prompt-caching-correctly
+order:
+  - 01-intro.read.md
+  - 02-which-prompt-costs-more.mc.yaml
+  - 03-the-shape-of-a-bill.read.md
+  - 04-predict-the-monthly-spend.predict.yaml
+  - 05-fill-the-cost-formula.fill.yaml
+  - 06-fix-the-pricing-ratio-error.fix.yaml
+  - 07-fix-the-units-error.fix.yaml
+  - 08-write-the-cost-estimator.write.yaml
+  - 09-checkpoint.checkpoint.yaml

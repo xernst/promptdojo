@@ -1,0 +1,78 @@
+xp: 5
+estSeconds: 210
+concept: cost-estimator-function
+prompt: |
+  Write `estimate_call_cost(prompt, expected_output, in_rate, out_rate)` that:
+
+  - Uses the `estimate_tokens` helper (chars / 4) to convert both
+    strings to token counts.
+  - Applies `in_rate` (per 1M) to the prompt tokens.
+  - Applies `out_rate` (per 1M) to the expected_output tokens.
+  - Returns the per-call cost as a float **rounded to 6 decimals**
+    (these are fractions of a cent — precision matters when you
+    multiply by a million calls).
+
+  Two scenarios run for you. Expected output:
+  ```
+  sonnet 4.6 cost: $0.000360
+  opus 4.7 cost:   $0.001800
+  ```
+starter: |
+  def estimate_tokens(text):
+      return len(text) // 4
+
+  PROMPT = "Summarize the following ticket in one sentence: " \
+           "Customer reports the app crashes on launch after the 4.1 update. " \
+           "They have tried reinstalling twice with no change."
+  EXPECTED_OUTPUT = "App crashes on launch after the 4.1 update; reinstall did not help."
+
+  # define estimate_call_cost(prompt, expected_output, in_rate, out_rate) below
+  # use estimate_tokens to convert each string to a token count.
+
+  sonnet = estimate_call_cost(PROMPT, EXPECTED_OUTPUT, in_rate=3.0,  out_rate=15.0)
+  opus   = estimate_call_cost(PROMPT, EXPECTED_OUTPUT, in_rate=15.0, out_rate=75.0)
+
+  print(f"sonnet 4.6 cost: ${sonnet:.6f}")
+  print(f"opus 4.7 cost:   ${opus:.6f}")
+grader:
+  kind: stdout-equality
+  expected: |
+    sonnet 4.6 cost: $0.000360
+    opus 4.7 cost:   $0.001800
+  normalize: collapse-trailing-newline
+solution: |
+  def estimate_tokens(text):
+      return len(text) // 4
+
+  PROMPT = "Summarize the following ticket in one sentence: " \
+           "Customer reports the app crashes on launch after the 4.1 update. " \
+           "They have tried reinstalling twice with no change."
+  EXPECTED_OUTPUT = "App crashes on launch after the 4.1 update; reinstall did not help."
+
+  def estimate_call_cost(prompt, expected_output, in_rate, out_rate):
+      in_tokens  = estimate_tokens(prompt)
+      out_tokens = estimate_tokens(expected_output)
+      cost = (in_tokens / 1_000_000) * in_rate + (out_tokens / 1_000_000) * out_rate
+      return round(cost, 6)
+
+  sonnet = estimate_call_cost(PROMPT, EXPECTED_OUTPUT, in_rate=3.0,  out_rate=15.0)
+  opus   = estimate_call_cost(PROMPT, EXPECTED_OUTPUT, in_rate=15.0, out_rate=75.0)
+
+  print(f"sonnet 4.6 cost: ${sonnet:.6f}")
+  print(f"opus 4.7 cost:   ${opus:.6f}")
+hint:
+  - level: 1
+    body: 'Three lines inside the function: count input tokens, count output tokens, return the summed cost rounded to 6 decimals. Use `len(text) // 4` (integer division) for the token estimate.'
+  - level: 2
+    body: |
+      The formula:
+
+      ```python
+      def estimate_call_cost(prompt, expected_output, in_rate, out_rate):
+          in_tokens  = estimate_tokens(prompt)
+          out_tokens = estimate_tokens(expected_output)
+          cost = (in_tokens / 1_000_000) * in_rate + (out_tokens / 1_000_000) * out_rate
+          return round(cost, 6)
+      ```
+
+      Opus is 5× the price of Sonnet on both sides. Same call, 5× the bill.

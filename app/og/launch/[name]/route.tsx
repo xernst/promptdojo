@@ -47,6 +47,7 @@ export async function generateStaticParams() {
     { name: "ide" },
     { name: "capstone" },
     { name: "price" },
+    { name: "roast" },
   ];
 }
 
@@ -66,6 +67,8 @@ export async function GET(
       return renderCapstone();
     case "price":
       return renderPrice();
+    case "roast":
+      return renderRoast();
     default:
       notFound();
   }
@@ -679,6 +682,88 @@ function renderPrice() {
         </div>
 
         <Footer rightText="github.com/xernst/promptdojo" />
+      </Frame>
+    ),
+    { width: W, height: H },
+  );
+}
+
+function renderRoast() {
+  return new ImageResponse(
+    (
+      <Frame>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            flex: 1,
+            padding: "0 80px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              color: red,
+              fontSize: 26,
+              letterSpacing: 16,
+              textTransform: "uppercase",
+              fontWeight: 700,
+              fontFamily: MONO_STACK,
+              marginTop: 40,
+            }}
+          >
+            /roast
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 132,
+              fontWeight: 800,
+              color: ink100,
+              letterSpacing: -5,
+              lineHeight: 1.0,
+              marginTop: 40,
+              fontFamily: SERIF_STACK,
+            }}
+          >
+            roast my prompt.
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 40,
+              color: ink300,
+              lineHeight: 1.25,
+              marginTop: 28,
+              fontFamily: SERIF_STACK,
+              fontStyle: "italic",
+              maxWidth: 1280,
+            }}
+          >
+            paste a prompt. get a brutal critique in under a second.
+          </div>
+          <div
+            style={{
+              display: "flex",
+              marginTop: "auto",
+              marginBottom: 8,
+              color: ink400,
+              fontSize: 24,
+              fontFamily: MONO_STACK,
+              letterSpacing: 1,
+              alignItems: "center",
+            }}
+          >
+            <span>no api key</span>
+            <span style={{ color: ink700, margin: "0 18px" }}>·</span>
+            <span>no signup</span>
+            <span style={{ color: ink700, margin: "0 18px" }}>·</span>
+            <span style={{ color: ember }}>runs in your browser</span>
+          </div>
+        </div>
+
+        <Footer rightText="promptdojo.dev/roast" />
       </Frame>
     ),
     { width: W, height: H },

@@ -11,6 +11,15 @@
 export const SESSION_COOKIE = "pd_session";
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
+// Hard cap on cookie length before decoding. Real signed sessions are
+// ~220 bytes; anything over 2 KB is a client error or an attempt to
+// OOM atob() on the worker.
+const MAX_COOKIE_BYTES = 2048;
+
+// HMAC with a short secret is trivially forgeable. 32 chars is the
+// minimum we accept; the in-browser generator produces 64.
+const MIN_SECRET_CHARS = 32;
+
 export type SessionPayload = {
   email: string;
   iat: number; // issued-at, unix seconds
@@ -82,6 +91,8 @@ export async function verifySession(
   // Per audit-v6/code-review #3.
   try {
     if (!cookieValue) return null;
+    if (cookieValue.length > MAX_COOKIE_BYTES) return null;
+    if (!secret || secret.length < MIN_SECRET_CHARS) return null;
     const parts = cookieValue.split(".");
     if (parts.length !== 2) return null;
     const [payloadB64, sig] = parts;

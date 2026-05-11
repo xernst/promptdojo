@@ -1,0 +1,52 @@
+xp: 4
+estSeconds: 100
+concept: tokens-vs-million-tokens
+prompt: |
+  This is the bug that turned a $400 month into a $400,000 alert.
+
+  The rate is quoted as "$15 per 1,000,000 tokens." Someone wrote
+  the formula dividing by **1000** instead of **1,000,000** —
+  inflating the bill by 1000×. In a feature that runs at scale,
+  this gets caught when the credit card alert fires at 3am, not
+  when the test suite passes.
+
+  Fix the divisors so the math works in per-million units.
+
+  Expected output:
+  ```
+  cost: $0.036
+  ```
+brokenCode: |
+  in_tokens  = 2000
+  out_tokens = 2000
+  IN_RATE    = 3.0    # $3 per 1,000,000 tokens
+  OUT_RATE   = 15.0   # $15 per 1,000,000 tokens
+
+  # bug: dividing by 1_000 (per-thousand) when the rate is per-MILLION.
+  # this OVERSTATES the cost by 1000x. live this bug and your dashboard
+  # screams about a $36,000 bill that's actually a $36 bill — or worse,
+  # you under-bill 1000x in the other direction and ship at a loss.
+  cost = (in_tokens / 1_000) * IN_RATE + (out_tokens / 1_000) * OUT_RATE
+
+  print(f"cost: ${cost:.3f}")
+bugLines:
+  - 9
+grader:
+  kind: stdout-equality
+  expected: "cost: $0.036"
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The rate is per 1,000,000 tokens. To go from tokens to "millions of tokens," divide by 1,000,000 — not 1,000.'
+  - level: 2
+    body: |
+      Replace both `/ 1_000` with `/ 1_000_000`:
+
+      ```python
+      cost = (in_tokens / 1_000_000) * IN_RATE + (out_tokens / 1_000_000) * OUT_RATE
+      ```
+
+      The off-by-1000 bug is real. It's why every PR that touches
+      pricing code should print one example calculation and a human
+      should eyeball the magnitude before merging.
+revealAfter: 4

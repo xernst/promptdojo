@@ -58,6 +58,12 @@ export default function FloatingNav() {
               curriculum
             </Link>
             <Link
+              href="/roast"
+              className="shrink-0 font-mono text-[11px] uppercase tracking-wider text-green-400/90 transition hover:text-green-300"
+            >
+              roast
+            </Link>
+            <Link
               href="/about"
               className="shrink-0 font-mono text-[11px] uppercase tracking-wider text-ink-400 transition hover:text-green-400"
             >

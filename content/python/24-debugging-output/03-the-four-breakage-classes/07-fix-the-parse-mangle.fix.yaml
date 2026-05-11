@@ -1,0 +1,57 @@
+xp: 4
+estSeconds: 110
+concept: class-4-parse-bug
+prompt: |
+  The model returned correct JSON: `{"refund": "$48.20"}`. A
+  downstream "currency cleaner" regex was supposed to strip junk
+  characters but instead strips the `$` — turning `$48.20` into
+  `48.20`. The user reads `48.20` and asks support what currency.
+
+  The model was right. The trace's `raw_output` is correct. The
+  bug is in the regex on the post-processing line.
+
+  Fix the regex so it strips literal backticks (`` ` ``) — which
+  is what the cleaner was meant to do — and leaves the `$`
+  untouched.
+
+  Expected output:
+  ```
+  raw:           {"refund": "$48.20"}
+  postprocessed: {"refund": "$48.20"}
+  class: parse (bug was in regex, not model)
+  ```
+brokenCode: |
+  import re
+
+  raw_output = '{"refund": "$48.20"}'
+
+  # bug: this regex strips the dollar sign. it was supposed to strip
+  # backticks. someone wrote `\$` thinking it meant "the literal
+  # backtick character" — it doesn't.
+  output_after_postprocess = re.sub(r"\$", "", raw_output)
+
+  print(f"raw:           {raw_output}")
+  print(f"postprocessed: {output_after_postprocess}")
+  print("class: parse (bug was in regex, not model)")
+bugLines:
+  - 8
+grader:
+  kind: stdout-equality
+  expected: |
+    raw:           {"refund": "$48.20"}
+    postprocessed: {"refund": "$48.20"}
+    class: parse (bug was in regex, not model)
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: 'The intent was "strip backticks" — the backtick character is `` ` ``. The pattern `r"\$"` matches a literal dollar sign. Replace the pattern with one that matches a literal backtick.'
+  - level: 2
+    body: |
+      Change line 8 to:
+
+      ```python
+      output_after_postprocess = re.sub(r"`", "", raw_output)
+      ```
+
+      Since the raw output contains no backticks, the substitution is a no-op and the dollar sign is preserved.
+revealAfter: 4

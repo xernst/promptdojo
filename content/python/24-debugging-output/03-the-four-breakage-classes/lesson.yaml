@@ -1,0 +1,15 @@
+slug: the-four-breakage-classes
+title: "The four breakage classes — sort any LLM failure before you touch the prompt"
+estMinutes: 14
+prerequisites:
+  - read-the-trace-not-the-chat
+order:
+  - 01-intro.read.md
+  - 02-classify-the-refund-bug.mc.yaml
+  - 03-the-trace-anatomy.read.md
+  - 04-predict-the-class.predict.yaml
+  - 05-fill-the-class-name.fill.yaml
+  - 06-fix-the-misclassification.fix.yaml
+  - 07-fix-the-parse-mangle.fix.yaml
+  - 08-write-the-classifier.write.yaml
+  - 09-checkpoint.checkpoint.yaml
