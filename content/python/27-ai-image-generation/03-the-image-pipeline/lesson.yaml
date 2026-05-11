@@ -1,0 +1,14 @@
+slug: the-image-pipeline
+title: "The image pipeline — turning one idea into a hundred shipped assets"
+estMinutes: 22
+prerequisites:
+  - the-image-model-landscape
+  - prompting-for-real-output
+order:
+  - 01-the-six-stages.read.md
+  - 02-batch-and-filter.read.md
+  - 03-which-stage-is-broken.mc.yaml
+  - 04-format-and-platform.read.md
+  - 05-fill-the-pipeline.fill.yaml
+  - 06-write-cost-for-batch.write.yaml
+  - 07-checkpoint.checkpoint.yaml

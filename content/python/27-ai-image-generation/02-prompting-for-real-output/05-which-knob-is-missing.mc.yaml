@@ -1,0 +1,38 @@
+xp: 2
+estSeconds: 70
+concept: missing-knob-in-prompt
+code: |
+  # the brief — every knob named EXCEPT one.
+  # which one is missing?
+  prompt = (
+      "Portrait of a 32-year-old man with a salt-and-pepper beard, "
+      "looking off-camera. Centered composition, subject filling the "
+      "middle third of the frame. Soft window light from camera-left, "
+      "deep shadows on the right. Editorial documentary style, "
+      "muted earth tones, slight film grain. Shot on 35mm film camera, "
+      "eye level. No text, no watermark, no harsh studio lighting, "
+      "no plastic skin."
+  )
+  for line in prompt.split(". "):
+      print(f"- {line.strip()}")
+prompt: |
+  The prompt above names seven of the eight knobs (subject,
+  composition, lighting, style, camera, palette, negatives — in some
+  order). One is missing. Which one?
+options:
+  - id: lens
+    label: "lens (no aperture/focal length specified — e.g., 85mm f/1.4, shallow depth)"
+  - id: subject
+    label: "subject"
+    explain: "The 32-year-old man with a salt-and-pepper beard, looking off-camera, IS the subject. Specific enough to narrow the distribution. Not missing."
+  - id: lighting
+    label: "lighting"
+    explain: "'Soft window light from camera-left, deep shadows on the right' covers the lighting knob clearly."
+  - id: palette
+    label: "palette"
+    explain: "'Muted earth tones, slight film grain' is the palette. Color direction is specified."
+answerIds:
+  - lens
+hint:
+  - level: 1
+    body: "Walk down the eight: subject, composition, lighting, style, camera, lens, palette, negatives. Read each phrase in the prompt and check it off. The unchecked one is the answer."

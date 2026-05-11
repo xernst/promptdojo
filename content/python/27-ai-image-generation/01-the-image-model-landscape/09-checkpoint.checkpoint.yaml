@@ -1,0 +1,94 @@
+xp: 8
+estSeconds: 260
+concept: audit-an-image-pipeline
+prompt: |
+  Final drill. You're auditing a real image pipeline at an agency.
+  Write `audit_image_pipeline(tasks)` that takes a list of task
+  dicts (same shape as the previous step) and returns a list of
+  dicts, one per task, in the same order:
+
+  ```python
+  {"task_id": ..., "model": ..., "specialist_used": bool}
+  ```
+
+  `model` comes from your `pick_image_model(task)` routing.
+  `specialist_used` is `True` if the chosen model is one of the
+  three specialty picks: `ideogram-3`, `flux-kontext-pro`, or
+  `flux-1.1-pro`. Everything else is False (including the budget
+  fallback `gpt-image-1-mini`).
+
+  Each task carries a `task_id` field (string). Preserve it in
+  the output.
+
+  Five tasks run. Expected output:
+  ```
+  T1: ideogram-3        specialist=True
+  T2: flux-kontext-pro  specialist=True
+  T3: nano-banana       specialist=False
+  T4: midjourney-v7     specialist=False
+  T5: gpt-image-1-mini  specialist=False
+  ```
+starter: |
+  tasks = [
+      {"task_id": "T1", "needs_text_in_image": True, "budget_per_image": 0.10},
+      {"task_id": "T2", "needs_character_consistency": True, "budget_per_image": 0.05},
+      {"task_id": "T3", "batch_count": 50, "budget_per_image": 0.05},
+      {"task_id": "T4", "subjective_taste": True, "budget_per_image": 0.20},
+      {"task_id": "T5", "budget_per_image": 0.01, "instruction_heavy": True},
+  ]
+
+  # define pick_image_model and audit_image_pipeline below
+
+  for row in audit_image_pipeline(tasks):
+      print(f"{row['task_id']}: {row['model']:<18} specialist={row['specialist_used']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    T1: ideogram-3         specialist=True
+    T2: flux-kontext-pro   specialist=True
+    T3: nano-banana        specialist=False
+    T4: midjourney-v7      specialist=False
+    T5: gpt-image-1-mini   specialist=False
+  normalize: collapse-trailing-newline
+solution: |
+  tasks = [
+      {"task_id": "T1", "needs_text_in_image": True, "budget_per_image": 0.10},
+      {"task_id": "T2", "needs_character_consistency": True, "budget_per_image": 0.05},
+      {"task_id": "T3", "batch_count": 50, "budget_per_image": 0.05},
+      {"task_id": "T4", "subjective_taste": True, "budget_per_image": 0.20},
+      {"task_id": "T5", "budget_per_image": 0.01, "instruction_heavy": True},
+  ]
+
+  SPECIALISTS = {"ideogram-3", "flux-kontext-pro", "flux-1.1-pro"}
+
+  def pick_image_model(task):
+      if task.get("budget_per_image", 1.0) < 0.02:
+          return "gpt-image-1-mini"
+      if task.get("needs_text_in_image"):
+          return "ideogram-3"
+      if task.get("needs_character_consistency"):
+          return "flux-kontext-pro"
+      if task.get("photoreal_art_directed"):
+          return "flux-1.1-pro"
+      if task.get("batch_count", 1) >= 10:
+          return "nano-banana"
+      if task.get("subjective_taste"):
+          return "midjourney-v7"
+      if task.get("instruction_heavy"):
+          return "gpt-image-1"
+      return "imagen-4"
+
+  def audit_image_pipeline(tasks):
+      rows = []
+      for t in tasks:
+          model = pick_image_model(t)
+          rows.append({
+              "task_id": t["task_id"],
+              "model": model,
+              "specialist_used": model in SPECIALISTS,
+          })
+      return rows
+
+  for row in audit_image_pipeline(tasks):
+      print(f"{row['task_id']}: {row['model']:<18} specialist={row['specialist_used']}")
+passThreshold: 0.66

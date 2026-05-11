@@ -1,0 +1,34 @@
+xp: 2
+estSeconds: 50
+concept: text-in-image-pick
+code: |
+  # the brief: a banner for an upcoming product launch.
+  # the headline 'LAUNCHING JUNE 1' must render legibly.
+  # budget is $0.10 per generation. one image needed.
+  brief = {
+      "needs_text_in_image": True,
+      "text_string": "LAUNCHING JUNE 1",
+      "budget_per_image": 0.10,
+      "count": 1,
+  }
+  print(brief)
+prompt: |
+  The brief: legible "LAUNCHING JUNE 1" headline rendered inside the
+  image, budget $0.10/image, one image needed. Which model wins?
+options:
+  - id: ideogram_quality
+    label: "Ideogram 3.0 (Quality tier, ~$0.09/image, 90-95% text accuracy)"
+  - id: midjourney
+    label: "Midjourney v7"
+    explain: "Midjourney lands roughly 30-40% accuracy on rendered text. The letters will be slightly wrong on most generations. Wrong tool for this brief."
+  - id: flux_pro
+    label: "Flux.1.1 [pro]"
+    explain: "Flux Pro improved on text but still loses to Ideogram. Use it for photorealism without specific text demands."
+  - id: nano_banana
+    label: "nano-banana (Gemini 2.5 Flash Image, ~$0.039/image)"
+    explain: "Cheaper, but Ideogram is the specialist for text. With a $0.10 budget and only one image needed, you pay for the accuracy premium."
+answerIds:
+  - ideogram_quality
+hint:
+  - level: 1
+    body: "The brief specifies a literal text string that must render legibly. There's exactly one model family in 2026 designed for that job."

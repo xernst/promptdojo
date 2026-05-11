@@ -1,0 +1,8 @@
+number: 27
+slug: ai-image-generation
+title: "ai image generation — from prompt to production asset"
+blurb: "the 2026 image model landscape, the prompts that work, and the pipeline that turns one good idea into a hundred ready-to-ship images. nano-banana, flux, midjourney, ideogram — when each wins and what they cost."
+lessons:
+  - 01-the-image-model-landscape
+  - 02-prompting-for-real-output
+  - 03-the-image-pipeline

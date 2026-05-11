@@ -1,0 +1,87 @@
+xp: 5
+estSeconds: 220
+concept: route-image-task-to-model
+prompt: |
+  Write `pick_image_model(task)` that routes an image-generation
+  task to the right 2026 model.
+
+  `task` is a dict with optional keys:
+
+  - `budget_per_image`: float (default 1.0)
+  - `needs_text_in_image`: bool
+  - `needs_character_consistency`: bool
+  - `photoreal_art_directed`: bool
+  - `batch_count`: int (default 1)
+  - `subjective_taste`: bool
+  - `instruction_heavy`: bool
+
+  Return one of the model name strings, in this priority order:
+
+  1. `budget_per_image < 0.02` → `"gpt-image-1-mini"`
+  2. `needs_text_in_image` → `"ideogram-3"`
+  3. `needs_character_consistency` → `"flux-kontext-pro"`
+  4. `photoreal_art_directed` → `"flux-1.1-pro"`
+  5. `batch_count >= 10` → `"nano-banana"`
+  6. `subjective_taste` → `"midjourney-v7"`
+  7. `instruction_heavy` → `"gpt-image-1"`
+  8. default → `"imagen-4"`
+
+  Four tasks run. Expected output:
+  ```
+  poster:    ideogram-3
+  hero:      flux-1.1-pro
+  batch:     nano-banana
+  cheap:     gpt-image-1-mini
+  ```
+starter: |
+  poster = {"needs_text_in_image": True, "budget_per_image": 0.10}
+  hero = {"photoreal_art_directed": True, "budget_per_image": 0.08}
+  batch = {"batch_count": 50, "budget_per_image": 0.05}
+  cheap = {"budget_per_image": 0.01, "needs_text_in_image": True}
+
+  # define pick_image_model(task) below
+
+  print(f"poster:    {pick_image_model(poster)}")
+  print(f"hero:      {pick_image_model(hero)}")
+  print(f"batch:     {pick_image_model(batch)}")
+  print(f"cheap:     {pick_image_model(cheap)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    poster:    ideogram-3
+    hero:      flux-1.1-pro
+    batch:     nano-banana
+    cheap:     gpt-image-1-mini
+  normalize: collapse-trailing-newline
+solution: |
+  poster = {"needs_text_in_image": True, "budget_per_image": 0.10}
+  hero = {"photoreal_art_directed": True, "budget_per_image": 0.08}
+  batch = {"batch_count": 50, "budget_per_image": 0.05}
+  cheap = {"budget_per_image": 0.01, "needs_text_in_image": True}
+
+  def pick_image_model(task):
+      if task.get("budget_per_image", 1.0) < 0.02:
+          return "gpt-image-1-mini"
+      if task.get("needs_text_in_image"):
+          return "ideogram-3"
+      if task.get("needs_character_consistency"):
+          return "flux-kontext-pro"
+      if task.get("photoreal_art_directed"):
+          return "flux-1.1-pro"
+      if task.get("batch_count", 1) >= 10:
+          return "nano-banana"
+      if task.get("subjective_taste"):
+          return "midjourney-v7"
+      if task.get("instruction_heavy"):
+          return "gpt-image-1"
+      return "imagen-4"
+
+  print(f"poster:    {pick_image_model(poster)}")
+  print(f"hero:      {pick_image_model(hero)}")
+  print(f"batch:     {pick_image_model(batch)}")
+  print(f"cheap:     {pick_image_model(cheap)}")
+hint:
+  - level: 1
+    body: "Eight `if` checks in priority order. Use `task.get(key, default)` everywhere so missing fields don't crash. The budget check goes FIRST — it overrides everything else, including text-in-image (see the `cheap` task: budget $0.01 routes to mini even though it needs text)."
+  - level: 2
+    body: "The trap is the `cheap` task. It has `needs_text_in_image=True` but `budget_per_image=0.01`. Budget rule fires first → returns `gpt-image-1-mini`. If your version returns `ideogram-3` for that task, you have the rules in the wrong order."

@@ -1,0 +1,118 @@
+xp: 5
+estSeconds: 240
+concept: score-prompt-by-knobs
+prompt: |
+  Write `score_image_prompt(prompt)` that takes a prompt string and
+  returns a dict:
+
+  ```python
+  {"score": int (0-8), "missing": list[str]}
+  ```
+
+  Use this exact `KNOB_KEYWORDS` table (provided in the starter).
+  Lowercase the prompt and check if ANY keyword for a knob appears
+  as a substring. If yes, that knob is hit. If no, add the knob's
+  name to `missing`. `score` is the number of knobs hit (0-8).
+  `missing` keeps the original knob-table order.
+
+  Three prompts run: `good`, `mid`, `bad`. Expected output:
+  ```
+  good: {'score': 8, 'missing': []}
+  mid:  {'score': 5, 'missing': ['lighting', 'lens', 'negatives']}
+  bad:  {'score': 0, 'missing': ['subject', 'composition', 'lighting', 'style', 'camera', 'lens', 'palette', 'negatives']}
+  ```
+starter: |
+  KNOB_KEYWORDS = {
+      "subject":     ["woman", "man", "person", "portrait", "subject"],
+      "composition": ["rule of thirds", "centered", "third", "frame", "composition"],
+      "lighting":    ["golden hour", "rim light", "side-lighting", "window light", "natural light", "studio light"],
+      "style":       ["editorial", "cinematic", "documentary", "fashion", "fine art", "illustration"],
+      "camera":      ["35mm camera", "leica", "shot on", "eye level", "low angle", "high angle"],
+      "lens":        ["85mm", "50mm", "f/1.4", "f/1.8", "shallow depth", "telephoto", "wide angle"],
+      "palette":     ["earth tones", "muted", "kodak portra", "warm shadows", "monochrome", "saturated"],
+      "negatives":   ["no text", "no watermark", "no harsh", "no extra", "no smile", "no plastic"],
+  }
+
+  good = (
+      "Portrait of a young woman with curly auburn hair. "
+      "Rule of thirds, subject in left third. "
+      "Golden hour side-lighting from a window. "
+      "Editorial documentary style. "
+      "Shot on 35mm camera, eye level. "
+      "85mm f/1.4 lens, shallow depth of field. "
+      "Muted earth tones, Kodak Portra palette. "
+      "No text, no watermark, no harsh studio light."
+  )
+
+  mid = (
+      "Portrait of a young woman with auburn hair. "
+      "Centered composition. "
+      "Editorial style, muted earth tones. "
+      "Shot on 35mm camera, eye level."
+  )
+
+  bad = "a girl with red hair"
+
+  # define score_image_prompt(prompt) below
+
+  print(f"good: {score_image_prompt(good)}")
+  print(f"mid:  {score_image_prompt(mid)}")
+  print(f"bad:  {score_image_prompt(bad)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    good: {'score': 8, 'missing': []}
+    mid:  {'score': 5, 'missing': ['lighting', 'lens', 'negatives']}
+    bad:  {'score': 0, 'missing': ['subject', 'composition', 'lighting', 'style', 'camera', 'lens', 'palette', 'negatives']}
+  normalize: collapse-trailing-newline
+solution: |
+  KNOB_KEYWORDS = {
+      "subject":     ["woman", "man", "person", "portrait", "subject"],
+      "composition": ["rule of thirds", "centered", "third", "frame", "composition"],
+      "lighting":    ["golden hour", "rim light", "side-lighting", "window light", "natural light", "studio light"],
+      "style":       ["editorial", "cinematic", "documentary", "fashion", "fine art", "illustration"],
+      "camera":      ["35mm camera", "leica", "shot on", "eye level", "low angle", "high angle"],
+      "lens":        ["85mm", "50mm", "f/1.4", "f/1.8", "shallow depth", "telephoto", "wide angle"],
+      "palette":     ["earth tones", "muted", "kodak portra", "warm shadows", "monochrome", "saturated"],
+      "negatives":   ["no text", "no watermark", "no harsh", "no extra", "no smile", "no plastic"],
+  }
+
+  good = (
+      "Portrait of a young woman with curly auburn hair. "
+      "Rule of thirds, subject in left third. "
+      "Golden hour side-lighting from a window. "
+      "Editorial documentary style. "
+      "Shot on 35mm camera, eye level. "
+      "85mm f/1.4 lens, shallow depth of field. "
+      "Muted earth tones, Kodak Portra palette. "
+      "No text, no watermark, no harsh studio light."
+  )
+
+  mid = (
+      "Portrait of a young woman with auburn hair. "
+      "Centered composition. "
+      "Editorial style, muted earth tones. "
+      "Shot on 35mm camera, eye level."
+  )
+
+  bad = "a girl with red hair"
+
+  def score_image_prompt(prompt):
+      low = prompt.lower()
+      missing = []
+      score = 0
+      for knob, keywords in KNOB_KEYWORDS.items():
+          if any(k in low for k in keywords):
+              score += 1
+          else:
+              missing.append(knob)
+      return {"score": score, "missing": missing}
+
+  print(f"good: {score_image_prompt(good)}")
+  print(f"mid:  {score_image_prompt(mid)}")
+  print(f"bad:  {score_image_prompt(bad)}")
+hint:
+  - level: 1
+    body: "Lowercase the prompt once. Then iterate the KNOB_KEYWORDS dict in order (Python 3.7+ dicts preserve insertion order). For each knob, if `any(k in low for k in keywords)` then increment score, else append the knob name to missing. Return both."
+  - level: 2
+    body: "The trap is iteration order — `missing` must preserve the dict's insertion order so the output matches. `dict.items()` does this in CPython 3.7+. Don't sort the missing list."

@@ -1,0 +1,38 @@
+xp: 2
+estSeconds: 60
+concept: flux-vs-midjourney-pick
+code: |
+  # five real briefs. one model fits each best.
+  briefs = [
+      "Photoreal hero shot of a wireless earbud on a marble surface, top-down, soft window light, art-directed.",
+      "Concept-art moodboard for a fantasy novel cover. Aesthetic-driven, no specific composition required.",
+      "Lifestyle banner with the headline 'Summer Sale — 30% off' rendered crisply across the image.",
+      "Twelve variants of the same product on twelve different backgrounds, keeping the product visually identical.",
+      "100 thumbnail variants for an A/B test, $50 total budget.",
+  ]
+  for i, b in enumerate(briefs, 1):
+      print(f"{i}. {b}")
+prompt: |
+  Five briefs. Which one is the BEST fit for Midjourney v7?
+  (Reminder: Midjourney wins on subjective taste, loses on text-in-image,
+  character consistency across renders, and high-volume API workloads.)
+options:
+  - id: brief_2
+    label: "2 — concept-art moodboard, aesthetic-driven, no specific composition"
+  - id: brief_1
+    label: "1 — photoreal earbud, art-directed"
+    explain: "Art-directed + photoreal is Flux territory. Midjourney will style it, but won't follow the composition as literally as Flux does."
+  - id: brief_3
+    label: "3 — banner with 'Summer Sale — 30% off' rendered crisply"
+    explain: "Text in image. Midjourney lands roughly 30-40% accuracy on text. Use Ideogram (90-95%) for any brief where the letters matter."
+  - id: brief_4
+    label: "4 — twelve variants of the same product, identical-looking"
+    explain: "Character/object consistency across renders. Flux Kontext is built for exactly this. Midjourney's `--cref` is lossy by comparison."
+  - id: brief_5
+    label: "5 — 100 thumbnails for $50 total"
+    explain: "Volume economics. Midjourney has no per-image API, no pro-rata pricing for an app. nano-banana at ~$0.039/image fits the budget; Midjourney doesn't have the right billing surface."
+answerIds:
+  - brief_2
+hint:
+  - level: 1
+    body: "Midjourney's home turf is 'mood-driven, taste-heavy, no specific art direction.' Of the five briefs, exactly one fits that profile."

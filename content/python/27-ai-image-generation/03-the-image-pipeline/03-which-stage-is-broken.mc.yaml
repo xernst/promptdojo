@@ -1,0 +1,36 @@
+xp: 2
+estSeconds: 70
+concept: diagnose-broken-pipeline-stage
+code: |
+  # the symptom: the team is generating beautiful Flux Pro images
+  # at $0.04/image. they ship one per request. but the customer
+  # complains the images sometimes have six-fingered hands AND
+  # they're served as 1024x1024 PNG even when the customer is on
+  # mobile where a 400x400 WebP would load 8x faster.
+  symptoms = [
+      "occasional broken hands shipped to production",
+      "1024x1024 PNG served regardless of viewport",
+      "no resize, no format conversion, no EXIF stripping",
+  ]
+  for s in symptoms:
+      print(f"- {s}")
+prompt: |
+  Six pipeline stages: brief, prompt, generate, filter, upscale,
+  format. The symptoms above point at which TWO broken stages?
+options:
+  - id: filter_and_format
+    label: "filter + format (broken hands = no filter step; 1024 PNG on mobile = no format step)"
+  - id: brief_and_prompt
+    label: "brief + prompt"
+    explain: "The brief and prompt could be fine. The issue is downstream: nothing catches the broken hands (filter), and nothing reformats for the channel (format)."
+  - id: generate_and_upscale
+    label: "generate + upscale"
+    explain: "Generation is producing the images correctly (Flux Pro is fine). Upscale isn't the issue — the problem is the OUTPUT format, not the resolution."
+  - id: prompt_and_upscale
+    label: "prompt + upscale"
+    explain: "The prompt issue would be 'images don't match the brief.' That's not the symptom here. The symptoms are post-generation: no filtering, no formatting."
+answerIds:
+  - filter_and_format
+hint:
+  - level: 1
+    body: "Map each symptom to the stage that would have caught it. Broken hands shipping to prod = no filter (stage 4) caught them. 1024 PNG on mobile = no format (stage 6) sized/converted them."

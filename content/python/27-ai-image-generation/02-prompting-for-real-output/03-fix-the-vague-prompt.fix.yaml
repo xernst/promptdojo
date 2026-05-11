@@ -1,0 +1,80 @@
+xp: 3
+estSeconds: 90
+concept: rewrite-vague-into-specific
+prompt: |
+  A function `build_prompt()` is supposed to return a production-grade
+  prompt with all eight knobs named (subject, composition, lighting,
+  style, camera, lens, palette, negatives). The current return value
+  is a vague one-liner. Fix it to hit all eight knobs.
+
+  The grader is lenient: it checks that the returned string contains
+  at least one phrase for each of the eight knob categories
+  (keyword-match), and the call site joins them with newlines.
+
+  Expected output (eight checkmarks):
+  ```
+  subject      ✓
+  composition  ✓
+  lighting     ✓
+  style        ✓
+  camera       ✓
+  lens         ✓
+  palette      ✓
+  negatives    ✓
+  ```
+brokenCode: |
+  KNOB_KEYWORDS = {
+      "subject":     ["woman", "man", "person", "subject", "portrait"],
+      "composition": ["rule of thirds", "centered", "third", "frame", "composition"],
+      "lighting":    ["golden hour", "rim light", "side-lighting", "window light", "natural light"],
+      "style":       ["editorial", "cinematic", "documentary", "fashion", "fine art"],
+      "camera":      ["35mm camera", "Leica", "shot on", "eye level", "low angle"],
+      "lens":        ["85mm", "50mm", "f/1.4", "f/1.8", "shallow depth", "telephoto"],
+      "palette":     ["earth tones", "muted", "Kodak Portra", "warm shadows", "monochrome"],
+      "negatives":   ["no text", "no watermark", "no harsh", "no extra", "no smile"],
+  }
+
+  def build_prompt():
+      # bug: vague one-liner, hits zero knobs cleanly
+      return "a girl with red hair"
+
+  prompt = build_prompt()
+  for knob, keywords in KNOB_KEYWORDS.items():
+      hit = any(k.lower() in prompt.lower() for k in keywords)
+      mark = "✓" if hit else "✗"
+      print(f"{knob:12} {mark}")
+bugLines:
+  - 13
+  - 14
+grader:
+  kind: stdout-equality
+  expected: |
+    subject      ✓
+    composition  ✓
+    lighting     ✓
+    style        ✓
+    camera       ✓
+    lens         ✓
+    palette      ✓
+    negatives    ✓
+  normalize: collapse-trailing-newline
+hint:
+  - level: 1
+    body: "Rewrite the return string to mention at least one phrase from each of the eight keyword lists. The grader case-insensitively substring-matches, so you don't need exact capitalization."
+  - level: 2
+    body: |
+      Something like:
+
+      ```python
+      return (
+          "Portrait of a young woman with auburn hair. "
+          "Rule of thirds, subject in left third. "
+          "Golden hour side-lighting from a window. "
+          "Editorial portrait style. "
+          "Shot on 35mm camera, eye level. "
+          "85mm f/1.4 lens, shallow depth of field. "
+          "Muted earth tones, Kodak Portra palette. "
+          "No text, no watermark, no harsh studio light."
+      )
+      ```
+revealAfter: 6

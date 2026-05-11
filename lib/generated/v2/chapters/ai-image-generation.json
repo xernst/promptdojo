@@ -1,0 +1,595 @@
+{
+  "number": 27,
+  "slug": "ai-image-generation",
+  "title": "ai image generation — from prompt to production asset",
+  "blurb": "the 2026 image model landscape, the prompts that work, and the pipeline that turns one good idea into a hundred ready-to-ship images. nano-banana, flux, midjourney, ideogram — when each wins and what they cost.",
+  "overview": "## The model didn't fail — the workflow did\n\nEvery founder who's tried to ship an image-heavy product in 2026 has the same story. They picked one model, wrote one prompt, generated one image, hated it, and concluded \"AI image stuff isn't there yet.\" It is there. They just ran the wrong tool against the wrong task with the wrong prompt and no pipeline.\n\nThis chapter is the production view. Six image-model families, the eight knobs that turn a \"make me a photo of a girl\" prompt into a usable asset, and the pipeline that takes the one idea you had at 9am and ships a hundred polished, platform-correct files by lunch. Real pricing. Real model names. Real failure modes.\n\n## Why it matters\n\n- **Image work is the second budget line in any AI product after the LLM call.** Picking nano-banana over Midjourney at scale is the difference between a $30 batch and a $3 batch.\n- **The model landscape forked.** \"AI image gen\" used to mean DALL-E. In 2026 it means six families optimized for six different jobs (photorealism, instruction-following, text-in-image, character consistency, speed, taste). Picking the wrong one wastes hours.\n- **Most of the quality is in the prompt and the pipeline, not the model.** The same Flux Pro call generates slop and award-shortlist work depending on the eight knobs in lesson 02.\n\n## What AI specifically gets wrong\n\n- **Picking Midjourney for everything.** Midjourney wins on taste, loses on text-in-image, character consistency across renders, and API-volume economics. If your job is a product page hero image, fine. If your job is a hundred banner variants with the same product, you're holding the wrong tool.\n- **Treating \"a girl with red hair\" as a prompt.** That's a wish. A prompt names subject, composition, lighting, style, camera, lens, palette, and negatives. Eight knobs. Skip them and the model fills in the average of the training data, which is slop.\n- **Generating one image and editing forever.** The 2026 workflow is generate-many, filter, upscale. nano-banana at ~$0.039/image lets you generate 50 candidates and pick 3 for less than one Midjourney render. Generating one image is the most expensive way to use these tools.\n- **Forgetting that Anthropic's Claude is input-only for images.** Claude can read images. Claude cannot generate them. Don't waste two days wiring an image-gen route to the Anthropic API.\n\n## What you'll be able to do at the end\n\nBy the end of this chapter you'll have:\n\n- Picked the right model family for any image task — product, social, illustration, document, character-consistent — using a decision function you wrote, not vibes.\n- Written prompts that hit the eight knobs and scored a prompt's completeness with a function you wrote.\n- Estimated the cost of a batch across nano-banana, Flux Pro, Midjourney, and DALL-E at real 2026 rates.\n- Planned a full shoot — brief in, model + count + total cost + output formats out — for any creative ask.\n\nThe difference between \"I can use ChatGPT to make a picture\" and \"I can ship image assets at production volume on a budget\" is this chapter. After it, the part of your stack where images live stops being a black box.\n",
+  "lessons": [
+    {
+      "slug": "the-image-model-landscape",
+      "title": "The image model landscape — six families and what each is for",
+      "estMinutes": 18,
+      "prerequisites": [],
+      "steps": [
+        {
+          "type": "read",
+          "id": "ai-image-generation/the-image-model-landscape/s01-01-the-six-families",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 180,
+          "concept": "six-image-model-families",
+          "body": "# Six families, six jobs\n\nIn 2024 there was effectively one mainstream image model people knew about (DALL-E 3) and a few power-user choices (Midjourney, Stable Diffusion forks). In 2026 the landscape has forked into six distinct families, each optimized for a different job. Picking the wrong family is the single biggest source of bad output in image generation today — bigger than prompt skill, bigger than budget.\n\nThe six families:\n\n1. **Flux** (Black Forest Labs) — open weights, leads on photorealism and technical accuracy. The 2026 lineup runs Flux.1 [pro], Flux.1.1 [pro], Flux.1.1 [pro] Ultra (up to 4MP), and the Flux Kontext family for edit-with-instructions. API access via `api.bfl.ml`, Replicate, and Fal.ai.\n2. **nano-banana** (Google Gemini Flash Image) — the rebranded marketing name for Gemini 2.5 Flash Image, Gemini 3 Pro Image (Nano Banana Pro), and Gemini 3.1 Flash Image (Nano Banana 2). Speed-optimized, very cheap per image, strong multi-turn editing. The Flash Image Preview launched late 2025 and made batch generation economically obvious.\n3. **Midjourney** (v7) — closed-source, no public API, Discord and web app only. Wins on subjective aesthetic taste, loses on text-in-image, character consistency, and any workflow that needs more than 200 images a month.\n4. **Ideogram** (3.0) — text-in-image specialist. Claims 90-95% text rendering accuracy. Three tiers: Turbo (~$0.03), Default (~$0.0375), Quality (~$0.09).\n5. **OpenAI gpt-image-1 family** — gpt-image-1, gpt-image-1.5 (current flagship as of March 2026), and gpt-image-1-mini. Strong instruction-following (you can say \"put the logo top-left at 20% size\" and it usually listens). DALL-E 3 is now deprecated.\n6. **Google Imagen** (4) — three variants on Vertex AI: Imagen 4 Fast ($0.02), Imagen 4 ($0.04), Imagen 4 Ultra ($0.06). Enterprise-friendly, integrates with Google Cloud.\n\n## The two axes that actually matter\n\nWhen you're picking a model, two axes determine 80% of the decision:\n\n- **Taste vs. control.** Midjourney is taste-heavy: you describe a vibe and it gives you a magazine shot. Flux and gpt-image-1 are control-heavy: you describe a specific composition and they execute on it. If you have art direction, you want control. If you don't, you want taste.\n- **Per-image cost vs. quality ceiling.** nano-banana at ~$0.039/image is the batch workhorse. Flux Pro at ~$0.04 is the photoreal workhorse. Midjourney Mega at $120/month is unlimited-Fast-GPU for one creator. Imagen 4 Ultra at $0.06 is the enterprise quality ceiling.\n\nEverything else (character consistency, text-in-image, document handling) collapses into a specialty model: if you need it, use the specialist.\n\n## What Claude can and can't do\n\nOne trap before we go further. Anthropic's Claude (the model running this curriculum) reads images — you can pass `{\"type\": \"image\", ...}` blocks into a `messages.create` and Claude will analyze them. Claude **does not generate images**. If you wire up an image-generation feature, the call goes to Google, OpenAI, Black Forest Labs, fal.ai, Replicate, or directly to a self-hosted Flux endpoint. Not Anthropic.\n\nThis trips up about half the people who try to ship an image feature in their first Claude app. Don't be one of them.\n\n## What this lesson does\n\nWalks the six families with their actual 2026 names, prices, and strengths. Drills you on which one to pick for five different jobs. Ends with a `pick_image_model(task)` function you can call from any harness to route an image-gen request to the right backend. Pure decision logic — no API calls, runs in stdlib.\n\nThe downstream lessons assume you can tell, given a task description, which family you'd send it to. By the end of this lesson, you can.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "ai-image-generation/the-image-model-landscape/s02-02-flux-vs-midjourney",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 200,
+          "concept": "flux-vs-midjourney",
+          "body": "# Flux vs Midjourney — the two ends of the spectrum\n\nIf you understand Flux and Midjourney, you understand the shape of the whole landscape. They sit at opposite ends of one axis (control vs. taste) and most other models slot somewhere between them.\n\n## Flux — what it's for\n\nBlack Forest Labs released Flux.1 in mid-2024 with three tiers: `[schnell]` (open Apache-2.0, fast and free to self-host), `[dev]` (open weights, non-commercial), and `[pro]` (API-only). Flux.1.1 [pro] dropped later that year with sharper output, and Flux.1.1 [pro] Ultra arrived in November 2024 at $0.06/image with up to 4MP resolution and a \"Raw\" mode for non-stylized photoreal output.\n\nThe 2026 reason to reach for Flux:\n\n- **Photorealism.** Flux.1.1 Pro is currently the leader on photorealistic output. Skin texture, depth-of-field, real-camera-feel. If the brief is \"make this look like a real photo,\" Flux wins.\n- **Prompt fidelity.** Flux follows your composition instructions more literally than Midjourney. \"Subject in lower-left third, holding a green mug, looking off-camera\" — Flux usually does what you said.\n- **Open weights option.** Flux.1 [schnell] and [dev] mean you can self-host. If you're sending 50,000+ images a month, the economics of running your own Flux on a rented H100 beat any API price.\n- **Edit with instructions via Flux Kontext.** Flux.1 Kontext (pro, max, and dev) takes an existing image and a text instruction (\"change the background to a beach, keep the subject identical\") and produces an edited version with character consistency preserved. This is the cleanest 2026 answer to \"I have a hero shot, give me 12 variants on different backgrounds.\"\n\nAPI access: `api.bfl.ml` directly (cheapest), or Replicate, or Fal.ai (typically 30-50% cheaper than Replicate for the same models).\n\n## Midjourney — what it's for\n\nMidjourney v7 (current as of 2026) is closed source, served exclusively through Discord and the web app. No public API. Subscription only: $10 Basic / $30 Standard / $60 Pro / $120 Mega per month, with 20% off annual.\n\nThe reason to reach for Midjourney:\n\n- **Subjective aesthetic.** Midjourney's training and tuning is heavily biased toward \"beautiful image.\" Hand it a vague brief and the output is composed, lit, and color-graded like a magazine shot. Flux hands you a literal image; Midjourney hands you a styled image.\n- **Mood-driven work.** Concept art, editorial illustration, fine-art moodboards, lookbook imagery — Midjourney still wins. Flux can match it with the right prompt, but Midjourney gets there with less prompt work.\n- **One-creator workflows.** A single designer with a Standard plan ($30/mo) gets unlimited Relax-mode generations after their Fast GPU hours run out. For \"I'm a solo designer doing 1,000 explorations a month,\" that's the cheapest path.\n\nWhere Midjourney loses, and loses badly:\n\n- **No public API.** Third-party \"Midjourney API\" services exist but they're scraping the web app — fragile, against TOS, not enterprise-viable.\n- **Text in image.** Midjourney v7 lands roughly 30-40% accuracy on rendered text. Don't use it for posters, ads with copy, or anything where letterforms matter.\n- **Character consistency across renders.** Midjourney has `--cref` for character reference, but it's lossy. For \"the same character across 20 scenes,\" Flux Kontext beats it.\n- **Volume economics.** $30/month is great for one user. For an app where every user generates 50 images a day, you can't bill Midjourney pro rata. There's no API contract for it.\n\n## The shorthand\n\nIf you can only remember one thing: **Flux for control, Midjourney for taste, and you pick based on whether you have art direction or you're hoping the model brings it.** The other four families fill in the gaps where neither of these two is the right answer (text-in-image → Ideogram, instruction-heavy multi-step → gpt-image-1, batch volume on a budget → nano-banana, enterprise + Google Cloud → Imagen).\n\nThe next step drills you on five tasks. Use this framing to pick.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "ai-image-generation/the-image-model-landscape/s03-03-pick-the-model",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Midjourney's home turf is 'mood-driven, taste-heavy, no specific art direction.' Of the five briefs, exactly one fits that profile.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 60,
+          "concept": "flux-vs-midjourney-pick",
+          "prompt": "Five briefs. Which one is the BEST fit for Midjourney v7?\n(Reminder: Midjourney wins on subjective taste, loses on text-in-image,\ncharacter consistency across renders, and high-volume API workloads.)\n",
+          "options": [
+            {
+              "id": "brief_2",
+              "label": "2 — concept-art moodboard, aesthetic-driven, no specific composition"
+            },
+            {
+              "id": "brief_1",
+              "label": "1 — photoreal earbud, art-directed",
+              "explain": "Art-directed + photoreal is Flux territory. Midjourney will style it, but won't follow the composition as literally as Flux does."
+            },
+            {
+              "id": "brief_3",
+              "label": "3 — banner with 'Summer Sale — 30% off' rendered crisply",
+              "explain": "Text in image. Midjourney lands roughly 30-40% accuracy on text. Use Ideogram (90-95%) for any brief where the letters matter."
+            },
+            {
+              "id": "brief_4",
+              "label": "4 — twelve variants of the same product, identical-looking",
+              "explain": "Character/object consistency across renders. Flux Kontext is built for exactly this. Midjourney's `--cref` is lossy by comparison."
+            },
+            {
+              "id": "brief_5",
+              "label": "5 — 100 thumbnails for $50 total",
+              "explain": "Volume economics. Midjourney has no per-image API, no pro-rata pricing for an app. nano-banana at ~$0.039/image fits the budget; Midjourney doesn't have the right billing surface."
+            }
+          ],
+          "answerIds": [
+            "brief_2"
+          ],
+          "shuffle": false,
+          "code": "# five real briefs. one model fits each best.\nbriefs = [\n    \"Photoreal hero shot of a wireless earbud on a marble surface, top-down, soft window light, art-directed.\",\n    \"Concept-art moodboard for a fantasy novel cover. Aesthetic-driven, no specific composition required.\",\n    \"Lifestyle banner with the headline 'Summer Sale — 30% off' rendered crisply across the image.\",\n    \"Twelve variants of the same product on twelve different backgrounds, keeping the product visually identical.\",\n    \"100 thumbnail variants for an A/B test, $50 total budget.\",\n]\nfor i, b in enumerate(briefs, 1):\n    print(f\"{i}. {b}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "ai-image-generation/the-image-model-landscape/s04-04-nano-banana-and-the-batch-economics",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "nano-banana-batch-economics",
+          "body": "# nano-banana and the batch economics\n\nGoogle released Gemini 2.5 Flash Image (codename \"nano-banana\") in late 2025, then rolled out Gemini 3 Pro Image (Nano Banana Pro) and Gemini 3.1 Flash Image (Nano Banana 2) through 2026. The whole family lives behind the Gemini API and Vertex AI.\n\nThe reason it matters: it changed the math.\n\n## The pricing\n\n- **Gemini 2.5 Flash Image** (Nano Banana): $30 per million output tokens, ~1290 tokens/image → **~$0.039/image**.\n- **Gemini 3 Pro Image** (Nano Banana Pro): $120 per million output tokens → **~$0.134/image at 2K**, **~$0.24 at 4K**.\n- **Gemini 3.1 Flash Image** (Nano Banana 2): roughly half the price of Pro, ranked #1 on text-to-image benchmarks at launch.\n\nCompare against the rest:\n\n| Model | Per-image cost (~) |\n|---|---|\n| Imagen 4 Fast | $0.02 |\n| GPT Image 1 Mini (low) | $0.005 |\n| Flux.1.1 [pro] | $0.04 |\n| nano-banana (Gemini 2.5 Flash Image) | $0.039 |\n| Flux.1.1 [pro] Ultra | $0.06 |\n| Imagen 4 Ultra | $0.06 |\n| Ideogram (Quality) | $0.09 |\n| GPT Image 1 (High) | $0.167 |\n| Midjourney (per-image equivalent) | $0.10+ depending on plan |\n\n## The economic threshold\n\nHere's the math that actually matters. Suppose your product needs one shipping-ready image per user request. Three strategies:\n\n1. **One-shot premium**: send one prompt to Midjourney Pro or GPT Image 1 (High). Cost: ~$0.10-0.17/image. Hit rate (image is usable as-is): maybe 30-40%. So real cost per shipping-ready image: $0.25-0.50, and you spent a minute regenerating.\n\n2. **Batch-and-filter**: send the same prompt to nano-banana 10 times. Cost: ~$0.39/batch. Hit rate per individual image is lower (~20%), but you have 10 candidates. Probability that AT LEAST one is shipping-ready is 1 - (0.8 ^ 10) ≈ 89%. Real cost per shipping-ready image: $0.39 with 89% confidence, $0.78 with ~99% confidence on the second batch.\n\n3. **Self-hosted Flux**: rent an H100, run Flux.1 [dev]. Marginal cost per image: ~$0.001-0.005 depending on GPU pricing. Worth it above ~50,000 images/month.\n\nThe batch-and-filter strategy is the 2026 default for most consumer products. nano-banana made it economically obvious. At $0.039/image, you can generate 25 candidates for the price of one premium render, then use a filtering step (cheap LLM call with vision, or a CLIP-similarity score against a reference) to pick the best.\n\n## Multi-turn editing\n\nThe other reason nano-banana is interesting: it's built for multi-turn conversational editing in the Gemini API. You generate an image, then say \"make the background blue and add a coffee cup on the left,\" and it edits in-place using world knowledge from Gemini's text base. Most other image models don't do this — they regenerate from scratch, losing identity.\n\nThis makes nano-banana the right pick for any flow where the user is iterating: \"show me an image of X\" → \"now change Y\" → \"now zoom in on Z.\" The cost per turn stays under $0.05 and the identity of the original subject is preserved across turns.\n\n## When to NOT use nano-banana\n\n- **Highest-end photorealism for hero shots.** Flux.1.1 [pro] still beats it. nano-banana is good, Flux is best.\n- **Crisp text rendering at scale.** Use Ideogram. nano-banana 2 got better, but Ideogram is still the specialist.\n- **Subjective magazine-shot taste.** Midjourney is still ahead here for now.\n\nFor everything else — batch generation, multi-turn editing, \"I need 50 variants under $5\" — nano-banana is the default.\n\n## What this changes about your harness\n\nBefore nano-banana, the default image-gen pattern was \"spend a lot, generate one, hope it's good.\" After nano-banana, the default is \"spend a little, generate many, filter.\" That changes the shape of the pipeline. Lesson 03 of this chapter walks the full pattern (brief → prompt → batch → filter → upscale → format). For now, just internalize: the cost of generating 10 images dropped 5-10x in the last 18 months. The pipelines built before that drop are wasting money.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "ai-image-generation/the-image-model-landscape/s05-05-text-in-image",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 170,
+          "concept": "text-in-image-and-specialists",
+          "body": "# Text in image, character consistency, and the specialty picks\n\nThe three hardest things for an image model are, in order: text inside the image, hands, and keeping a character identical across multiple renders. In 2026 each one has a specialist that solves it well.\n\n## Text in image\n\nUntil early 2024, every image model produced garbage text. Posters with \"Cumemr Sole\" instead of \"Summer Sale.\" Books with \"Hapry Pottter.\" The problem is diffusion models don't reason about letterforms — they treat text as texture.\n\nThe 2026 state:\n\n- **Ideogram 3.0** — purpose-built for text. Claims 90-95% accuracy. Three tiers: Turbo $0.03, Default $0.0375, Quality $0.09. Has a `magic_prompt_option` flag and supports negative prompts for style control. If your brief has copy that has to be readable, this is the default.\n- **GPT Image 1 / 1.5** — instruction-tuned, decent text. Lands in the 70-85% range for short copy. Good when you want both text AND complex composition control (\"logo top-left, headline center, subtle drop shadow\").\n- **Imagen 4 / 4 Ultra** — Google's enterprise pick. Strong on text in image, especially shorter copy. Better than Flux, worse than Ideogram.\n- **Flux** — improved with Flux.1.1 [pro] Ultra and Flux Kontext [max] specifically calling out \"high-quality typography generation,\" but still not Ideogram-tier.\n- **Midjourney v7** — 30-40% accuracy. Don't use it for anything where the letters matter.\n\nThe rule: if the brief mentions specific text strings, route to Ideogram unless you have another reason not to. If the brief mentions a logo or brand mark, use Flux Kontext to composite a real PNG of the logo onto a Flux-generated background — don't ask the model to draw the logo from scratch.\n\n## Character consistency\n\nThe classic failure: you generate a portrait of a character you like, then ask for \"the same character but in a forest\" and get a totally different person. Three approaches in 2026:\n\n- **Flux.1 Kontext** — the current best. You pass an image + a text edit instruction, it preserves identity. Available as Kontext [pro] (API at $0.04/image generation), Kontext [max] (premium), and Kontext [dev] (open weights, non-commercial). Used for: \"same person, different scene/outfit/expression.\"\n- **Midjourney `--cref`** — works for casual use, lossy for production. Identity drifts across renders.\n- **nano-banana multi-turn editing** — preserves identity within a session because Gemini holds the prior context. Cheap, but only works conversationally — you can't pass a reference image from outside the conversation and expect identity preservation.\n- **Custom LoRAs / DreamBooth** — train a small model on 20 photos of your character. Then any Flux generation with that LoRA loaded gets perfect identity. Requires the open weights of Flux.1 [dev] and an hour of training. The right answer for \"same brand mascot across hundreds of assets.\"\n\n## Hands\n\nHands are still the universal tell. Every model still produces six-fingered or warped hands at a non-zero rate. The 2026 mitigation:\n\n- Generate, inspect, regenerate any image with bad hands.\n- Use a second pass with a hand-aware checkpoint or inpainting only the hand region.\n- Or just don't show the hands. Crop them out. Half the working photographers do this on real shoots too.\n\n## When you need a document (slide, infographic, layout)\n\nNone of these models are good at producing actual documents — slide decks, charts, infographics with structured data. The 2026 pattern is: generate the background and visual elements with an image model, then use a layout tool (HTML/CSS, Figma API, or a deck-gen library) to overlay the structured text and data. Don't expect any image model to produce a usable pitch deck slide end-to-end.\n\n## What you're building toward\n\nBy the end of this lesson you'll have a `pick_image_model(task)` function that looks at a task description and returns the right model name. The decision logic is the rule set you've now seen:\n\n- text-in-image required → Ideogram (or fallback Imagen 4)\n- character consistency across renders → Flux Kontext (or LoRA)\n- subjective taste / mood-driven, no API constraint → Midjourney\n- photoreal + art-directed → Flux Pro\n- batch volume + tight budget → nano-banana (Gemini Flash Image)\n- instruction-heavy composition → gpt-image-1\n- Google Cloud shop → Imagen 4\n\nFive rules. One function. Next step: drill on text-in-image, then read the decision tree, then write it.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "ai-image-generation/the-image-model-landscape/s06-06-which-model-for-text",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The brief specifies a literal text string that must render legibly. There's exactly one model family in 2026 designed for that job.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 50,
+          "concept": "text-in-image-pick",
+          "prompt": "The brief: legible \"LAUNCHING JUNE 1\" headline rendered inside the\nimage, budget $0.10/image, one image needed. Which model wins?\n",
+          "options": [
+            {
+              "id": "ideogram_quality",
+              "label": "Ideogram 3.0 (Quality tier, ~$0.09/image, 90-95% text accuracy)"
+            },
+            {
+              "id": "midjourney",
+              "label": "Midjourney v7",
+              "explain": "Midjourney lands roughly 30-40% accuracy on rendered text. The letters will be slightly wrong on most generations. Wrong tool for this brief."
+            },
+            {
+              "id": "flux_pro",
+              "label": "Flux.1.1 [pro]",
+              "explain": "Flux Pro improved on text but still loses to Ideogram. Use it for photorealism without specific text demands."
+            },
+            {
+              "id": "nano_banana",
+              "label": "nano-banana (Gemini 2.5 Flash Image, ~$0.039/image)",
+              "explain": "Cheaper, but Ideogram is the specialist for text. With a $0.10 budget and only one image needed, you pay for the accuracy premium."
+            }
+          ],
+          "answerIds": [
+            "ideogram_quality"
+          ],
+          "shuffle": false,
+          "code": "# the brief: a banner for an upcoming product launch.\n# the headline 'LAUNCHING JUNE 1' must render legibly.\n# budget is $0.10 per generation. one image needed.\nbrief = {\n    \"needs_text_in_image\": True,\n    \"text_string\": \"LAUNCHING JUNE 1\",\n    \"budget_per_image\": 0.10,\n    \"count\": 1,\n}\nprint(brief)\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "ai-image-generation/the-image-model-landscape/s07-07-the-decision-tree",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 150,
+          "concept": "image-model-decision-tree",
+          "body": "# The decision tree, ordered\n\nYou've now seen the six families and the specialty cases. Here's the routing logic in one place — the order matters.\n\n## The rules, in priority order\n\nThe reason for priority order: **specialty constraints beat general preferences**. If the brief needs text-in-image, it doesn't matter that you prefer Midjourney — Ideogram is the answer. So the routing function checks the hard constraints first, falls through to taste/style preferences, then defaults.\n\nThe order:\n\n1. **Text in image required?** → `ideogram-3`. The specialist.\n2. **Character consistency across renders required?** → `flux-kontext-pro`. The other specialist.\n3. **Photoreal + art-directed?** → `flux-1.1-pro`. Strongest photoreal output with prompt fidelity.\n4. **High batch count (filter-and-pick workflow)?** → `nano-banana`. The batch economics make it obvious.\n5. **Subjective / taste-driven, no API constraint?** → `midjourney-v7`. The aesthetic pick.\n6. **Instruction-heavy composition (specific placements)?** → `gpt-image-1`. Best instruction-follower.\n7. **Default fallthrough** → `imagen-4`. Solid all-arounder, enterprise-friendly.\n\n## The escape hatches\n\nA few real-world overrides that the priority list above doesn't capture:\n\n- **`budget_per_image < 0.02`** — drop to `gpt-image-1-mini` (low quality, $0.005/image) or `imagen-4-fast` ($0.02/image) regardless of other rules. Cost discipline.\n- **`latency_ms_max < 2000`** — drop to a Flash-tier model. nano-banana 2 generates faster than Pro at roughly half the cost. Imagen 4 Fast is the other \"speed first\" pick.\n- **`self_hosted = True` AND volume > 50K/month** — run Flux.1 [dev] on a rented H100. The economics flip below ~$0.005/image when you amortize the GPU.\n\n## How this becomes code\n\nThe pseudocode for the routing function:\n\n```python\ndef pick_image_model(task):\n    if task.get(\"budget_per_image\", 1.0) < 0.02:\n        return \"gpt-image-1-mini\"\n    if task.get(\"needs_text_in_image\"):\n        return \"ideogram-3\"\n    if task.get(\"needs_character_consistency\"):\n        return \"flux-kontext-pro\"\n    if task.get(\"photoreal_art_directed\"):\n        return \"flux-1.1-pro\"\n    if task.get(\"batch_count\", 1) >= 10:\n        return \"nano-banana\"\n    if task.get(\"subjective_taste\"):\n        return \"midjourney-v7\"\n    if task.get(\"instruction_heavy\"):\n        return \"gpt-image-1\"\n    return \"imagen-4\"\n```\n\nThat's the spec for the write step. Eight lines of branching, plus the budget escape hatch. Notice the order: budget first (hard floor), then specialty constraints (text, character), then style preferences (photoreal, taste, instruction), then default.\n\n## A note on the \"default\" pick\n\n`imagen-4` as the fallthrough is a 2026-specific call. A year ago it would have been DALL-E 3. Two years ago it would have been Stable Diffusion. The default rotates as the landscape shifts. The shape of the function — specialty → preference → default — doesn't.\n\nIf you're writing this for a long-lived production codebase, leave the rule list as a module-level constant (like the `RULES` tuple in the editor above) so a future maintainer can re-rank without rewriting the function body. That's the same pattern from chapter 26 — keep the registry out of the loop.\n\n## What you'll write\n\nStep 8 asks you to implement `pick_image_model(task)` with the rules above. Step 9 runs it across five tasks and audits a pipeline. Both are pure stdlib, no API calls — just decision logic, exactly like the kind of routing function that sits at the front of a real image-gen feature in production.",
+          "cta": "Got it",
+          "code": "# the routing logic for picking an image model.\n# the order matters: specialty rules first, then defaults.\n\nRULES = [\n    (\"needs_text_in_image\",        \"ideogram-3\"),\n    (\"needs_character_consistency\", \"flux-kontext-pro\"),\n    (\"photoreal_art_directed\",     \"flux-1.1-pro\"),\n    (\"batch_count_high\",           \"nano-banana\"),\n    (\"subjective_taste\",           \"midjourney-v7\"),\n    (\"instruction_heavy\",          \"gpt-image-1\"),\n    (\"default\",                    \"imagen-4\"),\n]\n\nfor flag, model in RULES:\n    print(f\"{flag:32} → {model}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "write",
+          "id": "ai-image-generation/the-image-model-landscape/s08-08-write-pick-image-model",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Eight `if` checks in priority order. Use `task.get(key, default)` everywhere so missing fields don't crash. The budget check goes FIRST — it overrides everything else, including text-in-image (see the `cheap` task: budget $0.01 routes to mini even though it needs text).",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "The trap is the `cheap` task. It has `needs_text_in_image=True` but `budget_per_image=0.01`. Budget rule fires first → returns `gpt-image-1-mini`. If your version returns `ideogram-3` for that task, you have the rules in the wrong order.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 220,
+          "concept": "route-image-task-to-model",
+          "prompt": "Write `pick_image_model(task)` that routes an image-generation\ntask to the right 2026 model.\n\n`task` is a dict with optional keys:\n\n- `budget_per_image`: float (default 1.0)\n- `needs_text_in_image`: bool\n- `needs_character_consistency`: bool\n- `photoreal_art_directed`: bool\n- `batch_count`: int (default 1)\n- `subjective_taste`: bool\n- `instruction_heavy`: bool\n\nReturn one of the model name strings, in this priority order:\n\n1. `budget_per_image < 0.02` → `\"gpt-image-1-mini\"`\n2. `needs_text_in_image` → `\"ideogram-3\"`\n3. `needs_character_consistency` → `\"flux-kontext-pro\"`\n4. `photoreal_art_directed` → `\"flux-1.1-pro\"`\n5. `batch_count >= 10` → `\"nano-banana\"`\n6. `subjective_taste` → `\"midjourney-v7\"`\n7. `instruction_heavy` → `\"gpt-image-1\"`\n8. default → `\"imagen-4\"`\n\nFour tasks run. Expected output:\n```\nposter:    ideogram-3\nhero:      flux-1.1-pro\nbatch:     nano-banana\ncheap:     gpt-image-1-mini\n```\n",
+          "starter": "poster = {\"needs_text_in_image\": True, \"budget_per_image\": 0.10}\nhero = {\"photoreal_art_directed\": True, \"budget_per_image\": 0.08}\nbatch = {\"batch_count\": 50, \"budget_per_image\": 0.05}\ncheap = {\"budget_per_image\": 0.01, \"needs_text_in_image\": True}\n\n# define pick_image_model(task) below\n\nprint(f\"poster:    {pick_image_model(poster)}\")\nprint(f\"hero:      {pick_image_model(hero)}\")\nprint(f\"batch:     {pick_image_model(batch)}\")\nprint(f\"cheap:     {pick_image_model(cheap)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "poster:    ideogram-3\nhero:      flux-1.1-pro\nbatch:     nano-banana\ncheap:     gpt-image-1-mini\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "poster = {\"needs_text_in_image\": True, \"budget_per_image\": 0.10}\nhero = {\"photoreal_art_directed\": True, \"budget_per_image\": 0.08}\nbatch = {\"batch_count\": 50, \"budget_per_image\": 0.05}\ncheap = {\"budget_per_image\": 0.01, \"needs_text_in_image\": True}\n\ndef pick_image_model(task):\n    if task.get(\"budget_per_image\", 1.0) < 0.02:\n        return \"gpt-image-1-mini\"\n    if task.get(\"needs_text_in_image\"):\n        return \"ideogram-3\"\n    if task.get(\"needs_character_consistency\"):\n        return \"flux-kontext-pro\"\n    if task.get(\"photoreal_art_directed\"):\n        return \"flux-1.1-pro\"\n    if task.get(\"batch_count\", 1) >= 10:\n        return \"nano-banana\"\n    if task.get(\"subjective_taste\"):\n        return \"midjourney-v7\"\n    if task.get(\"instruction_heavy\"):\n        return \"gpt-image-1\"\n    return \"imagen-4\"\n\nprint(f\"poster:    {pick_image_model(poster)}\")\nprint(f\"hero:      {pick_image_model(hero)}\")\nprint(f\"batch:     {pick_image_model(batch)}\")\nprint(f\"cheap:     {pick_image_model(cheap)}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "ai-image-generation/the-image-model-landscape/s09-09-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 260,
+          "concept": "audit-an-image-pipeline",
+          "prompt": "Final drill. You're auditing a real image pipeline at an agency.\nWrite `audit_image_pipeline(tasks)` that takes a list of task\ndicts (same shape as the previous step) and returns a list of\ndicts, one per task, in the same order:\n\n```python\n{\"task_id\": ..., \"model\": ..., \"specialist_used\": bool}\n```\n\n`model` comes from your `pick_image_model(task)` routing.\n`specialist_used` is `True` if the chosen model is one of the\nthree specialty picks: `ideogram-3`, `flux-kontext-pro`, or\n`flux-1.1-pro`. Everything else is False (including the budget\nfallback `gpt-image-1-mini`).\n\nEach task carries a `task_id` field (string). Preserve it in\nthe output.\n\nFive tasks run. Expected output:\n```\nT1: ideogram-3        specialist=True\nT2: flux-kontext-pro  specialist=True\nT3: nano-banana       specialist=False\nT4: midjourney-v7     specialist=False\nT5: gpt-image-1-mini  specialist=False\n```\n",
+          "starter": "tasks = [\n    {\"task_id\": \"T1\", \"needs_text_in_image\": True, \"budget_per_image\": 0.10},\n    {\"task_id\": \"T2\", \"needs_character_consistency\": True, \"budget_per_image\": 0.05},\n    {\"task_id\": \"T3\", \"batch_count\": 50, \"budget_per_image\": 0.05},\n    {\"task_id\": \"T4\", \"subjective_taste\": True, \"budget_per_image\": 0.20},\n    {\"task_id\": \"T5\", \"budget_per_image\": 0.01, \"instruction_heavy\": True},\n]\n\n# define pick_image_model and audit_image_pipeline below\n\nfor row in audit_image_pipeline(tasks):\n    print(f\"{row['task_id']}: {row['model']:<18} specialist={row['specialist_used']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "T1: ideogram-3         specialist=True\nT2: flux-kontext-pro   specialist=True\nT3: nano-banana        specialist=False\nT4: midjourney-v7      specialist=False\nT5: gpt-image-1-mini   specialist=False\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "tasks = [\n    {\"task_id\": \"T1\", \"needs_text_in_image\": True, \"budget_per_image\": 0.10},\n    {\"task_id\": \"T2\", \"needs_character_consistency\": True, \"budget_per_image\": 0.05},\n    {\"task_id\": \"T3\", \"batch_count\": 50, \"budget_per_image\": 0.05},\n    {\"task_id\": \"T4\", \"subjective_taste\": True, \"budget_per_image\": 0.20},\n    {\"task_id\": \"T5\", \"budget_per_image\": 0.01, \"instruction_heavy\": True},\n]\n\nSPECIALISTS = {\"ideogram-3\", \"flux-kontext-pro\", \"flux-1.1-pro\"}\n\ndef pick_image_model(task):\n    if task.get(\"budget_per_image\", 1.0) < 0.02:\n        return \"gpt-image-1-mini\"\n    if task.get(\"needs_text_in_image\"):\n        return \"ideogram-3\"\n    if task.get(\"needs_character_consistency\"):\n        return \"flux-kontext-pro\"\n    if task.get(\"photoreal_art_directed\"):\n        return \"flux-1.1-pro\"\n    if task.get(\"batch_count\", 1) >= 10:\n        return \"nano-banana\"\n    if task.get(\"subjective_taste\"):\n        return \"midjourney-v7\"\n    if task.get(\"instruction_heavy\"):\n        return \"gpt-image-1\"\n    return \"imagen-4\"\n\ndef audit_image_pipeline(tasks):\n    rows = []\n    for t in tasks:\n        model = pick_image_model(t)\n        rows.append({\n            \"task_id\": t[\"task_id\"],\n            \"model\": model,\n            \"specialist_used\": model in SPECIALISTS,\n        })\n    return rows\n\nfor row in audit_image_pipeline(tasks):\n    print(f\"{row['task_id']}: {row['model']:<18} specialist={row['specialist_used']}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 23
+    },
+    {
+      "slug": "prompting-for-real-output",
+      "title": "Prompting for real output — composition, control, and the eight knobs that matter",
+      "estMinutes": 20,
+      "prerequisites": [
+        "the-image-model-landscape"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "ai-image-generation/prompting-for-real-output/s01-01-why-the-girl-with-red-hair-fails",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 160,
+          "concept": "vague-prompts-fail",
+          "body": "# Why \"girl with red hair\" gets you slop\n\nEvery person who tries image generation for the first time types something like:\n\n> a girl with red hair\n\n…and gets back a generic stock-photo redhead with an awkward smile, plastic skin, and the standard \"AI face.\" Then they conclude image gen isn't ready.\n\nThe model is fine. The prompt is wrong.\n\n## What the model does with a vague prompt\n\nA diffusion model is, roughly, learning a probability distribution over images conditioned on text. When you say \"a girl with red hair,\" the model samples from the **average of every image in its training set that matched that description**. That average is: front-facing, neutral background, awkward smile, soft over-lit studio look, slightly uncanny — because the training set is full of stock photography and Instagram selfies, and \"the mean of all those\" is exactly that uncanny stock-photo look.\n\nThe fix isn't a better model. The fix is a more specific prompt — one that narrows the distribution the model is sampling from.\n\n## What good looks like\n\nCompare:\n\n**Bad:**\n> a girl with red hair\n\n**Good:**\n> Portrait of a young woman with curly auburn hair, looking off-camera at a 30-degree angle. Shot on 85mm f/1.4, shallow depth of field, golden-hour side-lighting from a window on her left, soft shadows. Muted earth-tone wardrobe (terracotta sweater). Composition: rule-of-thirds, subject in left third, blurred bookshelves in the background. Editorial portrait style, film grain, Kodak Portra 400 color palette. No text, no watermark, no harsh studio lighting.\n\nThe good version did eight things. The bad version did one.\n\n## The 80-100 word ceiling\n\nResearch on production prompts found that prompts beyond 80-100 words start degrading output. Concise 20-50 word prompts with precise language often beat verbose 150-word descriptions. The goal is **dense** prompts, not long ones. Every word should narrow the distribution.\n\nBeyond ~100 words the model starts losing track of which words apply to what, and you get composition errors — the lighting you described attaches to the wrong subject, the lens you specified gets ignored.\n\n## What this lesson does\n\nLesson 01 was the model-picker. This lesson is the prompt-builder. You'll learn:\n\n- The eight knobs that matter (subject, composition, lighting, style, camera, lens, color palette, negatives).\n- Why each one narrows the distribution.\n- How to score a prompt's completeness — turn the eight knobs into a checklist.\n- Common failure modes that good prompts dodge.\n\nAt the end you'll write `score_image_prompt(prompt)` — a function that takes a prompt string and returns a quality score plus a list of missing knobs. You can run this in a CI step before sending any prompt to a model and catch the slop-bound prompts before they cost money.\n\nA note before we go further: this is general guidance. Each model family has its own prompt quirks. Flux likes complete sentences and real camera terms (\"85mm f/1.4 lens\"). Midjourney historically used `--ar 16:9 --stylize 100` style parameters. nano-banana uses conversational instructions (\"make the background blue\"). The eight knobs are the universal shape; the syntax differs.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "ai-image-generation/prompting-for-real-output/s02-02-the-eight-knobs",
+          "xp": 2,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 200,
+          "concept": "eight-prompt-knobs",
+          "body": "# The eight knobs\n\nEvery production-grade image prompt names eight things. Skip any one and the model fills in the average of the training data on that axis. Name all eight and you've narrowed the distribution to roughly the image you want.\n\nThe eight, in the order a working prompt usually lists them:\n\n## 1. Subject\n\nWhat is in the image. Be specific about **what kind of subject** (young woman, not \"girl\"), **identifying features** (curly auburn hair), and **action or pose** (looking off-camera at 30 degrees, holding a coffee cup, mid-stride).\n\nThe trap: \"subject\" alone isn't enough. \"A woman\" produces a generic woman. \"A 32-year-old woman with shoulder-length brown hair, mid-laugh, holding a vintage Leica\" produces the same person across many renders.\n\n## 2. Composition\n\nWhere things sit in the frame. The vocabulary: **rule of thirds**, **centered**, **symmetric**, **leading lines**, **negative space**, **close-up / medium / wide**, **subject in left third**, **eye level / high angle / low angle / Dutch tilt**.\n\nA single composition term immediately gives an image more intent and visual impact. The best angle depends on mood: eye level for connection, high angle for vulnerability, low angle for strength.\n\n## 3. Lighting\n\nHow light hits the subject. **Golden hour, blue hour, harsh midday, overcast, studio three-point, rim light, chiaroscuro, volumetric god rays, bioluminescent glow.** Models understand specific physical descriptions (\"golden-hour side-lighting from a window on her left\") far better than vague terms (\"beautiful lighting\").\n\nLighting is the single biggest tell between AI slop and AI work that ships. Studio over-lighting is the default; specifying anything else immediately raises the output quality.\n\n## 4. Style\n\nThe visual language. **Editorial photography, fashion editorial, fine-art portrait, watercolor illustration, vector flat illustration, oil painting, cyberpunk concept art, brutalist architecture rendering, anime cel-shaded, 90s film stock.**\n\nStyle words pull the model toward a specific cluster in its training distribution. \"Editorial portrait\" and \"stock photo\" are both photographs of people, but they sample completely different distributions of light, pose, color, and finish.\n\n## 5. Camera\n\nThe capture device. **Shot on 35mm film camera. Shot on Leica M11. Shot on iPhone 15 Pro. Drone shot. GoPro fisheye.** The model has learned the look of each because professional photographs are often captioned with their gear.\n\nCamera also encodes perspective: **eye-level, high-angle, low-angle, bird's-eye, worm's-eye, over-the-shoulder, POV**. Pick one. Don't make the model guess.\n\n## 6. Lens\n\nThe optics. **85mm f/1.4 (portrait, shallow depth of field), 50mm f/1.8 (natural, slight portrait), 24mm wide-angle (landscape, environmental, deeper depth), 100mm macro (close-up texture), 200mm telephoto (compression, distant subject).** Diffusion models have learned the optical characteristics of specific lenses. Naming a lens does roughly what naming it on a real shoot does.\n\n## 7. Color palette\n\nThe chromatic direction. **Muted earth tones, terracotta and forest green, pastel pinks and creams, high-contrast monochrome, Kodak Portra 400 (warm shadows, soft highlights), Fuji Velvia (saturated, punchy), teal-and-orange film grade.**\n\nPalette is the second-biggest aesthetic lever after lighting. A studio-lit portrait in muted earth tones reads as editorial. The same portrait in saturated cyan-and-magenta reads as cyberpunk. Same composition. Same lighting. Different output, because you moved this knob.\n\n## 8. Negatives\n\nWhat you do NOT want in the image. **No text, no watermark, no harsh studio lighting, no extra fingers, no plastic skin, no smile, no logo.**\n\nNegative prompts work differently across models — Flux and Stable Diffusion forks honor them as a separate input field, Midjourney has `--no`, gpt-image-1 accepts them in the prompt. But every model handles \"negatives\" of some kind. The most useful are usually the slop-defaults: text, watermarks, the AI smile, harsh studio light.\n\n## Why eight, in this order\n\nThe order matches what the model resolves first. Subject is non-negotiable — without it, no image. Composition tells the model where to place the subject. Lighting and style set the visual register. Camera and lens narrow the optical look. Palette pulls the color cluster. Negatives prune the slop defaults out.\n\nYou can shuffle the order in your final prompt — the model doesn't care about syntax as long as each concept is named — but the **completeness** matters. The next step gives you a broken prompt; you'll fix it. Then a multiple-choice on identifying which knob is missing from a real-world brief. Then the score function you can run as a pre-flight check.",
+          "cta": "Got it",
+          "code": "# the eight knobs, in the order they go in a prompt.\n# naming each one narrows the distribution the model samples from.\n\nKNOBS = [\n    (\"subject\",     \"young woman with curly auburn hair, looking off-camera\"),\n    (\"composition\", \"rule-of-thirds, subject in left third, blurred bookshelves background\"),\n    (\"lighting\",    \"golden-hour side-lighting from a window on her left, soft shadows\"),\n    (\"style\",       \"editorial portrait, film grain, Kodak Portra 400 palette\"),\n    (\"camera\",      \"shot on 35mm film camera, eye-level perspective\"),\n    (\"lens\",        \"85mm f/1.4 lens, shallow depth of field\"),\n    (\"palette\",     \"muted earth tones, terracotta sweater, warm shadows\"),\n    (\"negatives\",   \"no text, no watermark, no harsh studio lighting\"),\n]\nfor name, example in KNOBS:\n    print(f\"{name:12} → {example}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "fix",
+          "id": "ai-image-generation/prompting-for-real-output/s03-03-fix-the-vague-prompt",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Rewrite the return string to mention at least one phrase from each of the eight keyword lists. The grader case-insensitively substring-matches, so you don't need exact capitalization.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "Something like:\n\n```python\nreturn (\n    \"Portrait of a young woman with auburn hair. \"\n    \"Rule of thirds, subject in left third. \"\n    \"Golden hour side-lighting from a window. \"\n    \"Editorial portrait style. \"\n    \"Shot on 35mm camera, eye level. \"\n    \"85mm f/1.4 lens, shallow depth of field. \"\n    \"Muted earth tones, Kodak Portra palette. \"\n    \"No text, no watermark, no harsh studio light.\"\n)\n```\n",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 90,
+          "concept": "rewrite-vague-into-specific",
+          "brokenCode": "KNOB_KEYWORDS = {\n    \"subject\":     [\"woman\", \"man\", \"person\", \"subject\", \"portrait\"],\n    \"composition\": [\"rule of thirds\", \"centered\", \"third\", \"frame\", \"composition\"],\n    \"lighting\":    [\"golden hour\", \"rim light\", \"side-lighting\", \"window light\", \"natural light\"],\n    \"style\":       [\"editorial\", \"cinematic\", \"documentary\", \"fashion\", \"fine art\"],\n    \"camera\":      [\"35mm camera\", \"Leica\", \"shot on\", \"eye level\", \"low angle\"],\n    \"lens\":        [\"85mm\", \"50mm\", \"f/1.4\", \"f/1.8\", \"shallow depth\", \"telephoto\"],\n    \"palette\":     [\"earth tones\", \"muted\", \"Kodak Portra\", \"warm shadows\", \"monochrome\"],\n    \"negatives\":   [\"no text\", \"no watermark\", \"no harsh\", \"no extra\", \"no smile\"],\n}\n\ndef build_prompt():\n    # bug: vague one-liner, hits zero knobs cleanly\n    return \"a girl with red hair\"\n\nprompt = build_prompt()\nfor knob, keywords in KNOB_KEYWORDS.items():\n    hit = any(k.lower() in prompt.lower() for k in keywords)\n    mark = \"✓\" if hit else \"✗\"\n    print(f\"{knob:12} {mark}\")\n",
+          "prompt": "A function `build_prompt()` is supposed to return a production-grade\nprompt with all eight knobs named (subject, composition, lighting,\nstyle, camera, lens, palette, negatives). The current return value\nis a vague one-liner. Fix it to hit all eight knobs.\n\nThe grader is lenient: it checks that the returned string contains\nat least one phrase for each of the eight knob categories\n(keyword-match), and the call site joins them with newlines.\n\nExpected output (eight checkmarks):\n```\nsubject      ✓\ncomposition  ✓\nlighting     ✓\nstyle        ✓\ncamera       ✓\nlens         ✓\npalette      ✓\nnegatives    ✓\n```\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "subject      ✓\ncomposition  ✓\nlighting     ✓\nstyle        ✓\ncamera       ✓\nlens         ✓\npalette      ✓\nnegatives    ✓\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "bugLines": [
+            13,
+            14
+          ],
+          "revealAfter": 6
+        },
+        {
+          "type": "read",
+          "id": "ai-image-generation/prompting-for-real-output/s04-04-controlnet-and-reference",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 180,
+          "concept": "reference-images-and-controlnet",
+          "body": "# Reference images and ControlNet — when prompts aren't enough\n\nThe eight knobs get you to a specific-looking image. But sometimes \"specific-looking\" still isn't enough. You need the **exact** pose. You need **this** building's silhouette. You need a character whose face matches **this photo**.\n\nFor these cases, you stop describing the image in text and start showing the model a reference.\n\n## Three flavors of image conditioning\n\nThe 2026 toolbox has three distinct ways to condition generation on an existing image. Each does a different thing.\n\n### 1. Image-to-image (the strength dial)\n\nYou give the model an image plus a prompt, plus a `strength` parameter between 0.0 and 1.0. At strength 0.1 the output is nearly your input image with light prompt changes. At strength 0.9 the input is just a vague composition starter and the prompt dominates.\n\n- **Flux** — supports image-to-image at all tiers; pass `image` field with the source URL or base64, and a `strength` between 0 and 1.\n- **Fal.ai** — many models on Fal expose image-to-image as `image_url` + `strength` in the input schema.\n- **nano-banana** — supports image input as part of the multi-turn conversation. Edit-by-instruction is the same surface; you pass the image then describe what to change.\n\nUse it for: rough sketch → polished render, color reference → matching scene, hand-drawn composition → photorealistic version.\n\n### 2. Edit-by-instruction (Flux Kontext, nano-banana)\n\nNewer than i2i. Instead of \"give me this image but adjusted by strength X,\" you say \"change the background to a beach\" and the model edits in-place while preserving identity.\n\n- **Flux Kontext [pro], [max], [dev]** — built specifically for this. Maintains character consistency across edit chains. Supports multi-step edits (edit, then edit again, identity holds).\n- **nano-banana family** — the same shape inside a Gemini conversation; cheaper per turn but less precise than Flux Kontext for serious editing work.\n\nUse it for: same product on different backgrounds, same character in different scenes, swapping text on a sign, recoloring an outfit while keeping the model identical.\n\n### 3. ControlNet (structural conditioning)\n\nThe most powerful and most fiddly. You give the model:\n\n- An image (or a pre-extracted control signal — an edge map, a depth map, a pose skeleton, a segmentation mask).\n- A prompt.\n- A control type (`canny`, `depth`, `pose`, `seg`, `scribble`, `lineart`, `mlsd`, etc.).\n\nThe output follows the **structure** of the control signal while filling in the **content** from the prompt. ControlNet pose conditioning is how you get \"this exact pose, but as a knight in armor in a fantasy setting.\" ControlNet canny is how you get \"this exact building silhouette, but rendered in oil painting style.\"\n\nControlNet is most commonly used through the open-weights Flux and Stable Diffusion ecosystem. You'll see it referenced in ComfyUI workflows, in self-hosted Flux setups, and via specific Replicate/Fal models like `controlnet-pose` or `controlnet-depth`.\n\nAPI surfaces vary widely; if you need this in a hosted API, search the model index on Replicate or Fal for \"controlnet\" plus your control type. The call shape varies by provider — don't memorize one signature.\n\n## When you'd actually reach for these\n\nThe decision tree:\n\n- **Pure text prompt is enough** for most marketing/social/illustration work. The eight knobs cover the case.\n- **Image-to-image** when you have a rough that you want polished — a sketch, a color reference, a low-quality phone shot.\n- **Edit-by-instruction (Flux Kontext)** when you have a finished image and want variants that preserve identity — same product on twelve backgrounds, same character in five scenes.\n- **ControlNet** when the structure must be exact — pose-locked character animation frames, building-silhouette-preserved architectural rendering, matching the layout of a wireframe to a finished UI mockup.\n\nThe mistake to avoid: starting with ControlNet because it sounds powerful. It's a power-user feature with significant setup overhead. Most production briefs are solved with a good text prompt and, if needed, Flux Kontext for the multi-variant case.\n\n## What the next step asks\n\nYou'll be given five real-world briefs, each with one knob obviously missing. The drill is identifying which one. After that you'll read the failure modes (hands, text, character drift), then write the scoring function.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "ai-image-generation/prompting-for-real-output/s05-05-which-knob-is-missing",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Walk down the eight: subject, composition, lighting, style, camera, lens, palette, negatives. Read each phrase in the prompt and check it off. The unchecked one is the answer.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 70,
+          "concept": "missing-knob-in-prompt",
+          "prompt": "The prompt above names seven of the eight knobs (subject,\ncomposition, lighting, style, camera, palette, negatives — in some\norder). One is missing. Which one?\n",
+          "options": [
+            {
+              "id": "lens",
+              "label": "lens (no aperture/focal length specified — e.g., 85mm f/1.4, shallow depth)"
+            },
+            {
+              "id": "subject",
+              "label": "subject",
+              "explain": "The 32-year-old man with a salt-and-pepper beard, looking off-camera, IS the subject. Specific enough to narrow the distribution. Not missing."
+            },
+            {
+              "id": "lighting",
+              "label": "lighting",
+              "explain": "'Soft window light from camera-left, deep shadows on the right' covers the lighting knob clearly."
+            },
+            {
+              "id": "palette",
+              "label": "palette",
+              "explain": "'Muted earth tones, slight film grain' is the palette. Color direction is specified."
+            }
+          ],
+          "answerIds": [
+            "lens"
+          ],
+          "shuffle": false,
+          "code": "# the brief — every knob named EXCEPT one.\n# which one is missing?\nprompt = (\n    \"Portrait of a 32-year-old man with a salt-and-pepper beard, \"\n    \"looking off-camera. Centered composition, subject filling the \"\n    \"middle third of the frame. Soft window light from camera-left, \"\n    \"deep shadows on the right. Editorial documentary style, \"\n    \"muted earth tones, slight film grain. Shot on 35mm film camera, \"\n    \"eye level. No text, no watermark, no harsh studio lighting, \"\n    \"no plastic skin.\"\n)\nfor line in prompt.split(\". \"):\n    print(f\"- {line.strip()}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "ai-image-generation/prompting-for-real-output/s06-06-failure-modes",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "image-failure-modes",
+          "body": "# Failure modes — what still goes wrong in 2026\n\nThe eight knobs cover prompt quality. But three categories of failure are still inherent to the models themselves. Knowing them tells you when to inspect output before shipping and when to route a brief to a different tool entirely.\n\n## 1. Text in image — the hardest universal failure\n\nUntil late 2024, every image model produced garbage text. Posters with \"Hapry Birthay\" instead of \"Happy Birthday.\" The 2026 state:\n\n- **Ideogram 3.0** lands 90-95% accuracy on rendered text.\n- **GPT Image 1.5** and **Imagen 4** are decent for short copy (5-10 words).\n- **Flux.1.1 [pro] Ultra** and **Flux Kontext [max]** improved, but trail Ideogram.\n- **Midjourney v7** still runs 30-40% accuracy.\n\nThe rule: if the brief contains a specific text string, use Ideogram. If you can't route to Ideogram, generate the text in a second compositing layer (HTML/Figma/Photoshop) on top of an image-model background — don't ask the model to render the text inside the image.\n\n## 2. Hands — still tells\n\nHands are the universal failure. Six fingers. Bent thumbs. Hands fused with objects. Every model still produces broken hands at a non-zero rate.\n\nMitigations:\n\n- **Generate-and-inspect.** Always look at the hands before approving. This is one of the costs of using AI image gen — there's a manual check step.\n- **Inpaint the hand region.** If a generation is otherwise great, mask the hand region and regenerate just that part with a hand-aware checkpoint. Most production pipelines have this as a pass.\n- **Crop them out.** Half the working photographers do this on real shoots. If hands aren't critical to the brief, frame around them.\n- **Hide them.** Hands in pockets, behind back, holding a prop that obscures fingers. The composition naturally fixes the problem.\n\nIf hands are critical to the image (a portrait of a watchmaker, a chef plating food), expect to regenerate 3-5x or to do an inpainting pass.\n\n## 3. Character consistency — handled, but with effort\n\nYou want the same character — same face, same proportions, same wardrobe — across 10 renders. Out of the box, no model does this with a text prompt alone. The same prompt run twice will produce two visibly different people.\n\nThe 2026 solutions:\n\n- **Flux Kontext** (pro / max / dev). Pass a reference image plus an edit instruction; identity is preserved. Best in class for production.\n- **Midjourney `--cref`**. Works for casual use, lossy for production. Identity drifts.\n- **LoRA fine-tuning on Flux [dev]**. Train a small adapter (~30 minutes on an H100) on 15-30 photos of your character. Then any Flux generation with that LoRA gets perfect identity. The right answer for \"same brand mascot across hundreds of assets\" or \"this client's actual face.\"\n- **DreamBooth on open Stable Diffusion** — older, less clean than Flux LoRAs, but still around.\n\nThe wrong approach: trying to describe the character precisely enough in text that the model produces the same face. The text encoder isn't accurate enough. Use an image reference.\n\n## 4. The \"AI face\"\n\nA meta-failure across all models: people generated end up with a recognizable \"AI look.\" Slightly too symmetric, slightly too smooth, slightly too lit. Even with great prompts.\n\nMitigations:\n\n- **Specify imperfection.** \"Slight asymmetry, faint freckles, slight skin texture, faint under-eye shadow.\" The training data is full of retouched studio photography; you have to actively pull the model away from it.\n- **Specify a real camera and film.** \"Shot on 35mm Kodak Portra 400\" produces less of the plastic look than the default of \"studio portrait.\"\n- **Avoid the smile.** \"Smiling\" → AI face. \"Mid-laugh, looking off-camera\" or \"neutral expression, half-turned away\" → not AI face.\n\n## What this means for your pipeline\n\nThree takeaways:\n\n1. **Build inspection into the pipeline.** Generate, then look. Don't ship un-reviewed image-model output to customers.\n2. **Route by failure mode.** Text-in-image → Ideogram. Character consistency → Flux Kontext or LoRA. Hands matter → expect inspection and inpainting.\n3. **The eight knobs are necessary, not sufficient.** They get you to \"specific image.\" They don't fix hands. They don't fix the AI face by themselves. You also need to know what the model can't do.\n\nThe next step asks you to write `score_image_prompt(prompt)` — a checker that catches the missing-knob bugs before you spend money sending a bad prompt. Then the checkpoint asks you to rank five prompts by completeness.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "write",
+          "id": "ai-image-generation/prompting-for-real-output/s07-07-write-score-image-prompt",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Lowercase the prompt once. Then iterate the KNOB_KEYWORDS dict in order (Python 3.7+ dicts preserve insertion order). For each knob, if `any(k in low for k in keywords)` then increment score, else append the knob name to missing. Return both.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "The trap is iteration order — `missing` must preserve the dict's insertion order so the output matches. `dict.items()` does this in CPython 3.7+. Don't sort the missing list.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 240,
+          "concept": "score-prompt-by-knobs",
+          "prompt": "Write `score_image_prompt(prompt)` that takes a prompt string and\nreturns a dict:\n\n```python\n{\"score\": int (0-8), \"missing\": list[str]}\n```\n\nUse this exact `KNOB_KEYWORDS` table (provided in the starter).\nLowercase the prompt and check if ANY keyword for a knob appears\nas a substring. If yes, that knob is hit. If no, add the knob's\nname to `missing`. `score` is the number of knobs hit (0-8).\n`missing` keeps the original knob-table order.\n\nThree prompts run: `good`, `mid`, `bad`. Expected output:\n```\ngood: {'score': 8, 'missing': []}\nmid:  {'score': 5, 'missing': ['lighting', 'lens', 'negatives']}\nbad:  {'score': 0, 'missing': ['subject', 'composition', 'lighting', 'style', 'camera', 'lens', 'palette', 'negatives']}\n```\n",
+          "starter": "KNOB_KEYWORDS = {\n    \"subject\":     [\"woman\", \"man\", \"person\", \"portrait\", \"subject\"],\n    \"composition\": [\"rule of thirds\", \"centered\", \"third\", \"frame\", \"composition\"],\n    \"lighting\":    [\"golden hour\", \"rim light\", \"side-lighting\", \"window light\", \"natural light\", \"studio light\"],\n    \"style\":       [\"editorial\", \"cinematic\", \"documentary\", \"fashion\", \"fine art\", \"illustration\"],\n    \"camera\":      [\"35mm camera\", \"leica\", \"shot on\", \"eye level\", \"low angle\", \"high angle\"],\n    \"lens\":        [\"85mm\", \"50mm\", \"f/1.4\", \"f/1.8\", \"shallow depth\", \"telephoto\", \"wide angle\"],\n    \"palette\":     [\"earth tones\", \"muted\", \"kodak portra\", \"warm shadows\", \"monochrome\", \"saturated\"],\n    \"negatives\":   [\"no text\", \"no watermark\", \"no harsh\", \"no extra\", \"no smile\", \"no plastic\"],\n}\n\ngood = (\n    \"Portrait of a young woman with curly auburn hair. \"\n    \"Rule of thirds, subject in left third. \"\n    \"Golden hour side-lighting from a window. \"\n    \"Editorial documentary style. \"\n    \"Shot on 35mm camera, eye level. \"\n    \"85mm f/1.4 lens, shallow depth of field. \"\n    \"Muted earth tones, Kodak Portra palette. \"\n    \"No text, no watermark, no harsh studio light.\"\n)\n\nmid = (\n    \"Portrait of a young woman with auburn hair. \"\n    \"Centered composition. \"\n    \"Editorial style, muted earth tones. \"\n    \"Shot on 35mm camera, eye level.\"\n)\n\nbad = \"a girl with red hair\"\n\n# define score_image_prompt(prompt) below\n\nprint(f\"good: {score_image_prompt(good)}\")\nprint(f\"mid:  {score_image_prompt(mid)}\")\nprint(f\"bad:  {score_image_prompt(bad)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "good: {'score': 8, 'missing': []}\nmid:  {'score': 5, 'missing': ['lighting', 'lens', 'negatives']}\nbad:  {'score': 0, 'missing': ['subject', 'composition', 'lighting', 'style', 'camera', 'lens', 'palette', 'negatives']}\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "KNOB_KEYWORDS = {\n    \"subject\":     [\"woman\", \"man\", \"person\", \"portrait\", \"subject\"],\n    \"composition\": [\"rule of thirds\", \"centered\", \"third\", \"frame\", \"composition\"],\n    \"lighting\":    [\"golden hour\", \"rim light\", \"side-lighting\", \"window light\", \"natural light\", \"studio light\"],\n    \"style\":       [\"editorial\", \"cinematic\", \"documentary\", \"fashion\", \"fine art\", \"illustration\"],\n    \"camera\":      [\"35mm camera\", \"leica\", \"shot on\", \"eye level\", \"low angle\", \"high angle\"],\n    \"lens\":        [\"85mm\", \"50mm\", \"f/1.4\", \"f/1.8\", \"shallow depth\", \"telephoto\", \"wide angle\"],\n    \"palette\":     [\"earth tones\", \"muted\", \"kodak portra\", \"warm shadows\", \"monochrome\", \"saturated\"],\n    \"negatives\":   [\"no text\", \"no watermark\", \"no harsh\", \"no extra\", \"no smile\", \"no plastic\"],\n}\n\ngood = (\n    \"Portrait of a young woman with curly auburn hair. \"\n    \"Rule of thirds, subject in left third. \"\n    \"Golden hour side-lighting from a window. \"\n    \"Editorial documentary style. \"\n    \"Shot on 35mm camera, eye level. \"\n    \"85mm f/1.4 lens, shallow depth of field. \"\n    \"Muted earth tones, Kodak Portra palette. \"\n    \"No text, no watermark, no harsh studio light.\"\n)\n\nmid = (\n    \"Portrait of a young woman with auburn hair. \"\n    \"Centered composition. \"\n    \"Editorial style, muted earth tones. \"\n    \"Shot on 35mm camera, eye level.\"\n)\n\nbad = \"a girl with red hair\"\n\ndef score_image_prompt(prompt):\n    low = prompt.lower()\n    missing = []\n    score = 0\n    for knob, keywords in KNOB_KEYWORDS.items():\n        if any(k in low for k in keywords):\n            score += 1\n        else:\n            missing.append(knob)\n    return {\"score\": score, \"missing\": missing}\n\nprint(f\"good: {score_image_prompt(good)}\")\nprint(f\"mid:  {score_image_prompt(mid)}\")\nprint(f\"bad:  {score_image_prompt(bad)}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "ai-image-generation/prompting-for-real-output/s08-08-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 240,
+          "concept": "rank-prompts-by-completeness",
+          "prompt": "Final drill. Reuse `score_image_prompt` and write\n`rank_prompts(prompts)` that takes a dict of `{id: prompt_string}`\nand returns a list of `(id, score)` tuples sorted by score\nDESCENDING, ties broken by id ASCENDING (so the result is\ndeterministic).\n\nFive prompts run, ranging from \"a girl with red hair\" (zero knobs)\nto a full 8-knob prompt. Expected output:\n```\nP5: score=8\nP4: score=7\nP3: score=5\nP2: score=3\nP1: score=0\n```\n",
+          "starter": "KNOB_KEYWORDS = {\n    \"subject\":     [\"woman\", \"man\", \"person\", \"portrait\", \"subject\"],\n    \"composition\": [\"rule of thirds\", \"centered\", \"third\", \"frame\", \"composition\"],\n    \"lighting\":    [\"golden hour\", \"rim light\", \"side-lighting\", \"window light\", \"natural light\", \"studio light\"],\n    \"style\":       [\"editorial\", \"cinematic\", \"documentary\", \"fashion\", \"fine art\", \"illustration\"],\n    \"camera\":      [\"35mm camera\", \"leica\", \"shot on\", \"eye level\", \"low angle\", \"high angle\"],\n    \"lens\":        [\"85mm\", \"50mm\", \"f/1.4\", \"f/1.8\", \"shallow depth\", \"telephoto\", \"wide angle\"],\n    \"palette\":     [\"earth tones\", \"muted\", \"kodak portra\", \"warm shadows\", \"monochrome\", \"saturated\"],\n    \"negatives\":   [\"no text\", \"no watermark\", \"no harsh\", \"no extra\", \"no smile\", \"no plastic\"],\n}\n\nprompts = {\n    \"P1\": \"a girl with red hair\",\n    \"P2\": \"Portrait of a man. Editorial style, muted tones.\",\n    \"P3\": \"Portrait of a young woman. Centered composition. Window light. Editorial. 85mm f/1.4.\",\n    \"P4\": (\n        \"Portrait of a young woman with auburn hair. \"\n        \"Rule of thirds. Golden hour side-lighting. \"\n        \"Editorial style. Shot on 35mm camera. 85mm f/1.4. \"\n        \"Muted earth tones.\"\n    ),\n    \"P5\": (\n        \"Portrait of a young woman with curly auburn hair. \"\n        \"Rule of thirds, subject in left third. \"\n        \"Golden hour side-lighting from a window. \"\n        \"Editorial documentary style. \"\n        \"Shot on 35mm camera, eye level. \"\n        \"85mm f/1.4 lens, shallow depth of field. \"\n        \"Muted earth tones, Kodak Portra palette. \"\n        \"No text, no watermark.\"\n    ),\n}\n\n# define score_image_prompt(prompt) and rank_prompts(prompts) below\n\nfor pid, score in rank_prompts(prompts):\n    print(f\"{pid}: score={score}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "P5: score=8\nP4: score=7\nP3: score=5\nP2: score=3\nP1: score=0\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "KNOB_KEYWORDS = {\n    \"subject\":     [\"woman\", \"man\", \"person\", \"portrait\", \"subject\"],\n    \"composition\": [\"rule of thirds\", \"centered\", \"third\", \"frame\", \"composition\"],\n    \"lighting\":    [\"golden hour\", \"rim light\", \"side-lighting\", \"window light\", \"natural light\", \"studio light\"],\n    \"style\":       [\"editorial\", \"cinematic\", \"documentary\", \"fashion\", \"fine art\", \"illustration\"],\n    \"camera\":      [\"35mm camera\", \"leica\", \"shot on\", \"eye level\", \"low angle\", \"high angle\"],\n    \"lens\":        [\"85mm\", \"50mm\", \"f/1.4\", \"f/1.8\", \"shallow depth\", \"telephoto\", \"wide angle\"],\n    \"palette\":     [\"earth tones\", \"muted\", \"kodak portra\", \"warm shadows\", \"monochrome\", \"saturated\"],\n    \"negatives\":   [\"no text\", \"no watermark\", \"no harsh\", \"no extra\", \"no smile\", \"no plastic\"],\n}\n\nprompts = {\n    \"P1\": \"a girl with red hair\",\n    \"P2\": \"Portrait of a man. Editorial style, muted tones.\",\n    \"P3\": \"Portrait of a young woman. Centered composition. Window light. Editorial. 85mm f/1.4.\",\n    \"P4\": (\n        \"Portrait of a young woman with auburn hair. \"\n        \"Rule of thirds. Golden hour side-lighting. \"\n        \"Editorial style. Shot on 35mm camera. 85mm f/1.4. \"\n        \"Muted earth tones.\"\n    ),\n    \"P5\": (\n        \"Portrait of a young woman with curly auburn hair. \"\n        \"Rule of thirds, subject in left third. \"\n        \"Golden hour side-lighting from a window. \"\n        \"Editorial documentary style. \"\n        \"Shot on 35mm camera, eye level. \"\n        \"85mm f/1.4 lens, shallow depth of field. \"\n        \"Muted earth tones, Kodak Portra palette. \"\n        \"No text, no watermark.\"\n    ),\n}\n\ndef score_image_prompt(prompt):\n    low = prompt.lower()\n    score = 0\n    for knob, keywords in KNOB_KEYWORDS.items():\n        if any(k in low for k in keywords):\n            score += 1\n    return {\"score\": score}\n\ndef rank_prompts(prompts):\n    scored = [(pid, score_image_prompt(p)[\"score\"]) for pid, p in prompts.items()]\n    scored.sort(key=lambda x: (-x[1], x[0]))\n    return scored\n\nfor pid, score in rank_prompts(prompts):\n    print(f\"{pid}: score={score}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 23
+    },
+    {
+      "slug": "the-image-pipeline",
+      "title": "The image pipeline — turning one idea into a hundred shipped assets",
+      "estMinutes": 22,
+      "prerequisites": [
+        "the-image-model-landscape",
+        "prompting-for-real-output"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "ai-image-generation/the-image-pipeline/s01-01-the-six-stages",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 200,
+          "concept": "six-stage-image-pipeline",
+          "body": "# Brief → prompt → generate → filter → upscale → format\n\nThe hobbyist workflow is: open the tool, type a prompt, save the result. The production workflow is six stages, each with its own quality gate. Skip a stage and either the cost balloons or the output looks like AI slop.\n\n## Stage 1 — Brief\n\nBefore any prompt, you write down what the image is FOR.\n\n- **Channel**: Instagram square, TikTok 9:16, web hero 16:9, email header 600x300, print 300dpi.\n- **Intent**: drive a click, illustrate a product, set a mood, identify a person.\n- **Audience**: who sees this and what they expect.\n- **Constraints**: brand colors, must-include elements (logo, product), must-avoid elements (competitor product, controversial imagery).\n\nThe brief shapes the prompt and the platform-format step. Skipping it means you generate beautiful images that don't fit the format you actually need.\n\n## Stage 2 — Prompt\n\nEight knobs (lesson 02). Subject, composition, lighting, style, camera, lens, palette, negatives. Score it with `score_image_prompt` before you spend money. Don't send a 4/8 prompt to a $0.10/image model — fix the prompt first.\n\n## Stage 3 — Generate\n\nThe API call. The 2026 pattern is **batch, not single-shot**. nano-banana at ~$0.039/image makes generating 25 candidates cost about $1.00. For most briefs that beats one Midjourney render in expected value (better odds at least one is shipping-ready, plus options).\n\nWhere the actual API call lives depends on the model:\n\n```python\n# pseudocode — real call shape varies by provider\n\n# Flux via Black Forest Labs direct\n# import requests\n# r = requests.post(\n#     \"https://api.bfl.ml/v1/flux-pro-1.1\",\n#     headers={\"X-Key\": BFL_API_KEY},\n#     json={\"prompt\": prompt, \"width\": 1024, \"height\": 1024},\n# )\n\n# Flux via Replicate\n# import replicate\n# out = replicate.run(\"black-forest-labs/flux-1.1-pro\", input={\"prompt\": prompt})\n\n# Flux via Fal.ai\n# import fal_client\n# out = fal_client.subscribe(\"fal-ai/flux-pro/v1.1\", arguments={\"prompt\": prompt})\n\n# nano-banana via Google Gemini API\n# from google import genai\n# client = genai.Client(api_key=GEMINI_API_KEY)\n# resp = client.models.generate_content(\n#     model=\"gemini-2.5-flash-image-preview\",\n#     contents=[prompt],\n# )\n```\n\nDon't memorize call signatures. They change. Memorize the shape: **prompt + model + size → bytes**.\n\n## Stage 4 — Filter\n\nYou generated 25. You need 3. How to pick:\n\n- **Manual review.** Slow but the most reliable. A human picks the top K.\n- **LLM-as-judge with vision.** Send the candidates to a vision model (Claude, GPT-4o vision, Gemini) with the original brief and the scoring criteria. The model returns a ranked list. Fast and cheap (~$0.001-0.005 per candidate evaluated).\n- **CLIP similarity score.** Embed the brief into CLIP space, embed each candidate, rank by cosine similarity. Deterministic and free but ranks \"matches the brief\" not \"is beautiful.\"\n- **Aesthetic scorer.** Open-source models like `LAION-Aesthetics-V2` score \"how aesthetic does this look\" on a 0-10 scale. Pair with the CLIP score for a combined rank.\n\nThe 2026 default for an app: LLM-as-judge with vision. It's the only one that handles \"does this match the brief AND look good AND not have broken hands.\"\n\n## Stage 5 — Upscale\n\nThe image-gen models output at fixed sizes — usually 1024x1024 or up to ~4MP for Flux Pro Ultra. For hero use, print, or large-display banners, you need 4K+. The 2026 options:\n\n- **Imagen 4 upscale** — $0.06/image, in-line with Google Vertex AI's image generation surface.\n- **Flux.1.1 [pro] Ultra** — generates at up to 4MP natively. Saves the separate upscale step.\n- **Dedicated upscalers** — `clarity-upscaler`, `topaz-photo-ai` via API, `real-esrgan` open-source.\n\nFor most pipelines, generating at the highest resolution the chosen model supports and skipping the dedicated upscale is the right tradeoff. Reserve upscaling for \"I have a 1024 image and I need 4K\" exceptions.\n\n## Stage 6 — Format\n\nThe final step. Often skipped, always matters:\n\n- **Convert to platform format.** WebP for web (smaller than JPG, supported everywhere modern), AVIF for cutting edge (smaller still, support is now ubiquitous in 2026), JPG for compatibility, PNG only if you need transparency.\n- **Strip EXIF metadata.** Generated images sometimes include model name, prompt, and timestamps in EXIF. Strip them before shipping unless you want your prompt leaked publicly.\n- **Generate alt-text.** For every image you ship to a website, generate descriptive alt-text. A vision-model call with \"describe this image in one sentence for a blind user\" is roughly $0.001 and makes the page accessible.\n- **Watermark or sign if needed.** C2PA content credentials are now standard from most providers (OpenAI, Google) — they sign the image so it can be authenticated as AI-generated. Don't strip these if you want provenance.\n\n## The pipeline as code\n\nThe function shape:\n\n```python\ndef run_image_pipeline(brief):\n    prompt = build_prompt(brief)                    # stage 2\n    model = pick_image_model(brief.task)            # from lesson 01\n    candidates = generate_batch(model, prompt, n=brief.count)  # stage 3\n    top_k = filter_with_vision(candidates, brief)   # stage 4\n    upscaled = [upscale(img) for img in top_k] if brief.needs_4k else top_k  # stage 5\n    return [format_for_platform(img, brief) for img in upscaled]  # stage 6\n```\n\nSix stages, six function calls. Every production image-gen feature you've ever used has roughly this shape underneath.\n\nThe next step drills batch-and-filter — the stage 3+4 economics. Then a multiple choice on diagnosing a broken pipeline. Then format-and-platform. Then the fill step where you wire up a dispatch. Then the write step: `cost_for_batch(model, count, options)` at real 2026 rates. Then the checkpoint plans a full shoot end-to-end.",
+          "cta": "Got it",
+          "code": "# the six stages of a 2026 image pipeline.\n\nSTAGES = [\n    (\"1. brief\",      \"what is the image FOR — channel, intent, audience, dimensions\"),\n    (\"2. prompt\",     \"the eight knobs (subject, composition, lighting, style, camera, lens, palette, negatives)\"),\n    (\"3. generate\",   \"send the prompt to the chosen model — usually N times, not once\"),\n    (\"4. filter\",     \"score candidates, drop the bad ones, keep the top K\"),\n    (\"5. upscale\",    \"boost resolution for hero/print use (Imagen 4 upscale, Flux ultra, dedicated upscalers)\"),\n    (\"6. format\",     \"convert to platform formats (WebP, AVIF, JPG), strip EXIF, generate alt-text\"),\n]\nfor name, desc in STAGES:\n    print(f\"{name:14} {desc}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "ai-image-generation/the-image-pipeline/s02-02-batch-and-filter",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "batch-and-filter-economics",
+          "body": "# Batch and filter — where the math actually works\n\nThe single biggest 2026 unlock in image generation isn't a better model. It's the **collapse in per-image cost** at the Flash tier. nano-banana at ~$0.039 changed the economics of \"how should I get to a usable image\" from \"spend a lot, generate one, hope\" to \"spend a little, generate many, filter.\"\n\n## The math, walked through\n\nSuppose you need one shipping-ready image. Three strategies:\n\n### Strategy A — One-shot premium\n\nSend one prompt to Midjourney Pro tier or GPT Image 1 (High quality at $0.167/image). Per-image cost: ~$0.10-0.17. Hit rate (image is usable as-is, no broken hands, on-brief): assume 30-40%. So you regenerate, on average, 2-3 times to get a winner.\n\n**Real cost per shipping-ready image: ~$0.25-0.50, plus operator time.**\n\n### Strategy B — Batch and filter\n\nSend the same prompt to nano-banana 10 times. Cost: $0.039 × 10 = $0.39. Each individual image has a lower hit rate (~20%) because nano-banana isn't as polished as the premium models. But you have 10 candidates.\n\nProbability that AT LEAST ONE is shipping-ready:\n\n```\nP(none) = (1 - 0.2) ^ 10 = 0.8 ^ 10 ≈ 0.107\nP(at least one) ≈ 89%\n```\n\n**Real cost per shipping-ready image: ~$0.39 with 89% confidence on first batch.**\n\nIf the first batch produces nothing usable (~11% of the time), you batch again. Two batches gets you to 98.8% confidence at ~$0.78 total. That's still cheaper than strategy A's expected cost.\n\n### Strategy C — Self-hosted Flux\n\nRent an H100 GPU at ~$2/hour. Run Flux.1 [dev] (open weights, non-commercial license — for commercial you'd run Flux.1 [schnell] or have a license for [pro]). A well-tuned setup generates ~1 image/second at 1024x1024. That's 3,600 images/hour at $2/hour, so ~$0.00056 per image.\n\nBelow ~50,000 images/month, the API cost wins. Above that, the self-hosted economics win and the gap widens fast.\n\n## When strategy B (batch-and-filter) is wrong\n\nA few cases where you DON'T want batch-and-filter:\n\n- **Highest possible quality required.** Hero shot for a billboard. Flagship product launch image. Use Flux.1.1 [pro] Ultra at $0.06/image and review it yourself, don't try to filter 25 mediocre nano-bananas.\n- **Specific text required.** Ideogram. Generate 3-5, pick the one with crispest text. The filter step is text-readability check, not aesthetic.\n- **Tight subject-identity requirement across multiple outputs.** Flux Kontext with a reference. Batch is the wrong frame — you want consistent outputs, not varied ones.\n- **Single one-off where operator time is cheap.** Personal project, internal use. The math collapses; just pick whichever model you like and run it once.\n\n## The filter step in production\n\nThree ways to filter, in order of how often you'll actually use them:\n\n### Vision-model judge (the default)\n\n```python\n# pseudocode — real call shape varies by provider\n\n# import anthropic\n# client = anthropic.Anthropic()\n# resp = client.messages.create(\n#     model=\"claude-sonnet-4-7\",\n#     messages=[{\n#         \"role\": \"user\",\n#         \"content\": [\n#             {\"type\": \"text\", \"text\": f\"Brief: {brief}. Rate each on 0-10 for fit.\"},\n#             *[{\"type\": \"image\", \"source\": {...}} for img in candidates],\n#         ],\n#     }],\n# )\n```\n\nCost: ~$0.001-0.005 per candidate evaluated. Speed: ~3-10 seconds for a batch of 10. Quality: very good — the model catches broken hands, off-brief composition, AI face. The 2026 default.\n\n### CLIP similarity (the deterministic option)\n\nEmbed the brief in CLIP-space, embed each candidate, rank by cosine similarity. Fast and free. The downside: CLIP only knows \"does this image match this text,\" not \"is this beautiful\" or \"does this have broken hands.\"\n\n### Aesthetic scorer\n\nOpen-source models like `LAION-Aesthetics-V2-Predictor` give an aesthetic score 0-10. Combine with CLIP for a composite \"matches the brief AND looks good\" rank. Useful when you don't want vision-model latency or cost.\n\nIn practice, most production pipelines use the vision-model judge. The cost is in the noise compared to generation, and the quality of the rank is the bottleneck for shipping confidence.\n\n## The batch size question\n\nHow many candidates is the right batch size? It's a function of three things:\n\n- **Per-image cost.** Cheaper model → bigger batches make sense.\n- **Per-image hit rate.** Lower hit rate → bigger batches needed for high confidence.\n- **Filter cost.** The filter step costs money/time too. At some point adding more candidates costs more than it's worth.\n\nThe 2026 default heuristic: **batch of 10 for nano-banana, 5 for Flux Pro, 3 for premium tiers.** Adjust based on the hit rate you observe on your specific use case.\n\n## What the next step asks\n\nYou'll see five pipelines, each broken in one specific stage. The drill is identifying which stage broke. Then you'll read about format-and-platform, fill in a dispatch pattern, write the cost function, and plan a full shoot.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "ai-image-generation/the-image-pipeline/s03-03-which-stage-is-broken",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Map each symptom to the stage that would have caught it. Broken hands shipping to prod = no filter (stage 4) caught them. 1024 PNG on mobile = no format (stage 6) sized/converted them.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 70,
+          "concept": "diagnose-broken-pipeline-stage",
+          "prompt": "Six pipeline stages: brief, prompt, generate, filter, upscale,\nformat. The symptoms above point at which TWO broken stages?\n",
+          "options": [
+            {
+              "id": "filter_and_format",
+              "label": "filter + format (broken hands = no filter step; 1024 PNG on mobile = no format step)"
+            },
+            {
+              "id": "brief_and_prompt",
+              "label": "brief + prompt",
+              "explain": "The brief and prompt could be fine. The issue is downstream: nothing catches the broken hands (filter), and nothing reformats for the channel (format)."
+            },
+            {
+              "id": "generate_and_upscale",
+              "label": "generate + upscale",
+              "explain": "Generation is producing the images correctly (Flux Pro is fine). Upscale isn't the issue — the problem is the OUTPUT format, not the resolution."
+            },
+            {
+              "id": "prompt_and_upscale",
+              "label": "prompt + upscale",
+              "explain": "The prompt issue would be 'images don't match the brief.' That's not the symptom here. The symptoms are post-generation: no filtering, no formatting."
+            }
+          ],
+          "answerIds": [
+            "filter_and_format"
+          ],
+          "shuffle": false,
+          "code": "# the symptom: the team is generating beautiful Flux Pro images\n# at $0.04/image. they ship one per request. but the customer\n# complains the images sometimes have six-fingered hands AND\n# they're served as 1024x1024 PNG even when the customer is on\n# mobile where a 400x400 WebP would load 8x faster.\nsymptoms = [\n    \"occasional broken hands shipped to production\",\n    \"1024x1024 PNG served regardless of viewport\",\n    \"no resize, no format conversion, no EXIF stripping\",\n]\nfor s in symptoms:\n    print(f\"- {s}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "ai-image-generation/the-image-pipeline/s04-04-format-and-platform",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 180,
+          "concept": "format-and-platform-output",
+          "body": "# Format and platform — the stage everyone skips\n\nThe final stage of the pipeline is the one nobody respects. The image came out of the model. It looks great. Ship it.\n\nYou can do that. You will pay for it in three places:\n\n1. **Page load time.** A 1024x1024 PNG is 1-2MB. The same image as a 1024x1024 WebP at quality 85 is 80-200KB. On mobile, that's 1-2 seconds vs. 100-200ms. Conversion rates move on that gap.\n2. **Privacy leaks.** AI-generated images sometimes include the prompt in EXIF. Ship one to your competitor and they have your prompt.\n3. **Accessibility.** No alt text means screen readers say \"image\" and move on. Anyone using a screen reader gets nothing from your gorgeous hero shot.\n\n## The four format jobs\n\nEvery image that leaves your pipeline does four things at stage 6:\n\n### 1. Convert to platform format\n\nThe 2026 defaults:\n\n- **WebP** for web. Universal support, 25-35% smaller than JPG at equivalent quality.\n- **AVIF** for cutting-edge web. 50% smaller than JPG. Support is now ubiquitous (Chrome, Firefox, Safari all support it).\n- **JPG** as fallback when you need maximum compatibility (email clients, older platforms).\n- **PNG** only if you need transparency. Almost never for photographs.\n\nThe pseudocode shape:\n\n```python\n# pseudocode — using Pillow stdlib\n# from PIL import Image\n# img = Image.open(input_path)\n# img.save(output_path, format=\"WEBP\", quality=85)\n# img.save(avif_path, format=\"AVIF\", quality=80)\n```\n\n### 2. Resize per channel\n\nYou generated at 1024x1024. The actual destinations are:\n\n| Channel | Target size |\n|---|---|\n| Instagram square | 1080×1080 |\n| Instagram story | 1080×1920 |\n| TikTok 9:16 | 1080×1920 |\n| Twitter / X post | 1200×675 |\n| LinkedIn post | 1200×627 |\n| Email header | 600×300 |\n| Web hero | 1920×1080 (with 2x retina at 3840×2160) |\n| Thumbnail | 400×400 |\n\nGenerating once and resizing six times beats generating six times. The image-model bill is the expensive line; resize is essentially free with `Pillow`.\n\n### 3. Strip EXIF metadata\n\nEvery generated image potentially contains: prompt text, model name, generation timestamp, sometimes a \"made with X\" tag. Strip them unless you have a reason to keep them.\n\nThe exception: C2PA content credentials. As of 2026, OpenAI, Google, and most major providers attach C2PA signatures to generated images. These are designed to be preserved — they let downstream viewers verify \"this is AI-generated, this is the provenance.\" Strip EXIF but not C2PA, if you care about content authentication.\n\n### 4. Generate alt text\n\nFor every image going to a website, generate descriptive alt text. The pseudocode:\n\n```python\n# pseudocode — vision model call for alt text\n# resp = vision_client.describe(image, prompt=\"One-sentence alt text for a screen reader. Describe what's visually present.\")\n# alt = resp.text\n```\n\nCost: ~$0.001 per image. Quality: 80-90% as good as a human writer for descriptive alt text. Strongly recommended for any production web pipeline.\n\n## The platform routing function\n\nThe dispatch shape, in pseudocode:\n\n```python\nPLATFORM_CONFIGS = {\n    \"instagram_square\":  {\"size\": (1080, 1080), \"format\": \"JPEG\", \"quality\": 90},\n    \"instagram_story\":   {\"size\": (1080, 1920), \"format\": \"JPEG\", \"quality\": 90},\n    \"tiktok\":            {\"size\": (1080, 1920), \"format\": \"JPEG\", \"quality\": 90},\n    \"twitter\":           {\"size\": (1200, 675),  \"format\": \"JPEG\", \"quality\": 85},\n    \"web_hero\":          {\"size\": (1920, 1080), \"format\": \"WEBP\", \"quality\": 85},\n    \"web_hero_retina\":   {\"size\": (3840, 2160), \"format\": \"WEBP\", \"quality\": 80},\n    \"thumbnail\":         {\"size\": (400, 400),   \"format\": \"WEBP\", \"quality\": 75},\n    \"email_header\":      {\"size\": (600, 300),   \"format\": \"JPEG\", \"quality\": 80},\n}\n\ndef format_for_platform(img, platform):\n    cfg = PLATFORM_CONFIGS[platform]\n    # resize, convert format, strip EXIF, return\n    ...\n```\n\nThe next step has you fill in this exact dispatch. After that, you'll write the cost function that estimates the API spend across nano-banana / Flux Pro / Midjourney / DALL-E for a given batch — the function you'd actually call before kicking off a job to make sure it fits your budget.\n\n## What this means for your workflow\n\nStop thinking of stage 6 as \"save the file.\" Think of it as \"the image now has to go through six platforms, each with different requirements, and the original 1024 PNG is the wrong shape for every single one.\"\n\nGenerate once. Format six times. Strip metadata. Add alt text. Then ship.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "fill",
+          "id": "ai-image-generation/the-image-pipeline/s05-05-fill-the-pipeline",
+          "xp": 3,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Same shape as the harness tool dispatch (chapter 26 step 05): registry lookup `HANDLERS[stage]`, then call with the running state. The handler returns a new state dict (immutable update), which becomes the input to the next stage.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "`HANDLERS[stage](state)` — exact line. Each handler returns a NEW dict spread from the old one plus its addition. That's the immutable update pattern from chapter 17.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 75,
+          "concept": "pipeline-stage-dispatch",
+          "prompt": "The pipeline runs six stages in order: brief, prompt, generate,\nfilter, upscale, format. The dispatch function takes a brief\nthrough each stage by looking up the stage handler in a registry.\n\nFill in the dispatch line: look up the handler for the current\nstage name and call it with the running `state` dict.\n\nExpected output:\n```\ndone: {'brief': 'ok', 'prompt': '8/8 knobs', 'generated': 10, 'filtered': 3, 'upscaled': 3, 'formatted': 3}\n```\n",
+          "code": "STAGES = [\"brief\", \"prompt\", \"generate\", \"filter\", \"upscale\", \"format\"]\n\nHANDLERS = {\n    \"brief\":    lambda s: {**s, \"brief\": \"ok\"},\n    \"prompt\":   lambda s: {**s, \"prompt\": \"8/8 knobs\"},\n    \"generate\": lambda s: {**s, \"generated\": 10},\n    \"filter\":   lambda s: {**s, \"filtered\": 3},\n    \"upscale\":  lambda s: {**s, \"upscaled\": s[\"filtered\"]},\n    \"format\":   lambda s: {**s, \"formatted\": s[\"upscaled\"]},\n}\n\ndef run_pipeline():\n    state = {}\n    for stage in STAGES:\n        state = ___\n    return state\n\nprint(f\"done: {run_pipeline()}\")\n",
+          "blanks": [
+            {
+              "id": "dispatch",
+              "accept": [
+                "HANDLERS[stage](state)"
+              ],
+              "caseSensitive": true,
+              "normalize": "trim"
+            }
+          ]
+        },
+        {
+          "type": "write",
+          "id": "ai-image-generation/the-image-pipeline/s06-06-write-cost-for-batch",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Three steps: look up `PRICING[model]`, multiply by `count`, optionally add `UPSCALE_COST * count` if `options.get('upscale')`. Return `round(total, 2)`. The `options or {}` idiom handles the None default cleanly.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "The trap is `options=None` as default — never use a mutable default. Convert with `options = options or {}` at the top of the function, then use `.get(...)` for the upscale check.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 220,
+          "concept": "image-batch-cost-math",
+          "prompt": "Write `cost_for_batch(model, count, options=None)` that returns\nthe total batch cost in USD, rounded to 2 decimals.\n\nUse this exact `PRICING` table (real 2026 per-image rates,\nprovided in the starter):\n\n- `nano-banana`: $0.039 (Gemini 2.5 Flash Image)\n- `flux-1.1-pro`: $0.04 (Black Forest Labs API)\n- `flux-pro-ultra`: $0.06 (Flux.1.1 Pro Ultra at 4MP)\n- `midjourney`: $0.10 (per-image equivalent on a Standard plan)\n- `dall-e-3`: $0.04 (1024x1024 standard quality)\n- `ideogram-3`: $0.0375 (Default tier)\n- `gpt-image-1-mini`: $0.005 (Low quality)\n- `imagen-4`: $0.04 (Google Vertex AI)\n- `imagen-4-ultra`: $0.06\n\n`options` may include `{\"upscale\": True}` — if so, add $0.06 per\nimage (the Imagen 4 upscale rate) to the base cost.\n\nReturn a float, rounded to 2 decimals via `round(x, 2)`.\n\nFour cases run. Expected output:\n```\nnano-banana x 100:        $3.90\nflux-1.1-pro x 25:        $1.00\nmidjourney x 100:         $10.00\ndall-e-3 x 50 + upscale:  $5.00\n```\n",
+          "starter": "PRICING = {\n    \"nano-banana\":      0.039,\n    \"flux-1.1-pro\":     0.04,\n    \"flux-pro-ultra\":   0.06,\n    \"midjourney\":       0.10,\n    \"dall-e-3\":         0.04,\n    \"ideogram-3\":       0.0375,\n    \"gpt-image-1-mini\": 0.005,\n    \"imagen-4\":         0.04,\n    \"imagen-4-ultra\":   0.06,\n}\n\nUPSCALE_COST = 0.06\n\n# define cost_for_batch(model, count, options=None) below\n\nprint(f\"nano-banana x 100:        ${cost_for_batch('nano-banana', 100):.2f}\")\nprint(f\"flux-1.1-pro x 25:        ${cost_for_batch('flux-1.1-pro', 25):.2f}\")\nprint(f\"midjourney x 100:         ${cost_for_batch('midjourney', 100):.2f}\")\nprint(f\"dall-e-3 x 50 + upscale:  ${cost_for_batch('dall-e-3', 50, {'upscale': True}):.2f}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "nano-banana x 100:        $3.90\nflux-1.1-pro x 25:        $1.00\nmidjourney x 100:         $10.00\ndall-e-3 x 50 + upscale:  $5.00\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "PRICING = {\n    \"nano-banana\":      0.039,\n    \"flux-1.1-pro\":     0.04,\n    \"flux-pro-ultra\":   0.06,\n    \"midjourney\":       0.10,\n    \"dall-e-3\":         0.04,\n    \"ideogram-3\":       0.0375,\n    \"gpt-image-1-mini\": 0.005,\n    \"imagen-4\":         0.04,\n    \"imagen-4-ultra\":   0.06,\n}\n\nUPSCALE_COST = 0.06\n\ndef cost_for_batch(model, count, options=None):\n    options = options or {}\n    base = PRICING[model] * count\n    if options.get(\"upscale\"):\n        base += UPSCALE_COST * count\n    return round(base, 2)\n\nprint(f\"nano-banana x 100:        ${cost_for_batch('nano-banana', 100):.2f}\")\nprint(f\"flux-1.1-pro x 25:        ${cost_for_batch('flux-1.1-pro', 25):.2f}\")\nprint(f\"midjourney x 100:         ${cost_for_batch('midjourney', 100):.2f}\")\nprint(f\"dall-e-3 x 50 + upscale:  ${cost_for_batch('dall-e-3', 50, {'upscale': True}):.2f}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "ai-image-generation/the-image-pipeline/s07-07-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 280,
+          "concept": "plan-a-shoot-end-to-end",
+          "prompt": "Final drill. Wire all three lessons together. Write\n`plan_shoot(brief)` that takes a brief dict and returns a plan\ndict:\n\n```python\n{\"model\": str, \"count\": int, \"total_cost\": float, \"formats\": list[str]}\n```\n\nThe brief may contain:\n- `channel`: one of `\"instagram\"`, `\"web\"`, `\"email\"`, `\"tiktok\"`\n- `batch_count`: int (default 1)\n- `budget_per_image`: float (default 1.0)\n- `needs_text_in_image`: bool\n- `needs_character_consistency`: bool\n- `photoreal_art_directed`: bool\n- `subjective_taste`: bool\n- `instruction_heavy`: bool\n- `needs_4k`: bool (adds upscale cost)\n\nUse the routing from lesson 01 (`pick_image_model`), the pricing\ntable from lesson 03 step 06 (extended with `midjourney-v7`,\n`gpt-image-1`, `flux-kontext-pro`), and the `PLATFORM_FORMATS`\ntable (provided) to pick output formats by channel.\n\nFour briefs run. Expected output:\n```\nB1: model=ideogram-3         count=  5  total=$  0.19  formats=['WEBP_1920', 'WEBP_400_thumb']\nB2: model=midjourney-v7      count=  4  total=$  0.40  formats=['JPEG_1080']\nB3: model=nano-banana        count= 50  total=$  1.95  formats=['JPEG_1080_vertical']\nB4: model=flux-1.1-pro       count= 10  total=$  1.00  formats=['WEBP_1920', 'WEBP_400_thumb']\n```\n",
+          "starter": "PRICING = {\n    \"nano-banana\":      0.039,\n    \"flux-1.1-pro\":     0.04,\n    \"flux-pro-ultra\":   0.06,\n    \"midjourney-v7\":    0.10,\n    \"dall-e-3\":         0.04,\n    \"ideogram-3\":       0.0375,\n    \"gpt-image-1-mini\": 0.005,\n    \"gpt-image-1\":      0.042,\n    \"imagen-4\":         0.04,\n    \"imagen-4-ultra\":   0.06,\n    \"flux-kontext-pro\": 0.04,\n}\n\nUPSCALE_COST = 0.06\n\nPLATFORM_FORMATS = {\n    \"instagram\": [\"JPEG_1080\"],\n    \"web\":       [\"WEBP_1920\", \"WEBP_400_thumb\"],\n    \"email\":     [\"JPEG_600\"],\n    \"tiktok\":    [\"JPEG_1080_vertical\"],\n}\n\nbriefs = [\n    (\"B1\", {\"channel\": \"web\", \"needs_text_in_image\": True, \"batch_count\": 5, \"budget_per_image\": 0.10}),\n    (\"B2\", {\"channel\": \"instagram\", \"subjective_taste\": True, \"batch_count\": 4, \"budget_per_image\": 0.15}),\n    (\"B3\", {\"channel\": \"tiktok\", \"batch_count\": 50, \"budget_per_image\": 0.05}),\n    (\"B4\", {\"channel\": \"web\", \"photoreal_art_directed\": True, \"batch_count\": 10, \"needs_4k\": True, \"budget_per_image\": 0.15}),\n]\n\n# define pick_image_model(task), cost_for_batch(model, count, options=None),\n# and plan_shoot(brief) below\n\nfor name, b in briefs:\n    p = plan_shoot(b)\n    print(f\"{name}: model={p['model']:<18} count={p['count']:>3}  total=${p['total_cost']:>6.2f}  formats={p['formats']}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "B1: model=ideogram-3         count=  5  total=$  0.19  formats=['WEBP_1920', 'WEBP_400_thumb']\nB2: model=midjourney-v7      count=  4  total=$  0.40  formats=['JPEG_1080']\nB3: model=nano-banana        count= 50  total=$  1.95  formats=['JPEG_1080_vertical']\nB4: model=flux-1.1-pro       count= 10  total=$  1.00  formats=['WEBP_1920', 'WEBP_400_thumb']\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "PRICING = {\n    \"nano-banana\":      0.039,\n    \"flux-1.1-pro\":     0.04,\n    \"flux-pro-ultra\":   0.06,\n    \"midjourney-v7\":    0.10,\n    \"dall-e-3\":         0.04,\n    \"ideogram-3\":       0.0375,\n    \"gpt-image-1-mini\": 0.005,\n    \"gpt-image-1\":      0.042,\n    \"imagen-4\":         0.04,\n    \"imagen-4-ultra\":   0.06,\n    \"flux-kontext-pro\": 0.04,\n}\n\nUPSCALE_COST = 0.06\n\nPLATFORM_FORMATS = {\n    \"instagram\": [\"JPEG_1080\"],\n    \"web\":       [\"WEBP_1920\", \"WEBP_400_thumb\"],\n    \"email\":     [\"JPEG_600\"],\n    \"tiktok\":    [\"JPEG_1080_vertical\"],\n}\n\nbriefs = [\n    (\"B1\", {\"channel\": \"web\", \"needs_text_in_image\": True, \"batch_count\": 5, \"budget_per_image\": 0.10}),\n    (\"B2\", {\"channel\": \"instagram\", \"subjective_taste\": True, \"batch_count\": 4, \"budget_per_image\": 0.15}),\n    (\"B3\", {\"channel\": \"tiktok\", \"batch_count\": 50, \"budget_per_image\": 0.05}),\n    (\"B4\", {\"channel\": \"web\", \"photoreal_art_directed\": True, \"batch_count\": 10, \"needs_4k\": True, \"budget_per_image\": 0.15}),\n]\n\ndef pick_image_model(task):\n    if task.get(\"budget_per_image\", 1.0) < 0.02:\n        return \"gpt-image-1-mini\"\n    if task.get(\"needs_text_in_image\"):\n        return \"ideogram-3\"\n    if task.get(\"needs_character_consistency\"):\n        return \"flux-kontext-pro\"\n    if task.get(\"photoreal_art_directed\"):\n        return \"flux-1.1-pro\"\n    if task.get(\"batch_count\", 1) >= 10:\n        return \"nano-banana\"\n    if task.get(\"subjective_taste\"):\n        return \"midjourney-v7\"\n    if task.get(\"instruction_heavy\"):\n        return \"gpt-image-1\"\n    return \"imagen-4\"\n\ndef cost_for_batch(model, count, options=None):\n    options = options or {}\n    base = PRICING[model] * count\n    if options.get(\"upscale\"):\n        base += UPSCALE_COST * count\n    return round(base, 2)\n\ndef plan_shoot(brief):\n    model = pick_image_model(brief)\n    count = brief.get(\"batch_count\", 1)\n    options = {\"upscale\": brief.get(\"needs_4k\", False)}\n    total_cost = cost_for_batch(model, count, options)\n    formats = PLATFORM_FORMATS.get(brief.get(\"channel\", \"web\"), [\"WEBP_1920\"])\n    return {\n        \"model\": model,\n        \"count\": count,\n        \"total_cost\": total_cost,\n        \"formats\": formats,\n    }\n\nfor name, b in briefs:\n    p = plan_shoot(b)\n    print(f\"{name}: model={p['model']:<18} count={p['count']:>3}  total=${p['total_cost']:>6.2f}  formats={p['formats']}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 21
+    }
+  ],
+  "xpTotal": 67
+}

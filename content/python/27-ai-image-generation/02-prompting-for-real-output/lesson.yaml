@@ -1,0 +1,14 @@
+slug: prompting-for-real-output
+title: "Prompting for real output — composition, control, and the eight knobs that matter"
+estMinutes: 20
+prerequisites:
+  - the-image-model-landscape
+order:
+  - 01-why-the-girl-with-red-hair-fails.read.md
+  - 02-the-eight-knobs.read.md
+  - 03-fix-the-vague-prompt.fix.yaml
+  - 04-controlnet-and-reference.read.md
+  - 05-which-knob-is-missing.mc.yaml
+  - 06-failure-modes.read.md
+  - 07-write-score-image-prompt.write.yaml
+  - 08-checkpoint.checkpoint.yaml

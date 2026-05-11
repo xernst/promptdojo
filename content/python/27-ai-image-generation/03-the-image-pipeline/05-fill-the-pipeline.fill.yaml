@@ -1,0 +1,44 @@
+xp: 3
+estSeconds: 75
+concept: pipeline-stage-dispatch
+prompt: |
+  The pipeline runs six stages in order: brief, prompt, generate,
+  filter, upscale, format. The dispatch function takes a brief
+  through each stage by looking up the stage handler in a registry.
+
+  Fill in the dispatch line: look up the handler for the current
+  stage name and call it with the running `state` dict.
+
+  Expected output:
+  ```
+  done: {'brief': 'ok', 'prompt': '8/8 knobs', 'generated': 10, 'filtered': 3, 'upscaled': 3, 'formatted': 3}
+  ```
+code: |
+  STAGES = ["brief", "prompt", "generate", "filter", "upscale", "format"]
+
+  HANDLERS = {
+      "brief":    lambda s: {**s, "brief": "ok"},
+      "prompt":   lambda s: {**s, "prompt": "8/8 knobs"},
+      "generate": lambda s: {**s, "generated": 10},
+      "filter":   lambda s: {**s, "filtered": 3},
+      "upscale":  lambda s: {**s, "upscaled": s["filtered"]},
+      "format":   lambda s: {**s, "formatted": s["upscaled"]},
+  }
+
+  def run_pipeline():
+      state = {}
+      for stage in STAGES:
+          state = ___
+      return state
+
+  print(f"done: {run_pipeline()}")
+blanks:
+  - id: dispatch
+    accept:
+      - "HANDLERS[stage](state)"
+    caseSensitive: true
+hint:
+  - level: 1
+    body: "Same shape as the harness tool dispatch (chapter 26 step 05): registry lookup `HANDLERS[stage]`, then call with the running state. The handler returns a new state dict (immutable update), which becomes the input to the next stage."
+  - level: 2
+    body: "`HANDLERS[stage](state)` — exact line. Each handler returns a NEW dict spread from the old one plus its addition. That's the immutable update pattern from chapter 17."

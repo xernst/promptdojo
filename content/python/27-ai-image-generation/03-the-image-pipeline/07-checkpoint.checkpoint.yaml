@@ -1,0 +1,152 @@
+xp: 8
+estSeconds: 280
+concept: plan-a-shoot-end-to-end
+prompt: |
+  Final drill. Wire all three lessons together. Write
+  `plan_shoot(brief)` that takes a brief dict and returns a plan
+  dict:
+
+  ```python
+  {"model": str, "count": int, "total_cost": float, "formats": list[str]}
+  ```
+
+  The brief may contain:
+  - `channel`: one of `"instagram"`, `"web"`, `"email"`, `"tiktok"`
+  - `batch_count`: int (default 1)
+  - `budget_per_image`: float (default 1.0)
+  - `needs_text_in_image`: bool
+  - `needs_character_consistency`: bool
+  - `photoreal_art_directed`: bool
+  - `subjective_taste`: bool
+  - `instruction_heavy`: bool
+  - `needs_4k`: bool (adds upscale cost)
+
+  Use the routing from lesson 01 (`pick_image_model`), the pricing
+  table from lesson 03 step 06 (extended with `midjourney-v7`,
+  `gpt-image-1`, `flux-kontext-pro`), and the `PLATFORM_FORMATS`
+  table (provided) to pick output formats by channel.
+
+  Four briefs run. Expected output:
+  ```
+  B1: model=ideogram-3         count=  5  total=$  0.19  formats=['WEBP_1920', 'WEBP_400_thumb']
+  B2: model=midjourney-v7      count=  4  total=$  0.40  formats=['JPEG_1080']
+  B3: model=nano-banana        count= 50  total=$  1.95  formats=['JPEG_1080_vertical']
+  B4: model=flux-1.1-pro       count= 10  total=$  1.00  formats=['WEBP_1920', 'WEBP_400_thumb']
+  ```
+starter: |
+  PRICING = {
+      "nano-banana":      0.039,
+      "flux-1.1-pro":     0.04,
+      "flux-pro-ultra":   0.06,
+      "midjourney-v7":    0.10,
+      "dall-e-3":         0.04,
+      "ideogram-3":       0.0375,
+      "gpt-image-1-mini": 0.005,
+      "gpt-image-1":      0.042,
+      "imagen-4":         0.04,
+      "imagen-4-ultra":   0.06,
+      "flux-kontext-pro": 0.04,
+  }
+
+  UPSCALE_COST = 0.06
+
+  PLATFORM_FORMATS = {
+      "instagram": ["JPEG_1080"],
+      "web":       ["WEBP_1920", "WEBP_400_thumb"],
+      "email":     ["JPEG_600"],
+      "tiktok":    ["JPEG_1080_vertical"],
+  }
+
+  briefs = [
+      ("B1", {"channel": "web", "needs_text_in_image": True, "batch_count": 5, "budget_per_image": 0.10}),
+      ("B2", {"channel": "instagram", "subjective_taste": True, "batch_count": 4, "budget_per_image": 0.15}),
+      ("B3", {"channel": "tiktok", "batch_count": 50, "budget_per_image": 0.05}),
+      ("B4", {"channel": "web", "photoreal_art_directed": True, "batch_count": 10, "needs_4k": True, "budget_per_image": 0.15}),
+  ]
+
+  # define pick_image_model(task), cost_for_batch(model, count, options=None),
+  # and plan_shoot(brief) below
+
+  for name, b in briefs:
+      p = plan_shoot(b)
+      print(f"{name}: model={p['model']:<18} count={p['count']:>3}  total=${p['total_cost']:>6.2f}  formats={p['formats']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    B1: model=ideogram-3         count=  5  total=$  0.19  formats=['WEBP_1920', 'WEBP_400_thumb']
+    B2: model=midjourney-v7      count=  4  total=$  0.40  formats=['JPEG_1080']
+    B3: model=nano-banana        count= 50  total=$  1.95  formats=['JPEG_1080_vertical']
+    B4: model=flux-1.1-pro       count= 10  total=$  1.00  formats=['WEBP_1920', 'WEBP_400_thumb']
+  normalize: collapse-trailing-newline
+solution: |
+  PRICING = {
+      "nano-banana":      0.039,
+      "flux-1.1-pro":     0.04,
+      "flux-pro-ultra":   0.06,
+      "midjourney-v7":    0.10,
+      "dall-e-3":         0.04,
+      "ideogram-3":       0.0375,
+      "gpt-image-1-mini": 0.005,
+      "gpt-image-1":      0.042,
+      "imagen-4":         0.04,
+      "imagen-4-ultra":   0.06,
+      "flux-kontext-pro": 0.04,
+  }
+
+  UPSCALE_COST = 0.06
+
+  PLATFORM_FORMATS = {
+      "instagram": ["JPEG_1080"],
+      "web":       ["WEBP_1920", "WEBP_400_thumb"],
+      "email":     ["JPEG_600"],
+      "tiktok":    ["JPEG_1080_vertical"],
+  }
+
+  briefs = [
+      ("B1", {"channel": "web", "needs_text_in_image": True, "batch_count": 5, "budget_per_image": 0.10}),
+      ("B2", {"channel": "instagram", "subjective_taste": True, "batch_count": 4, "budget_per_image": 0.15}),
+      ("B3", {"channel": "tiktok", "batch_count": 50, "budget_per_image": 0.05}),
+      ("B4", {"channel": "web", "photoreal_art_directed": True, "batch_count": 10, "needs_4k": True, "budget_per_image": 0.15}),
+  ]
+
+  def pick_image_model(task):
+      if task.get("budget_per_image", 1.0) < 0.02:
+          return "gpt-image-1-mini"
+      if task.get("needs_text_in_image"):
+          return "ideogram-3"
+      if task.get("needs_character_consistency"):
+          return "flux-kontext-pro"
+      if task.get("photoreal_art_directed"):
+          return "flux-1.1-pro"
+      if task.get("batch_count", 1) >= 10:
+          return "nano-banana"
+      if task.get("subjective_taste"):
+          return "midjourney-v7"
+      if task.get("instruction_heavy"):
+          return "gpt-image-1"
+      return "imagen-4"
+
+  def cost_for_batch(model, count, options=None):
+      options = options or {}
+      base = PRICING[model] * count
+      if options.get("upscale"):
+          base += UPSCALE_COST * count
+      return round(base, 2)
+
+  def plan_shoot(brief):
+      model = pick_image_model(brief)
+      count = brief.get("batch_count", 1)
+      options = {"upscale": brief.get("needs_4k", False)}
+      total_cost = cost_for_batch(model, count, options)
+      formats = PLATFORM_FORMATS.get(brief.get("channel", "web"), ["WEBP_1920"])
+      return {
+          "model": model,
+          "count": count,
+          "total_cost": total_cost,
+          "formats": formats,
+      }
+
+  for name, b in briefs:
+      p = plan_shoot(b)
+      print(f"{name}: model={p['model']:<18} count={p['count']:>3}  total=${p['total_cost']:>6.2f}  formats={p['formats']}")
+passThreshold: 0.66

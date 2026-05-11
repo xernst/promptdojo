@@ -1,0 +1,14 @@
+slug: the-image-model-landscape
+title: "The image model landscape — six families and what each is for"
+estMinutes: 18
+prerequisites: []
+order:
+  - 01-the-six-families.read.md
+  - 02-flux-vs-midjourney.read.md
+  - 03-pick-the-model.mc.yaml
+  - 04-nano-banana-and-the-batch-economics.read.md
+  - 05-text-in-image.read.md
+  - 06-which-model-for-text.mc.yaml
+  - 07-the-decision-tree.read.md
+  - 08-write-pick-image-model.write.yaml
+  - 09-checkpoint.checkpoint.yaml

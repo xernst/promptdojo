@@ -1,0 +1,92 @@
+xp: 5
+estSeconds: 220
+concept: image-batch-cost-math
+prompt: |
+  Write `cost_for_batch(model, count, options=None)` that returns
+  the total batch cost in USD, rounded to 2 decimals.
+
+  Use this exact `PRICING` table (real 2026 per-image rates,
+  provided in the starter):
+
+  - `nano-banana`: $0.039 (Gemini 2.5 Flash Image)
+  - `flux-1.1-pro`: $0.04 (Black Forest Labs API)
+  - `flux-pro-ultra`: $0.06 (Flux.1.1 Pro Ultra at 4MP)
+  - `midjourney`: $0.10 (per-image equivalent on a Standard plan)
+  - `dall-e-3`: $0.04 (1024x1024 standard quality)
+  - `ideogram-3`: $0.0375 (Default tier)
+  - `gpt-image-1-mini`: $0.005 (Low quality)
+  - `imagen-4`: $0.04 (Google Vertex AI)
+  - `imagen-4-ultra`: $0.06
+
+  `options` may include `{"upscale": True}` — if so, add $0.06 per
+  image (the Imagen 4 upscale rate) to the base cost.
+
+  Return a float, rounded to 2 decimals via `round(x, 2)`.
+
+  Four cases run. Expected output:
+  ```
+  nano-banana x 100:        $3.90
+  flux-1.1-pro x 25:        $1.00
+  midjourney x 100:         $10.00
+  dall-e-3 x 50 + upscale:  $5.00
+  ```
+starter: |
+  PRICING = {
+      "nano-banana":      0.039,
+      "flux-1.1-pro":     0.04,
+      "flux-pro-ultra":   0.06,
+      "midjourney":       0.10,
+      "dall-e-3":         0.04,
+      "ideogram-3":       0.0375,
+      "gpt-image-1-mini": 0.005,
+      "imagen-4":         0.04,
+      "imagen-4-ultra":   0.06,
+  }
+
+  UPSCALE_COST = 0.06
+
+  # define cost_for_batch(model, count, options=None) below
+
+  print(f"nano-banana x 100:        ${cost_for_batch('nano-banana', 100):.2f}")
+  print(f"flux-1.1-pro x 25:        ${cost_for_batch('flux-1.1-pro', 25):.2f}")
+  print(f"midjourney x 100:         ${cost_for_batch('midjourney', 100):.2f}")
+  print(f"dall-e-3 x 50 + upscale:  ${cost_for_batch('dall-e-3', 50, {'upscale': True}):.2f}")
+grader:
+  kind: stdout-equality
+  expected: |
+    nano-banana x 100:        $3.90
+    flux-1.1-pro x 25:        $1.00
+    midjourney x 100:         $10.00
+    dall-e-3 x 50 + upscale:  $5.00
+  normalize: collapse-trailing-newline
+solution: |
+  PRICING = {
+      "nano-banana":      0.039,
+      "flux-1.1-pro":     0.04,
+      "flux-pro-ultra":   0.06,
+      "midjourney":       0.10,
+      "dall-e-3":         0.04,
+      "ideogram-3":       0.0375,
+      "gpt-image-1-mini": 0.005,
+      "imagen-4":         0.04,
+      "imagen-4-ultra":   0.06,
+  }
+
+  UPSCALE_COST = 0.06
+
+  def cost_for_batch(model, count, options=None):
+      options = options or {}
+      base = PRICING[model] * count
+      if options.get("upscale"):
+          base += UPSCALE_COST * count
+      return round(base, 2)
+
+  print(f"nano-banana x 100:        ${cost_for_batch('nano-banana', 100):.2f}")
+  print(f"flux-1.1-pro x 25:        ${cost_for_batch('flux-1.1-pro', 25):.2f}")
+  print(f"midjourney x 100:         ${cost_for_batch('midjourney', 100):.2f}")
+  print(f"dall-e-3 x 50 + upscale:  ${cost_for_batch('dall-e-3', 50, {'upscale': True}):.2f}")
+hint:
+  - level: 1
+    body: "Three steps: look up `PRICING[model]`, multiply by `count`, optionally add `UPSCALE_COST * count` if `options.get('upscale')`. Return `round(total, 2)`. The `options or {}` idiom handles the None default cleanly."
+  - level: 2
+    body: "The trap is `options=None` as default — never use a mutable default. Convert with `options = options or {}` at the top of the function, then use `.get(...)` for the upscale check."
