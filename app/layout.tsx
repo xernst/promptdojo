@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import BrainDump from "@/components/BrainDump";
@@ -15,15 +15,18 @@ export const metadata: Metadata = {
   },
   description:
     "free, open-source python school for people who already use ai to write code. runs in your browser. login to save progress and sync across devices.",
-  // iOS save-to-home + Android Chrome address bar / task switcher hue.
-  // Matches --color-ink-950 (#0a0a0a) from globals.css so the chrome
-  // blends into the page instead of clashing.
-  themeColor: "#0a0a0a",
   appleWebApp: {
     capable: true,
     title: "promptdojo",
     statusBarStyle: "black-translucent",
   },
+};
+
+// Next.js 16 wants themeColor on the viewport export, not metadata.
+// Matches --color-ink-950 (#0a0a0a) from globals.css so the iOS Safari
+// toolbar and Android Chrome address bar blend into the page.
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
