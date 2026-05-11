@@ -8,7 +8,7 @@
     "build:content": "node scripts/build-content.mjs && node scripts/build-content-v2.mjs",
     "copy:pyodide": "node scripts/copy-pyodide.mjs",
     "predev": "node scripts/copy-pyodide.mjs && node scripts/build-content-v2.mjs && node scripts/fetch-github-stats.mjs",
-    "prebuild": "node scripts/copy-pyodide.mjs && node scripts/build-content-v2.mjs && node scripts/fetch-github-stats.mjs",
+    "prebuild": "node scripts/copy-pyodide.mjs && node scripts/build-content-v2.mjs && node scripts/validate-solutions.mjs && node scripts/fetch-github-stats.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -16,8 +16,9 @@
     "typecheck": "tsc --noEmit",
     "check:content:v1": "node scripts/build-content.mjs",
     "check:content:v2": "node scripts/build-content-v2.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm check:content:v2 && pnpm build",
-    "check:full": "pnpm lint && pnpm typecheck && pnpm check:content:v1 && pnpm check:content:v2 && pnpm build",
+    "validate:solutions": "node scripts/validate-solutions.mjs",
+    "check": "pnpm lint && pnpm typecheck && pnpm check:content:v2 && pnpm validate:solutions && pnpm build",
+    "check:full": "pnpm lint && pnpm typecheck && pnpm check:content:v1 && pnpm check:content:v2 && pnpm validate:solutions && pnpm build",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {

@@ -51,6 +51,8 @@ Run them by an issue first (description + the AI bug it teaches). Lessons follow
 
 Look at `content/python/16-agent-loops/04-evaluator-optimizer/` as the reference shape. Every step file is validated by Zod at build time (`pnpm prebuild`); a malformed YAML will fail the build before it ever ships.
 
+`write` and `checkpoint` solutions are also executed through their graders at build time (`pnpm validate:solutions`). If you change a step's expected output or its grader rules, the build will fail until the `solution` matches. Set `SKIP_VALIDATE_SOLUTIONS=1` to bypass in environments without Python 3.10+.
+
 ### 4. UI / build / infra PRs
 
 Open an issue first to confirm direction. The site is Next.js 16 static export → Cloudflare Pages; bigger architectural changes need a heads-up. For local setup see `DEPLOY.md`.
