@@ -1,0 +1,32 @@
+xp: 2
+estSeconds: 60
+concept: match-shot-type
+code: |
+  # four shot descriptions. which shot type is each?
+  descriptions = [
+      "A: The protagonist visible head-to-toe, standing in a kitchen, the whole kitchen visible behind them.",
+      "B: Just the protagonist's eyes filling the frame, tears welling.",
+      "C: Looking past the shoulder of one character, the other character's face is the focus.",
+      "D: The frame is what the protagonist sees — the road ahead, the steering wheel below.",
+  ]
+  for d in descriptions:
+      print(d)
+prompt: |
+  Four shot descriptions above. Which mapping is correct?
+options:
+  - id: correct
+    label: "A=Wide, B=Extreme Close-up, C=Over-the-Shoulder, D=POV"
+  - id: a_medium
+    label: "A=Medium, B=Close-up, C=Over-the-Shoulder, D=POV"
+    explain: "If you can see the whole subject head-to-toe AND the whole environment, that's a wide shot (WS), not a medium. Medium is waist-up. Also: tears welling 'just the eyes' is an extreme close-up (ECU), not a regular close-up (head + shoulders)."
+  - id: b_close_only
+    label: "A=Wide, B=Close-up, C=Medium, D=POV"
+    explain: "B is too tight to be a regular close-up — head-and-shoulders is CU, just the eyes is ECU. And C is over-the-shoulder, not a medium — the framing device is the foreground shoulder."
+  - id: c_pov
+    label: "A=Wide, B=Extreme Close-up, C=POV, D=Over-the-Shoulder"
+    explain: "C and D are swapped. POV is when the CAMERA is the subject's eyes (you see what they see). OTS is when you see PAST another character's shoulder at the subject. The driving description is POV — the road is what you see — not OTS."
+answerIds:
+  - correct
+hint:
+  - level: 1
+    body: "Frame the question by 'where is the camera?': A — far enough to see everything (Wide). B — pressed against the subject's face (Extreme Close-up). C — behind another character (Over-the-Shoulder). D — inside the subject's head (POV)."

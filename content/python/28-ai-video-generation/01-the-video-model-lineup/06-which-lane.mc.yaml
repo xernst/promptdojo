@@ -1,0 +1,35 @@
+xp: 2
+estSeconds: 60
+concept: match-model-to-lane
+code: |
+  # six lanes. one model per lane is the lane leader in mid-2026.
+  lanes = [
+      "1. Native audio in one pass",
+      "2. Camera-control / cinematic moves",
+      "3. Cheapest publishable 1080p",
+      "4. Reference-to-video (subject lock-in)",
+      "5. Lip-sync from a still image",
+      "6. Premium physics + character consistency",
+  ]
+  for L in lanes:
+      print(L)
+prompt: |
+  Match the lane to its lane leader. Which mapping is correct in
+  mid-2026?
+options:
+  - id: correct
+    label: "1=Veo 3, 2=Higgsfield, 3=Hailuo 02, 4=Vidu Q3, 5=Pika (Pikaformance), 6=Sora 2"
+  - id: swap_pika_veo
+    label: "1=Pika, 2=Higgsfield, 3=Hailuo 02, 4=Vidu Q3, 5=Veo 3, 6=Sora 2"
+    explain: "Pika does lip-sync (Pikaformance), not the native-audio-in-one-pass tier. Veo 3 owns native audio. Swap them and you'd lose the actual lane leaders."
+  - id: sora_for_audio
+    label: "1=Sora 2, 2=Higgsfield, 3=Hailuo 02, 4=Vidu Q3, 5=Pika, 6=Veo 3"
+    explain: "Sora 2 has audio but Veo 3 is the audio-first model; it shipped first and the speech quality is still the reference. And Sora 2 — not Veo 3 — is the consistency leader."
+  - id: kling_for_camera
+    label: "1=Veo 3, 2=Kling 3.0, 3=Hailuo 02, 4=Vidu Q3, 5=Pika, 6=Sora 2"
+    explain: "Kling 3.0 is the value-tier heavyweight, not the camera-control leader. Higgsfield is the camera-control layer — its whole product is built around plannable camera moves."
+answerIds:
+  - correct
+hint:
+  - level: 1
+    body: "Veo 3 = native audio. Higgsfield = camera control. Hailuo 02 = cheapest 1080p. Vidu Q3 = reference-to-video. Pika = Pikaformance lip-sync. Sora 2 = physics + character consistency."

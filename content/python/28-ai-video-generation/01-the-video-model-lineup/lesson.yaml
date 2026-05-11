@@ -1,0 +1,14 @@
+slug: the-video-model-lineup
+title: "The 2026 video model lineup — what each one is actually good at"
+estMinutes: 18
+prerequisites: []
+order:
+  - 01-the-landscape.read.md
+  - 02-sora-and-veo.read.md
+  - 03-higgsfield-and-camera-control.read.md
+  - 04-the-second-wave.read.md
+  - 05-text-vs-image-vs-video.read.md
+  - 06-which-lane.mc.yaml
+  - 07-pick-the-model.mc.yaml
+  - 08-write-pick-video-model.write.yaml
+  - 09-checkpoint.checkpoint.yaml

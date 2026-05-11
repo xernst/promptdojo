@@ -1,0 +1,115 @@
+xp: 8
+estSeconds: 250
+concept: plan-a-30-second-sequence
+prompt: |
+  Final drill. Synthesize the shot vocabulary + camera moves into a
+  shot planner: `plan_sequence(beats)` that takes a list of "beat"
+  dicts and returns a list of "shot" dicts, one per beat, with shot
+  type and camera move filled in according to these rules.
+
+  Each beat dict has:
+  - `intent` (str): one of `"establish"`, `"reveal"`, `"intensify"`,
+    `"reaction"`, `"product_beauty"`, `"resolution"`
+  - `subject` (str): what's being filmed
+  - `duration_sec` (float)
+
+  For each beat, assign a `shot_type` and a `camera_move` using these
+  rules:
+
+  | intent           | shot_type        | camera_move           |
+  |---|---|---|
+  | `establish`      | `"wide"`         | `"slow pan right"`    |
+  | `reveal`         | `"medium wide"`  | `"dolly out"`         |
+  | `intensify`      | `"close-up"`     | `"slow push-in"`      |
+  | `reaction`       | `"medium close"` | `"static"`            |
+  | `product_beauty` | `"medium"`       | `"orbit 180 degrees"` |
+  | `resolution`     | `"wide"`         | `"slow pull-out"`     |
+
+  Return a list of `{"subject": ..., "shot_type": ..., "camera_move":
+  ..., "duration_sec": ...}` dicts in beat order.
+
+  THEN, after building the sequence, validate that each shot's
+  camera move fits its duration:
+
+  - `"orbit 180 degrees"` requires `duration_sec >= 4.0`
+  - `"slow push-in"` requires `duration_sec >= 2.0`
+  - everything else is fine at any duration
+
+  Append `"warning": True` to any shot that fails the duration check.
+  Pass-through shots get no warning key.
+
+  A 6-beat sequence runs. Expected output:
+  ```
+  city / wide / slow pan right / 5.0 / ok
+  shop facade / medium wide / dolly out / 4.0 / ok
+  closing the deal / close-up / slow push-in / 1.5 / WARN
+  the buyer / medium close / static / 3.0 / ok
+  the product / medium / orbit 180 degrees / 3.0 / WARN
+  city again / wide / slow pull-out / 5.0 / ok
+  ```
+starter: |
+  beats = [
+      {"intent": "establish",      "subject": "city",             "duration_sec": 5.0},
+      {"intent": "reveal",         "subject": "shop facade",      "duration_sec": 4.0},
+      {"intent": "intensify",      "subject": "closing the deal", "duration_sec": 1.5},
+      {"intent": "reaction",       "subject": "the buyer",        "duration_sec": 3.0},
+      {"intent": "product_beauty", "subject": "the product",      "duration_sec": 3.0},
+      {"intent": "resolution",     "subject": "city again",       "duration_sec": 5.0},
+  ]
+
+  # define plan_sequence(beats) below
+
+  for s in plan_sequence(beats):
+      flag = "WARN" if s.get("warning") else "ok"
+      print(f"{s['subject']} / {s['shot_type']} / {s['camera_move']} / {s['duration_sec']} / {flag}")
+grader:
+  kind: stdout-equality
+  expected: |
+    city / wide / slow pan right / 5.0 / ok
+    shop facade / medium wide / dolly out / 4.0 / ok
+    closing the deal / close-up / slow push-in / 1.5 / WARN
+    the buyer / medium close / static / 3.0 / ok
+    the product / medium / orbit 180 degrees / 3.0 / WARN
+    city again / wide / slow pull-out / 5.0 / ok
+  normalize: collapse-trailing-newline
+solution: |
+  beats = [
+      {"intent": "establish",      "subject": "city",             "duration_sec": 5.0},
+      {"intent": "reveal",         "subject": "shop facade",      "duration_sec": 4.0},
+      {"intent": "intensify",      "subject": "closing the deal", "duration_sec": 1.5},
+      {"intent": "reaction",       "subject": "the buyer",        "duration_sec": 3.0},
+      {"intent": "product_beauty", "subject": "the product",      "duration_sec": 3.0},
+      {"intent": "resolution",     "subject": "city again",       "duration_sec": 5.0},
+  ]
+
+  INTENT_TO_SHOT = {
+      "establish":      ("wide",         "slow pan right"),
+      "reveal":         ("medium wide",  "dolly out"),
+      "intensify":      ("close-up",     "slow push-in"),
+      "reaction":       ("medium close", "static"),
+      "product_beauty": ("medium",       "orbit 180 degrees"),
+      "resolution":     ("wide",         "slow pull-out"),
+  }
+
+  def plan_sequence(beats):
+      out = []
+      for beat in beats:
+          shot_type, camera_move = INTENT_TO_SHOT[beat["intent"]]
+          shot = {
+              "subject": beat["subject"],
+              "shot_type": shot_type,
+              "camera_move": camera_move,
+              "duration_sec": beat["duration_sec"],
+          }
+          dur = beat["duration_sec"]
+          if camera_move == "orbit 180 degrees" and dur < 4.0:
+              shot["warning"] = True
+          elif camera_move == "slow push-in" and dur < 2.0:
+              shot["warning"] = True
+          out.append(shot)
+      return out
+
+  for s in plan_sequence(beats):
+      flag = "WARN" if s.get("warning") else "ok"
+      print(f"{s['subject']} / {s['shot_type']} / {s['camera_move']} / {s['duration_sec']} / {flag}")
+passThreshold: 0.66

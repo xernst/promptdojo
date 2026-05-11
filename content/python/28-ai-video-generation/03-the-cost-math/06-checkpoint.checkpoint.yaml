@@ -1,0 +1,128 @@
+xp: 8
+estSeconds: 250
+concept: route-by-budget-and-quality
+prompt: |
+  Final drill. Synthesize price + retake + quality into a router:
+  `route_to_model(budget, quality_floor, retake_tolerance)` that
+  takes:
+
+  - `budget` (float): max dollars per finished minute the user can spend.
+  - `quality_floor` (str): minimum acceptable quality, one of
+    `"ai_flavored"`, `"client_grade"`, `"premium"`.
+  - `retake_tolerance` (float): the retake multiplier the user
+    expects to hit.
+
+  Each model has a `quality_tier` per this table:
+
+  | Model | quality_tier | $/sec |
+  |---|---|---|
+  | Hailuo 02 (768p) | `ai_flavored` | 0.045 |
+  | Veo 3.1 Lite (720p) | `ai_flavored` | 0.05 |
+  | Kling 3.0 standard | `client_grade` | 0.084 |
+  | Sora 2 (720p) | `client_grade` | 0.10 |
+  | Sora 2 Pro (720p) | `premium` | 0.30 |
+  | Sora 2 Pro (1024p) | `premium` | 0.50 |
+  | Veo 3 (with audio) | `premium` | 0.75 |
+
+  Quality ordering (each tier accepts higher tiers as substitutes):
+  `ai_flavored` < `client_grade` < `premium`. So if
+  `quality_floor == "client_grade"`, both `client_grade` and
+  `premium` models are eligible.
+
+  Algorithm:
+
+  1. Filter models down to those whose `quality_tier` is >=
+     `quality_floor`.
+  2. Compute each eligible model's `$/min real = price_per_sec × 60
+     × retake_tolerance`.
+  3. Keep only models where `$/min real <= budget`.
+  4. From the remaining set, return the CHEAPEST one (lowest
+     `$/min real`). On a tie, prefer the model that appears
+     EARLIER in the PRICES dict order.
+  5. If no model fits, return `"NO MATCH"`.
+
+  Five scenarios run. Expected output:
+  ```
+  $10 + ai_flavored + 2.5x       -> Hailuo 02 (768p)
+  $20 + client_grade + 3.0x      -> Kling 3.0 standard
+  $50 + premium + 1.5x           -> Sora 2 Pro (720p)
+  $200 + premium + 4.0x          -> Sora 2 Pro (720p)
+  $2 + client_grade + 5.0x       -> NO MATCH
+  ```
+starter: |
+  PRICES = {
+      "Hailuo 02 (768p)":      ("ai_flavored", 0.045),
+      "Veo 3.1 Lite (720p)":   ("ai_flavored", 0.05),
+      "Kling 3.0 standard":    ("client_grade", 0.084),
+      "Sora 2 (720p)":         ("client_grade", 0.10),
+      "Sora 2 Pro (720p)":     ("premium", 0.30),
+      "Sora 2 Pro (1024p)":    ("premium", 0.50),
+      "Veo 3 (with audio)":    ("premium", 0.75),
+  }
+
+  TIER_RANK = {"ai_flavored": 0, "client_grade": 1, "premium": 2}
+
+  scenarios = [
+      (10,  "ai_flavored",  2.5),
+      (20,  "client_grade", 3.0),
+      (50,  "premium",      1.5),
+      (200, "premium",      4.0),
+      (2,   "client_grade", 5.0),
+  ]
+
+  # define route_to_model(budget, quality_floor, retake_tolerance) below
+
+  for budget, floor, retake in scenarios:
+      pick = route_to_model(budget, floor, retake)
+      label = f"${budget} + {floor} + {retake}x"
+      print(f"{label:<30} -> {pick}")
+grader:
+  kind: stdout-equality
+  expected: |
+    $10 + ai_flavored + 2.5x       -> Hailuo 02 (768p)
+    $20 + client_grade + 3.0x      -> Kling 3.0 standard
+    $50 + premium + 1.5x           -> Sora 2 Pro (720p)
+    $200 + premium + 4.0x          -> Sora 2 Pro (720p)
+    $2 + client_grade + 5.0x       -> NO MATCH
+  normalize: collapse-trailing-newline
+solution: |
+  PRICES = {
+      "Hailuo 02 (768p)":      ("ai_flavored", 0.045),
+      "Veo 3.1 Lite (720p)":   ("ai_flavored", 0.05),
+      "Kling 3.0 standard":    ("client_grade", 0.084),
+      "Sora 2 (720p)":         ("client_grade", 0.10),
+      "Sora 2 Pro (720p)":     ("premium", 0.30),
+      "Sora 2 Pro (1024p)":    ("premium", 0.50),
+      "Veo 3 (with audio)":    ("premium", 0.75),
+  }
+
+  TIER_RANK = {"ai_flavored": 0, "client_grade": 1, "premium": 2}
+
+  scenarios = [
+      (10,  "ai_flavored",  2.5),
+      (20,  "client_grade", 3.0),
+      (50,  "premium",      1.5),
+      (200, "premium",      4.0),
+      (2,   "client_grade", 5.0),
+  ]
+
+  def route_to_model(budget, quality_floor, retake_tolerance):
+      floor_rank = TIER_RANK[quality_floor]
+      best_name = None
+      best_cost = None
+      for name, (tier, price_per_sec) in PRICES.items():
+          if TIER_RANK[tier] < floor_rank:
+              continue
+          real_cost_per_min = price_per_sec * 60 * retake_tolerance
+          if real_cost_per_min > budget:
+              continue
+          if best_cost is None or real_cost_per_min < best_cost:
+              best_name = name
+              best_cost = real_cost_per_min
+      return best_name if best_name is not None else "NO MATCH"
+
+  for budget, floor, retake in scenarios:
+      pick = route_to_model(budget, floor, retake)
+      label = f"${budget} + {floor} + {retake}x"
+      print(f"{label:<30} -> {pick}")
+passThreshold: 0.66

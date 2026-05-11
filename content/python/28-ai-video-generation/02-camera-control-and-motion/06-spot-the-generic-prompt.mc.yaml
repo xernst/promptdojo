@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 70
+concept: spot-generic-vs-specific
+code: |
+  # four shot prompts. one of them is real shot direction.
+  # the other three are AI-prompter-speak that produces the AI smell.
+  prompts = {
+      "A": "Beautiful cinematic shot of a city at night, dramatic, 4k, masterpiece, trending on artstation, photorealistic.",
+      "B": "Medium close-up of a woman closing a laptop, three-quarter angle, shallow depth of field, warm desk lamp from frame-left. Slow 2-second push-in. 35mm equivalent.",
+      "C": "Epic stunning gorgeous mountains, hyper-realistic, vibrant colors, 8k, masterpiece, breathtaking vista.",
+      "D": "Amazing professional video of a coffee being poured, cinematic, dramatic lighting, ultra high quality, award-winning.",
+  }
+  for k, v in prompts.items():
+      print(f"{k}: {v}")
+prompt: |
+  Four shot prompts. Which one is real, executable shot direction?
+options:
+  - id: b
+    label: "B — medium close-up of a woman closing a laptop."
+  - id: a
+    label: "A — beautiful cinematic city at night."
+    explain: "Zero shot type. Zero camera move. Zero lens info. Just adjectives. The model has to invent every concrete decision and the inventions are unstable across retakes. This is the canonical 'AI smell' prompt."
+  - id: c
+    label: "C — epic stunning mountains."
+    explain: "Pure adjective soup. 'Epic, stunning, gorgeous, hyper-realistic, vibrant, 8k, masterpiece, breathtaking' — none of these are operational. The model knows nothing about the shot type, the camera move, the lens, or the duration of any motion."
+  - id: d
+    label: "D — coffee pouring, cinematic, dramatic lighting."
+    explain: "Closer than A or C because at least it names the subject and the action (coffee being poured). But 'cinematic, dramatic, award-winning' is exactly the meaningless-word trap. No shot type, no camera move, no specific lighting direction."
+answerIds:
+  - b
+hint:
+  - level: 1
+    body: "Look for the five operational levers: shot type, action, framing detail (angle / depth of field / lens), lighting direction, camera move + duration. Only one prompt names them all."

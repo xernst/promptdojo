@@ -1,0 +1,8 @@
+number: 28
+slug: ai-video-generation
+title: "ai video generation — sora, veo, higgsfield, and the second wave"
+blurb: "video is the hardest content type to generate, the most expensive, and the most strategically interesting. learn the 2026 model lineup, the camera-control patterns that separate slop from craft, and the cost math that decides whether your idea is viable."
+lessons:
+  - 01-the-video-model-lineup
+  - 02-camera-control-and-motion
+  - 03-the-cost-math

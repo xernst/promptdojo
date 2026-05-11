@@ -1,0 +1,39 @@
+xp: 2
+estSeconds: 70
+concept: pick-by-brief
+code: |
+  # the brief. 30-second product launch trailer for a consumer
+  # electronics brand. 6 shots, 5 seconds each. Specific brand
+  # product (a hero camera) must look correct and consistent across
+  # every shot. Synchronized narration over the whole piece. Budget
+  # is "premium agency" — not the cheapest, but not unlimited.
+  brief = {
+      "duration_sec": 30,
+      "shots": 6,
+      "shot_duration_sec": 5,
+      "brand_asset_fidelity": "must-have",
+      "needs_audio": True,
+      "needs_camera_moves": True,
+      "budget_tier": "premium",
+  }
+  for k, v in brief.items():
+      print(f"{k}: {v}")
+prompt: |
+  Read the brief above. What's the right model stack for the job?
+options:
+  - id: i2v_higgsfield
+    label: "Compose each shot's first frame in Nano Banana Pro; animate with Higgsfield's Cinema Studio (which can route to Veo 3 underneath for the audio); 6 shots × 5s, image-to-video, planned camera moves per shot."
+  - id: t2v_sora
+    label: "Text-to-video each shot in Sora 2 Pro at 1024p. Composite audio in post."
+    explain: "Sora 2 Pro at 1024p is $0.50/sec × 5 = $2.50 per generation, before retakes. T2V means the brand camera looks slightly different in every shot — exactly the failure mode the brief says is a must-fix. Audio in post adds a step and loses the lip-sync edge."
+  - id: hailuo_volume
+    label: "Generate 60 candidate clips in Hailuo 02 and pick the best 6."
+    explain: "Hailuo is the cheap-tier benchmark, not a premium-brand-asset tool. Brand fidelity will collapse. Premium agency client will not accept Hailuo output for hero product shots."
+  - id: pika_effects
+    label: "Use Pika 2.2 with Pikaffects presets for each shot to give it a unique look."
+    explain: "Pikaffects are stylized transformations, not premium product cinematography. Wrong product entirely for a hero product trailer."
+answerIds:
+  - i2v_higgsfield
+hint:
+  - level: 1
+    body: "Three signals point one way. Brand-asset fidelity = image-to-video (you author the frame). Camera moves = Higgsfield. Audio = a model that has it native (Veo 3 or Sora 2). The right answer combines all three."

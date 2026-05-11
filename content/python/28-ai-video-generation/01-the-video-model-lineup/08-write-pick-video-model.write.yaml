@@ -1,0 +1,145 @@
+xp: 5
+estSeconds: 220
+concept: route-brief-to-model
+prompt: |
+  Write `pick_video_model(task)` that takes a brief and returns the
+  right model name as a string. Routing rules, evaluated in order
+  (FIRST matching rule wins):
+
+  1. If `task["needs_camera_control"]` is True: return `"Higgsfield"`.
+  2. Else if `task["budget_max_per_sec"] < 0.06`: return `"Hailuo 02"`
+     (cheap tier — Hailuo at $0.045/sec is the only one that fits).
+  3. Else if `task["needs_audio"]` is True AND
+     `task["budget_max_per_sec"] >= 0.50`: return `"Veo 3"`
+     (audio-native premium).
+  4. Else if `task["needs_audio"]` is True: return `"Veo 3.1 Lite"`
+     (audio at the cheap tier — $0.05/sec at 720p).
+  5. Else if `task["needs_image_input"]` is True AND
+     `task["budget_max_per_sec"] < 0.20`: return `"Kling 3.0"`
+     (best price-performance for image-to-video at $0.084/sec).
+  6. Else if `task["duration_sec"] >= 20`: return `"Sora 2 Pro"`
+     (only model with 25-sec single-shot durations).
+  7. Else: return `"Sora 2"` (default premium choice).
+
+  Five briefs run. Expected output:
+  ```
+  Higgsfield
+  Hailuo 02
+  Veo 3
+  Veo 3.1 Lite
+  Sora 2 Pro
+  ```
+starter: |
+  briefs = [
+      {  # cinematic shot list, premium budget, no audio yet
+          "needs_camera_control": True,
+          "needs_audio": False,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.40,
+          "duration_sec": 6,
+      },
+      {  # bulk performance-marketing test, cheap-first
+          "needs_camera_control": False,
+          "needs_audio": False,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.05,
+          "duration_sec": 6,
+      },
+      {  # premium talking-head spot with VO and lip-sync
+          "needs_camera_control": False,
+          "needs_audio": True,
+          "needs_image_input": False,
+          "budget_max_per_sec": 0.75,
+          "duration_sec": 8,
+      },
+      {  # mid-tier social ad with VO, cheap audio
+          "needs_camera_control": False,
+          "needs_audio": True,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.10,
+          "duration_sec": 8,
+      },
+      {  # long-form narrative shot, 22 seconds, no audio yet
+          "needs_camera_control": False,
+          "needs_audio": False,
+          "needs_image_input": False,
+          "budget_max_per_sec": 0.50,
+          "duration_sec": 22,
+      },
+  ]
+
+  # define pick_video_model(task) below
+
+  for b in briefs:
+      print(pick_video_model(b))
+grader:
+  kind: stdout-equality
+  expected: |
+    Higgsfield
+    Hailuo 02
+    Veo 3
+    Veo 3.1 Lite
+    Sora 2 Pro
+  normalize: collapse-trailing-newline
+solution: |
+  briefs = [
+      {
+          "needs_camera_control": True,
+          "needs_audio": False,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.40,
+          "duration_sec": 6,
+      },
+      {
+          "needs_camera_control": False,
+          "needs_audio": False,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.05,
+          "duration_sec": 6,
+      },
+      {
+          "needs_camera_control": False,
+          "needs_audio": True,
+          "needs_image_input": False,
+          "budget_max_per_sec": 0.75,
+          "duration_sec": 8,
+      },
+      {
+          "needs_camera_control": False,
+          "needs_audio": True,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.10,
+          "duration_sec": 8,
+      },
+      {
+          "needs_camera_control": False,
+          "needs_audio": False,
+          "needs_image_input": False,
+          "budget_max_per_sec": 0.50,
+          "duration_sec": 22,
+      },
+  ]
+
+  def pick_video_model(task):
+      if task.get("needs_camera_control"):
+          return "Higgsfield"
+      if task.get("budget_max_per_sec", 0) < 0.06:
+          return "Hailuo 02"
+      if task.get("needs_audio") and task.get("budget_max_per_sec", 0) >= 0.50:
+          return "Veo 3"
+      if task.get("needs_audio"):
+          return "Veo 3.1 Lite"
+      if task.get("needs_image_input") and task.get("budget_max_per_sec", 0) < 0.20:
+          return "Kling 3.0"
+      if task.get("duration_sec", 0) >= 20:
+          return "Sora 2 Pro"
+      return "Sora 2"
+
+  for b in briefs:
+      print(pick_video_model(b))
+hint:
+  - level: 1
+    body: "Seven if-checks in order. FIRST match wins — once you return, you're done. Use `.get(key, 0)` (or `.get(key)`) so missing keys default sanely instead of raising KeyError."
+  - level: 2
+    body: |
+      The rule ordering is load-bearing. Camera-control is the most-discriminating signal (only Higgsfield does it deterministically) so it goes first. Cheap-tier is the second filter — once you're below $0.06/sec, only Hailuo fits, regardless of other flags. Then audio splits premium (Veo 3) vs cheap (Veo 3.1 Lite). Then image-input + budget pushes to Kling. Then duration pushes to Sora 2 Pro. Default is Sora 2.

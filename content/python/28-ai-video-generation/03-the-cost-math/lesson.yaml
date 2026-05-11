@@ -1,0 +1,13 @@
+slug: the-cost-math
+title: "The cost math — when AI video is viable and when it bankrupts you"
+estMinutes: 16
+prerequisites:
+  - the-video-model-lineup
+  - camera-control-and-motion
+order:
+  - 01-the-unit-economics.read.md
+  - 02-the-retake-rate-reality.read.md
+  - 03-which-tier-for-this-budget.mc.yaml
+  - 04-the-60-second-promo.read.md
+  - 05-write-cost-per-minute.write.yaml
+  - 06-checkpoint.checkpoint.yaml

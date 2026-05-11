@@ -1,0 +1,151 @@
+xp: 8
+estSeconds: 230
+concept: route-five-briefs
+prompt: |
+  Final drill. Synthesize the lane map into a single routing
+  function: `route_briefs(briefs)` that takes a list of briefs and
+  returns a list of `{"name": <brief_name>, "model": <chosen_model>}`
+  dicts in the same order.
+
+  Same routing rules as lesson step 08, evaluated in order, FIRST
+  match wins:
+
+  1. `needs_camera_control` True → `"Higgsfield"`
+  2. `budget_max_per_sec < 0.06` → `"Hailuo 02"`
+  3. `needs_audio` True AND `budget_max_per_sec >= 0.50` → `"Veo 3"`
+  4. `needs_audio` True → `"Veo 3.1 Lite"`
+  5. `needs_image_input` True AND `budget_max_per_sec < 0.20` →
+     `"Kling 3.0"`
+  6. `duration_sec >= 20` → `"Sora 2 Pro"`
+  7. Default → `"Sora 2"`
+
+  Five briefs run. Expected output:
+  ```
+  hero_product_trailer       -> Higgsfield
+  bulk_perf_marketing        -> Hailuo 02
+  vo_talking_head_premium    -> Veo 3
+  budget_social_with_vo      -> Veo 3.1 Lite
+  long_narrative_shot        -> Sora 2 Pro
+  ```
+starter: |
+  briefs = [
+      {
+          "name": "hero_product_trailer",
+          "needs_camera_control": True,
+          "needs_audio": False,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.40,
+          "duration_sec": 6,
+      },
+      {
+          "name": "bulk_perf_marketing",
+          "needs_camera_control": False,
+          "needs_audio": False,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.05,
+          "duration_sec": 6,
+      },
+      {
+          "name": "vo_talking_head_premium",
+          "needs_camera_control": False,
+          "needs_audio": True,
+          "needs_image_input": False,
+          "budget_max_per_sec": 0.75,
+          "duration_sec": 8,
+      },
+      {
+          "name": "budget_social_with_vo",
+          "needs_camera_control": False,
+          "needs_audio": True,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.10,
+          "duration_sec": 8,
+      },
+      {
+          "name": "long_narrative_shot",
+          "needs_camera_control": False,
+          "needs_audio": False,
+          "needs_image_input": False,
+          "budget_max_per_sec": 0.50,
+          "duration_sec": 22,
+      },
+  ]
+
+  # define route_briefs(briefs) below
+
+  for r in route_briefs(briefs):
+      print(f"{r['name']:<26} -> {r['model']}")
+grader:
+  kind: stdout-equality
+  expected: |
+    hero_product_trailer       -> Higgsfield
+    bulk_perf_marketing        -> Hailuo 02
+    vo_talking_head_premium    -> Veo 3
+    budget_social_with_vo      -> Veo 3.1 Lite
+    long_narrative_shot        -> Sora 2 Pro
+  normalize: collapse-trailing-newline
+solution: |
+  briefs = [
+      {
+          "name": "hero_product_trailer",
+          "needs_camera_control": True,
+          "needs_audio": False,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.40,
+          "duration_sec": 6,
+      },
+      {
+          "name": "bulk_perf_marketing",
+          "needs_camera_control": False,
+          "needs_audio": False,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.05,
+          "duration_sec": 6,
+      },
+      {
+          "name": "vo_talking_head_premium",
+          "needs_camera_control": False,
+          "needs_audio": True,
+          "needs_image_input": False,
+          "budget_max_per_sec": 0.75,
+          "duration_sec": 8,
+      },
+      {
+          "name": "budget_social_with_vo",
+          "needs_camera_control": False,
+          "needs_audio": True,
+          "needs_image_input": True,
+          "budget_max_per_sec": 0.10,
+          "duration_sec": 8,
+      },
+      {
+          "name": "long_narrative_shot",
+          "needs_camera_control": False,
+          "needs_audio": False,
+          "needs_image_input": False,
+          "budget_max_per_sec": 0.50,
+          "duration_sec": 22,
+      },
+  ]
+
+  def pick_video_model(task):
+      if task.get("needs_camera_control"):
+          return "Higgsfield"
+      if task.get("budget_max_per_sec", 0) < 0.06:
+          return "Hailuo 02"
+      if task.get("needs_audio") and task.get("budget_max_per_sec", 0) >= 0.50:
+          return "Veo 3"
+      if task.get("needs_audio"):
+          return "Veo 3.1 Lite"
+      if task.get("needs_image_input") and task.get("budget_max_per_sec", 0) < 0.20:
+          return "Kling 3.0"
+      if task.get("duration_sec", 0) >= 20:
+          return "Sora 2 Pro"
+      return "Sora 2"
+
+  def route_briefs(briefs):
+      return [{"name": b["name"], "model": pick_video_model(b)} for b in briefs]
+
+  for r in route_briefs(briefs):
+      print(f"{r['name']:<26} -> {r['model']}")
+passThreshold: 0.66

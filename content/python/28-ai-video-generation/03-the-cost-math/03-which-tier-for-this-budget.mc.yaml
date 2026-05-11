@@ -1,0 +1,39 @@
+xp: 2
+estSeconds: 70
+concept: pick-the-tier
+code: |
+  # the job: 200 short video ads (5 seconds each), tested on
+  # Facebook and Instagram for a DTC skincare brand. The goal is
+  # PERFORMANCE-MARKETING SIGNAL — finding the 5-10 winning creatives
+  # to scale. No hero shot, no client-facing premium. The brand
+  # tolerates "AI-flavored" output if the cost-per-test is low.
+  # Total budget: $400.
+  brief = {
+      "job": "200 × 5s performance-marketing video ads",
+      "purpose": "find winning creatives via volume testing",
+      "client_quality_bar": "AI-flavored is fine",
+      "total_budget_usd": 400,
+      "shots_needed": 200,
+      "seconds_per_shot": 5,
+  }
+  for k, v in brief.items():
+      print(f"{k}: {v}")
+prompt: |
+  Which tier do you buy for this job?
+options:
+  - id: cheap_tier
+    label: "Hailuo 02 or Veo 3.1 Lite (cheap tier, $0.045-0.08/sec). Image-to-video, 2.5x retake rate."
+  - id: premium_tier
+    label: "Sora 2 Pro at 1024p ($0.50/sec). Hero-grade quality."
+    explain: "Cost math: 200 shots × 5 sec × $0.50/sec × 2.5x retake = $1,250. Triple the budget. The quality bar doesn't require it — the client said AI-flavored output is fine. This is the canonical 'paying for the wrong lane' mistake."
+  - id: veo_3_audio
+    label: "Veo 3 with audio at $0.75/sec — native VO on every clip."
+    explain: "$0.75 × 5 × 200 × 2.5 = $1,875. Five times the budget. And the job is performance-marketing testing for skincare — these are short ad variants, not narrated talking heads. The audio premium is unused capability."
+  - id: higgsfield_cinema
+    label: "Higgsfield Cinema Studio for cinematic camera work on all 200 shots."
+    explain: "Cinematic camera control on 200 performance-marketing ads is over-engineering. Performance marketing tests volume, not cinematography. Higgsfield's value layer is unused here, and the credit math gets ugly at this volume."
+answerIds:
+  - cheap_tier
+hint:
+  - level: 1
+    body: "The brief says explicitly: AI-flavored is fine, volume testing is the point, budget is constrained. Two of those three signals — quality tolerance and budget — collapse to the cheap tier. The math: Hailuo at $0.045/sec × 5 sec × 200 shots × 2.5x retake = $112. Veo 3.1 Lite 720p × 200 × 2.5 = $125. Both fit well under $400 with budget left to actually buy ad impressions."

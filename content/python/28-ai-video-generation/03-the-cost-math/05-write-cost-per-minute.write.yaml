@@ -1,0 +1,114 @@
+xp: 5
+estSeconds: 200
+concept: price-a-finished-minute
+prompt: |
+  Write `cost_per_minute(model, retake_rate)` that takes:
+
+  - `model` (str): one of the keys in the `PRICES` dict below.
+  - `retake_rate` (float): the retake multiplier (1.0 = no retakes,
+    10.0 = generate 10x the final length).
+
+  Return a float — dollars per minute of FINISHED video. The
+  formula is:
+
+  ```
+  cost_per_minute = price_per_sec × 60 × retake_rate
+  ```
+
+  If the model name is not in the PRICES dict, raise
+  `ValueError("unknown model: {model}")`.
+
+  Round the returned float to 2 decimal places using `round(x, 2)`.
+
+  Five rows run. Expected output:
+  ```
+  Hailuo 02 (768p) @ 2.5x       = $  6.75/min
+  Sora 2 (720p) @ 4.0x          = $ 24.00/min
+  Sora 2 Pro (1024p) @ 4.0x     = $120.00/min
+  Veo 3 (with audio) @ 1.5x     = $ 67.50/min
+  Kling 3.0 standard @ 3.0x     = $ 15.12/min
+  ```
+starter: |
+  PRICES = {
+      "Hailuo 02 (768p)":      0.045,
+      "Veo 3.1 Lite (720p)":   0.05,
+      "Runway Gen-4 Turbo":    0.05,
+      "Vidu Q3":               0.07,
+      "Veo 3.1 Lite (1080p)":  0.08,
+      "Kling 3.0 standard":    0.084,
+      "Sora 2 (720p)":         0.10,
+      "Kling 3.0 Pro":         0.168,
+      "Sora 2 Pro (720p)":     0.30,
+      "Sora 2 Pro (1024p)":    0.50,
+      "Veo 3 (no audio)":      0.50,
+      "Veo 3 (with audio)":    0.75,
+  }
+
+  scenarios = [
+      ("Hailuo 02 (768p)",       2.5),
+      ("Sora 2 (720p)",          4.0),
+      ("Sora 2 Pro (1024p)",     4.0),
+      ("Veo 3 (with audio)",     1.5),
+      ("Kling 3.0 standard",     3.0),
+  ]
+
+  # define cost_per_minute(model, retake_rate) below
+
+  for model, rate in scenarios:
+      cost = cost_per_minute(model, rate)
+      print(f"{model + ' @ ' + str(rate) + 'x':<28}  = ${cost:>6.2f}/min")
+grader:
+  kind: stdout-equality
+  expected: |
+    Hailuo 02 (768p) @ 2.5x       = $  6.75/min
+    Sora 2 (720p) @ 4.0x          = $ 24.00/min
+    Sora 2 Pro (1024p) @ 4.0x     = $120.00/min
+    Veo 3 (with audio) @ 1.5x     = $ 67.50/min
+    Kling 3.0 standard @ 3.0x     = $ 15.12/min
+  normalize: collapse-trailing-newline
+solution: |
+  PRICES = {
+      "Hailuo 02 (768p)":      0.045,
+      "Veo 3.1 Lite (720p)":   0.05,
+      "Runway Gen-4 Turbo":    0.05,
+      "Vidu Q3":               0.07,
+      "Veo 3.1 Lite (1080p)":  0.08,
+      "Kling 3.0 standard":    0.084,
+      "Sora 2 (720p)":         0.10,
+      "Kling 3.0 Pro":         0.168,
+      "Sora 2 Pro (720p)":     0.30,
+      "Sora 2 Pro (1024p)":    0.50,
+      "Veo 3 (no audio)":      0.50,
+      "Veo 3 (with audio)":    0.75,
+  }
+
+  scenarios = [
+      ("Hailuo 02 (768p)",       2.5),
+      ("Sora 2 (720p)",          4.0),
+      ("Sora 2 Pro (1024p)",     4.0),
+      ("Veo 3 (with audio)",     1.5),
+      ("Kling 3.0 standard",     3.0),
+  ]
+
+  def cost_per_minute(model, retake_rate):
+      if model not in PRICES:
+          raise ValueError(f"unknown model: {model}")
+      return round(PRICES[model] * 60 * retake_rate, 2)
+
+  for model, rate in scenarios:
+      cost = cost_per_minute(model, rate)
+      print(f"{model + ' @ ' + str(rate) + 'x':<28}  = ${cost:>6.2f}/min")
+hint:
+  - level: 1
+    body: "Three lines of real logic. Check membership in PRICES; raise ValueError with the model name if missing; otherwise multiply price × 60 × retake_rate and round to 2 decimals."
+  - level: 2
+    body: |
+      ```python
+      def cost_per_minute(model, retake_rate):
+          if model not in PRICES:
+              raise ValueError(f"unknown model: {model}")
+          return round(PRICES[model] * 60 * retake_rate, 2)
+      ```
+      The `round(x, 2)` is what makes the output match the
+      expected formatting exactly. Without it you'd get
+      floating-point tails like `6.7499999999`.

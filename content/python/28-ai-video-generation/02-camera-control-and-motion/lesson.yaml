@@ -1,0 +1,14 @@
+slug: camera-control-and-motion
+title: "Camera control and motion — what separates slop from craft"
+estMinutes: 16
+prerequisites:
+  - the-video-model-lineup
+order:
+  - 01-the-static-camera-problem.read.md
+  - 02-shot-vocabulary.read.md
+  - 03-which-shot-is-which.mc.yaml
+  - 04-camera-moves.read.md
+  - 05-the-i2v-keyframe-pattern.read.md
+  - 06-spot-the-generic-prompt.mc.yaml
+  - 07-write-audit-shot-list.write.yaml
+  - 08-checkpoint.checkpoint.yaml

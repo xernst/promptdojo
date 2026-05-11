@@ -1,0 +1,166 @@
+xp: 5
+estSeconds: 240
+concept: audit-shot-specifications
+prompt: |
+  Write `audit_shot_list(shots)` that takes a list of shot dicts and
+  returns a list of suggestion strings — one per shot that has a
+  problem.
+
+  Each shot is a dict with these keys:
+  - `description` (str): the subject and action
+  - `camera_move` (str): the camera move
+  - `duration_sec` (float): clip duration in seconds
+
+  Apply these checks IN ORDER for each shot. As soon as ONE check
+  fires, emit a suggestion and move to the next shot:
+
+  1. If `camera_move` is one of the **generic words** — `"cinematic"`,
+     `"dramatic"`, `"beautiful"`, `"epic"`, or empty `""` —
+     emit: `"shot {i}: '{camera_move}' is not a camera move. Specify one (push-in / orbit / track / pan / tilt / static)."`
+  2. If `camera_move` contains the substring `"dolly zoom"` AND
+     `duration_sec < 3.0`:
+     emit: `"shot {i}: dolly zoom in {duration_sec}s is too fast — needs >=3s to read."`
+  3. If `camera_move` contains the substring `"orbit"` AND
+     `duration_sec < 4.0`:
+     emit: `"shot {i}: orbit in {duration_sec}s won't complete cleanly — needs >=4s."`
+  4. If `camera_move` contains the substring `"push-in"` AND
+     `duration_sec < 2.0`:
+     emit: `"shot {i}: push-in in {duration_sec}s reads as a jump — needs >=2s for the slow read."`
+  5. If `description` is shorter than 20 characters:
+     emit: `"shot {i}: description too short ({len} chars) — needs subject + action + framing detail."`
+
+  Shots are numbered starting at 1. If a shot passes all checks,
+  emit NOTHING for it. Return the list of suggestions in shot order.
+
+  Five shots run. Expected output:
+  ```
+  shot 1: 'cinematic' is not a camera move. Specify one (push-in / orbit / track / pan / tilt / static).
+  shot 2: orbit in 2.0s won't complete cleanly — needs >=4s.
+  shot 3: push-in in 1.0s reads as a jump — needs >=2s for the slow read.
+  shot 5: description too short (8 chars) — needs subject + action + framing detail.
+  ```
+starter: |
+  shots = [
+      {
+          "description": "Wide shot of a city skyline at sunset, deep focus.",
+          "camera_move": "cinematic",
+          "duration_sec": 5.0,
+      },
+      {
+          "description": "Medium shot of a product on a turntable, soft key from frame-right.",
+          "camera_move": "orbit 360 degrees",
+          "duration_sec": 2.0,
+      },
+      {
+          "description": "Close-up of a face reacting to news, shallow depth of field.",
+          "camera_move": "slow push-in",
+          "duration_sec": 1.0,
+      },
+      {
+          "description": "Tracking shot following a runner left-to-right, parallax against trees, medium distance.",
+          "camera_move": "tracking",
+          "duration_sec": 5.0,
+      },
+      {
+          "description": "a sunset",
+          "camera_move": "static",
+          "duration_sec": 4.0,
+      },
+  ]
+
+  # define audit_shot_list(shots) below
+
+  for s in audit_shot_list(shots):
+      print(s)
+grader:
+  kind: stdout-equality
+  expected: |
+    shot 1: 'cinematic' is not a camera move. Specify one (push-in / orbit / track / pan / tilt / static).
+    shot 2: orbit in 2.0s won't complete cleanly — needs >=4s.
+    shot 3: push-in in 1.0s reads as a jump — needs >=2s for the slow read.
+    shot 5: description too short (8 chars) — needs subject + action + framing detail.
+  normalize: collapse-trailing-newline
+solution: |
+  shots = [
+      {
+          "description": "Wide shot of a city skyline at sunset, deep focus.",
+          "camera_move": "cinematic",
+          "duration_sec": 5.0,
+      },
+      {
+          "description": "Medium shot of a product on a turntable, soft key from frame-right.",
+          "camera_move": "orbit 360 degrees",
+          "duration_sec": 2.0,
+      },
+      {
+          "description": "Close-up of a face reacting to news, shallow depth of field.",
+          "camera_move": "slow push-in",
+          "duration_sec": 1.0,
+      },
+      {
+          "description": "Tracking shot following a runner left-to-right, parallax against trees, medium distance.",
+          "camera_move": "tracking",
+          "duration_sec": 5.0,
+      },
+      {
+          "description": "a sunset",
+          "camera_move": "static",
+          "duration_sec": 4.0,
+      },
+  ]
+
+  GENERIC_MOVES = {"cinematic", "dramatic", "beautiful", "epic", ""}
+
+  def audit_shot_list(shots):
+      suggestions = []
+      for i, shot in enumerate(shots, start=1):
+          move = shot.get("camera_move", "")
+          dur = shot.get("duration_sec", 0.0)
+          desc = shot.get("description", "")
+
+          if move.strip().lower() in GENERIC_MOVES:
+              suggestions.append(
+                  f"shot {i}: '{move}' is not a camera move. "
+                  "Specify one (push-in / orbit / track / pan / tilt / static)."
+              )
+              continue
+
+          if "dolly zoom" in move.lower() and dur < 3.0:
+              suggestions.append(
+                  f"shot {i}: dolly zoom in {dur}s is too fast — needs >=3s to read."
+              )
+              continue
+
+          if "orbit" in move.lower() and dur < 4.0:
+              suggestions.append(
+                  f"shot {i}: orbit in {dur}s won't complete cleanly — needs >=4s."
+              )
+              continue
+
+          if "push-in" in move.lower() and dur < 2.0:
+              suggestions.append(
+                  f"shot {i}: push-in in {dur}s reads as a jump — needs >=2s for the slow read."
+              )
+              continue
+
+          if len(desc) < 20:
+              suggestions.append(
+                  f"shot {i}: description too short ({len(desc)} chars) — "
+                  "needs subject + action + framing detail."
+              )
+              continue
+
+      return suggestions
+
+  for s in audit_shot_list(shots):
+      print(s)
+hint:
+  - level: 1
+    body: "Loop with `enumerate(shots, start=1)` so shot numbering starts at 1. Use `continue` after each emit so only one issue is reported per shot. `.lower()` and `in` substring checks are the right pattern for matching the camera_move text — avoid exact-equality so 'slow push-in' still matches the 'push-in' rule."
+  - level: 2
+    body: |
+      GENERIC_MOVES = {"cinematic", "dramatic", "beautiful", "epic", ""} — a set of the bad-word camera_move values. Check first because if `camera_move` is "cinematic" you don't want to also check whether "cinematic" contains "push-in".
+
+      Substring checks for the duration rules: `"dolly zoom" in move.lower()`, `"orbit" in move.lower()`, `"push-in" in move.lower()`. Each duration threshold matches what's in the prompt (3.0, 4.0, 2.0).
+
+      The description-too-short check goes last — it should only fire if no other issue was caught.
