@@ -228,14 +228,14 @@
           "phase": "check",
           "estSeconds": 120,
           "concept": "conditionals-recap",
-          "prompt": "One last thing. AI wrote a discount-rule script. The starter has the right\nbranches but the conditions are missing. Finish lines 4 and 6 so the script\nprints `vip discount` (because `tier` is `\"gold\"` and `points` is greater\nthan zero).\n\nUse `==` for the string and `is not None` for the points check.\n",
-          "starter": "tier = \"gold\"\npoints = 50\n\nif tier ___ \"gold\":\n    if points ___:\n        print(\"vip discount\")\n        # if both checks pass\n    else:\n        print(\"vip, no points\")\nelse:\n    print(\"standard\")\n",
+          "prompt": "One last thing. AI wrote a discount-rule script. The starter has the right\nbranches but the conditions are missing. Finish lines 4 and 6 so the script\nprints `vip discount`.\n\nCatch: `points = 0` is a valid score (user has a record, just zero). The\ntruthy check `if points:` falls through to the wrong branch. Use\n`is not None` so a real zero still counts.\n",
+          "starter": "tier = \"gold\"\npoints = 0\n\nif tier ___ \"gold\":\n    if points ___:\n        print(\"vip discount\")\n        # both checks pass — user has a tier and a points record\n    else:\n        print(\"vip, no points record\")\nelse:\n    print(\"standard\")\n",
           "grader": {
             "kind": "stdout-equality",
             "expected": "vip discount",
             "normalize": "collapse-trailing-newline"
           },
-          "solution": "tier = \"gold\"\npoints = 50\n\nif tier == \"gold\":\n    if points is not None:\n        print(\"vip discount\")\n        # if both checks pass\n    else:\n        print(\"vip, no points\")\nelse:\n    print(\"standard\")\n",
+          "solution": "tier = \"gold\"\npoints = 0\n\nif tier == \"gold\":\n    if points is not None:\n        print(\"vip discount\")\n        # both checks pass — user has a tier and a points record\n    else:\n        print(\"vip, no points record\")\nelse:\n    print(\"standard\")\n",
           "passThreshold": 0.66
         }
       ],

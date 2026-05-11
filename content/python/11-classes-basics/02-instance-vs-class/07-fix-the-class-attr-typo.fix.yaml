@@ -4,12 +4,15 @@ concept: assigning-vs-shadowing
 prompt: |
   AI tried to update a class-level constant from inside an instance
   method. The intent was to change the rate for *all* `Account`
-  instances. But `self.rate = 0.05` doesn't update the class attribute —
-  it creates a *new* instance attribute that shadows the class one,
+  instances. But `self.rate = 0.05` doesn't update the class attribute.
+  It creates a *new* instance attribute that shadows the class one,
   only on this instance.
 
-  Fix line 6 so it updates the class attribute directly. Use
-  `Account.rate = 0.05` instead of `self.rate = 0.05`.
+  The lesson here is the SHADOWING, not the fix. Mutating shared class
+  state from an instance method is rare and usually a design smell. A
+  cleaner version would be a `@classmethod` or just `Account.rate =
+  0.05` at module level. For this drill, fix line 6 to write to the
+  class so you can SEE the shadowing rule.
 
   Expected output (both accounts share the new rate):
   ```

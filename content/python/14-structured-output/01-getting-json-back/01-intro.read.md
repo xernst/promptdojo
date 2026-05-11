@@ -64,10 +64,10 @@ Skip the schema and you're back to regex-on-natural-language. Skip the
 validation and you'll find out about the model's hallucinated field at
 3am from a NoneType error in production.
 
-> **Browser note:** Pydantic isn't bundled with Pyodide. We'll use plain
-> `dict` validation here — same logic, just spelled out — so you can
-> read and write the pattern. Switching to `BaseModel` later is a
-> two-line change.
+> **Browser note:** Pydantic loads in Pyodide via `micropip.install("pydantic")`,
+> but for fast feedback we use plain `dict` validation in these drills. Same
+> logic, spelled out, so you can read and write the pattern by hand.
+> Switching to `BaseModel` later is a two-line change.
 
 ## Where AI specifically gets this wrong
 

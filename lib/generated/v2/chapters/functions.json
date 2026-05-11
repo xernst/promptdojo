@@ -757,7 +757,7 @@
             },
             {
               "level": 2,
-              "body": "Inside the wrapper: `result = fn(*args, **kwargs); return result.replace(\"!\", \"\").upper()`. Then `@shout` on `say_hi`.",
+              "body": "Inside the wrapper: `result = fn(*args, **kwargs); return result.upper() + \"!\"`. Then `@shout` on `say_hi`.",
               "cost": 0
             }
           ],
@@ -765,14 +765,14 @@
           "phase": "build",
           "estSeconds": 120,
           "concept": "write-decorator",
-          "prompt": "Write a decorator called `shout` that takes a function returning a\nstring, calls it, and returns the result with `!` removed and converted\nto uppercase. (We don't use exclamation marks, but other people's code\ndoes — your decorator strips them.)\n\nThen decorate a function `say_hi` that returns `\"hi!\"` and print\nthe result.\n\nExpected output:\n```\nHI\n```\n",
-          "starter": "# define `shout`, then use @shout on say_hi\n# say_hi should return \"hi!\"\n",
+          "prompt": "Write a decorator called `shout` that takes a function returning a\nstring, calls it, and returns the result UPPERCASED with `!` added\nat the end. (A `shout` decorator makes things louder. That's what\nthe name promises.)\n\nThen decorate a function `say_hi` that returns `\"hi\"` and print\nthe result.\n\nExpected output:\n```\nHI!\n```\n",
+          "starter": "# define `shout`, then use @shout on say_hi\n# say_hi should return \"hi\"\n",
           "grader": {
             "kind": "stdout-equality",
-            "expected": "HI",
+            "expected": "HI!",
             "normalize": "collapse-trailing-newline"
           },
-          "solution": "def shout(fn):\n    def wrapper(*args, **kwargs):\n        result = fn(*args, **kwargs)\n        return result.replace(\"!\", \"\").upper()\n    return wrapper\n\n@shout\ndef say_hi():\n    return \"hi!\"\n\nprint(say_hi())\n",
+          "solution": "def shout(fn):\n    def wrapper(*args, **kwargs):\n        result = fn(*args, **kwargs)\n        return result.upper() + \"!\"\n    return wrapper\n\n@shout\ndef say_hi():\n    return \"hi\"\n\nprint(say_hi())\n",
           "hiddenTests": []
         },
         {

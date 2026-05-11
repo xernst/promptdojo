@@ -4,8 +4,8 @@ concept: prompting-recap
 prompt: |
   Last one. The starter has a tiny `audit` function that flags a prompt
   as `weak`, `ok`, or `strong` based on how many of the four parts it
-  has. The prompt dict currently scores `weak`. Add the two missing keys
-  so it scores exactly `strong`.
+  has. The prompt dict currently scores `weak`. Add the three missing
+  keys so it scores exactly `strong`.
 
   Expected output:
   ```

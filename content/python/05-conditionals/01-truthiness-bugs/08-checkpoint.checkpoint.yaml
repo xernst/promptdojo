@@ -4,20 +4,21 @@ concept: conditionals-recap
 prompt: |
   One last thing. AI wrote a discount-rule script. The starter has the right
   branches but the conditions are missing. Finish lines 4 and 6 so the script
-  prints `vip discount` (because `tier` is `"gold"` and `points` is greater
-  than zero).
+  prints `vip discount`.
 
-  Use `==` for the string and `is not None` for the points check.
+  Catch: `points = 0` is a valid score (user has a record, just zero). The
+  truthy check `if points:` falls through to the wrong branch. Use
+  `is not None` so a real zero still counts.
 starter: |
   tier = "gold"
-  points = 50
+  points = 0
 
   if tier ___ "gold":
       if points ___:
           print("vip discount")
-          # if both checks pass
+          # both checks pass — user has a tier and a points record
       else:
-          print("vip, no points")
+          print("vip, no points record")
   else:
       print("standard")
 grader:
@@ -26,14 +27,14 @@ grader:
   normalize: collapse-trailing-newline
 solution: |
   tier = "gold"
-  points = 50
+  points = 0
 
   if tier == "gold":
       if points is not None:
           print("vip discount")
-          # if both checks pass
+          # both checks pass — user has a tier and a points record
       else:
-          print("vip, no points")
+          print("vip, no points record")
   else:
       print("standard")
 passThreshold: 0.66

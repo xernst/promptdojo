@@ -6,7 +6,7 @@ prompt: |
   the same tool is called with the same arguments three turns in a row.
   The current implementation only checks the tool name, so it misses the
   fact that the third call has different arguments. Fix the check on
-  line 4 so the function returns `False` for this trace.
+  line 5 so the function returns `False` for this trace.
 
   Expected output:
   ```

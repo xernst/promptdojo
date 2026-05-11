@@ -36,7 +36,7 @@ brokenCode: |
 
   print(loop("describe x"))
 bugLines:
-  - 11
+  - 13
 grader:
   kind: stdout-equality
   expected: "capped"

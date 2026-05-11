@@ -3,11 +3,11 @@ estSeconds: 40
 concept: mutating-vs-non-mutating
 code: |
   pets = ["luna", "moose"]
-  pets.append("biscuit")          # mutates pets
+  pets.append("biscuit")
   print(pets)
-  pets_sorted = sorted(pets)      # leaves pets alone
+  pets_sorted = sorted(pets)
   print(pets_sorted)
-  print(pets)                     # still has "biscuit"
+  print(pets)
 prompt: |
   Cursor wrote four lines. Three of them leave `pets` unchanged. Which one
   *mutates* the original list?

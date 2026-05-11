@@ -66,7 +66,7 @@
             "c"
           ],
           "shuffle": false,
-          "code": "pets = [\"luna\", \"moose\"]\npets.append(\"biscuit\")          # mutates pets\nprint(pets)\npets_sorted = sorted(pets)      # leaves pets alone\nprint(pets_sorted)\nprint(pets)                     # still has \"biscuit\"\n",
+          "code": "pets = [\"luna\", \"moose\"]\npets.append(\"biscuit\")\nprint(pets)\npets_sorted = sorted(pets)\nprint(pets_sorted)\nprint(pets)\n",
           "runnable": true
         },
         {
@@ -307,7 +307,7 @@
             "a"
           ],
           "shuffle": false,
-          "code": "users = [\"maya\", \"marcus\"]\nbackup = users          # second name for the same list, not a copy\nusers.append(\"priya\")\nprint(users)            # [\"maya\", \"marcus\", \"priya\"]\nprint(backup)           # also [\"maya\", \"marcus\", \"priya\"] — surprise.\n",
+          "code": "users = [\"maya\", \"marcus\"]\nbackup = users\nusers.append(\"priya\")\nprint(users)\nprint(backup)\n",
           "runnable": true
         },
         {

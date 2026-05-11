@@ -6,8 +6,10 @@ prompt: |
   Write `harness(user_input, tools, fake_model, config, max_iters)`
   that:
 
-  - **Layer 1**: build messages — start with `system` from config
-    (the `system` key), then user turn.
+  - **Layer 1**: hold `system` from config in a separate
+    `system_prompt` variable (matches Anthropic's SDK shape:
+    `system=` is a top-level kwarg, NOT a role inside messages).
+    Build `messages` with just the user turn.
   - Loop up to `max_iters`. **Layer 2**: call `fake_model(messages)`
     via `with_retries` (provided — retries on `TransientError`).
     **Layer 3**: filter content into text + tool_use blocks; track
@@ -17,8 +19,9 @@ prompt: |
     `tool_calls_total`.
   - Returns
     `{"text": str, "iters": int, "tool_calls": int, "tokens": int, "system_used": bool}`.
-  - `system_used` is True iff the config's `system` key was loaded
-    into messages[0].
+  - `system_used` is True iff the config's `system` key was held
+    in `system_prompt` (i.e., would be sent via the SDK's
+    top-level `system=` kwarg).
 
   Two cases run. Expected output:
   ```
@@ -99,12 +102,11 @@ solution: |
       return next(current["iter"])
 
   def harness(user_input, tools, fake_model, config, max_iters):
-      messages = []
-      system_used = False
-      if "system" in config:
-          messages.append({"role": "system", "content": config["system"]})
-          system_used = True
-      messages.append({"role": "user", "content": user_input})
+      # Layer 1: system_prompt is a top-level kwarg in the Anthropic
+      # SDK, NOT a role inside messages. Keep them separate.
+      system_prompt = config.get("system")
+      system_used = system_prompt is not None
+      messages = [{"role": "user", "content": user_input}]
 
       tool_calls_total = 0
       tokens_used = 0

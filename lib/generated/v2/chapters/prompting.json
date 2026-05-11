@@ -255,7 +255,7 @@
           "phase": "check",
           "estSeconds": 130,
           "concept": "prompting-recap",
-          "prompt": "Last one. The starter has a tiny `audit` function that flags a prompt\nas `weak`, `ok`, or `strong` based on how many of the four parts it\nhas. The prompt dict currently scores `weak`. Add the two missing keys\nso it scores exactly `strong`.\n\nExpected output:\n```\nstrong\n```\n",
+          "prompt": "Last one. The starter has a tiny `audit` function that flags a prompt\nas `weak`, `ok`, or `strong` based on how many of the four parts it\nhas. The prompt dict currently scores `weak`. Add the three missing\nkeys so it scores exactly `strong`.\n\nExpected output:\n```\nstrong\n```\n",
           "starter": "parts = [\"context\", \"goal\", \"constraints\", \"format\"]\n\ndef audit(prompt):\n    hits = sum(1 for p in parts if p in prompt)\n    if hits == 4:\n        return \"strong\"\n    if hits >= 2:\n        return \"ok\"\n    return \"weak\"\n\nprompt = {\n    \"context\": \"fastapi route file\",\n    # add the missing keys here:\n}\n\nprint(audit(prompt))\n",
           "grader": {
             "kind": "stdout-equality",

@@ -170,7 +170,7 @@
           "estSeconds": 95,
           "concept": "detect-tool-loop",
           "brokenCode": "def is_looping(turns):\n    if len(turns) < 3:\n        return False\n    last_three = turns[-3:]\n    return all(t[\"tool\"] == last_three[0][\"tool\"] for t in last_three)\n\ntrace = [\n    {\"tool\": \"search_repo\", \"args\": {\"q\": \"auth\"}},\n    {\"tool\": \"search_repo\", \"args\": {\"q\": \"auth\"}},\n    {\"tool\": \"search_repo\", \"args\": {\"q\": \"billing\"}},\n]\n\nprint(is_looping(trace))\n",
-          "prompt": "The toy `is_looping` function should flag a session as looping when\nthe same tool is called with the same arguments three turns in a row.\nThe current implementation only checks the tool name, so it misses the\nfact that the third call has different arguments. Fix the check on\nline 4 so the function returns `False` for this trace.\n\nExpected output:\n```\nFalse\n```\n",
+          "prompt": "The toy `is_looping` function should flag a session as looping when\nthe same tool is called with the same arguments three turns in a row.\nThe current implementation only checks the tool name, so it misses the\nfact that the third call has different arguments. Fix the check on\nline 5 so the function returns `False` for this trace.\n\nExpected output:\n```\nFalse\n```\n",
           "grader": {
             "kind": "stdout-equality",
             "expected": "False",

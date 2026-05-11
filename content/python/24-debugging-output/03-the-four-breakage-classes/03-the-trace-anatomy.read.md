@@ -57,27 +57,29 @@ flying blind — fix logging before you debug the next failure.
 
 ## Priority order: which field first
 
-Read the fields in this order. Stop at the first one that points
-at a class.
+Three of the classes show up in the trace as mechanical signals.
+The fourth (prompt ambiguity) can't be detected from fields alone.
+So your classifier walks the mechanical signals first and lands on
+prompt as the fallthrough.
 
 1. **Retrieved chunks**. Open them. Are they relevant to the
    question? Are they from the right account, customer, document,
    or time range? If `retrieved_chunks` looks wrong: **class 1
    (retrieval)**. Stop here.
 
-2. **Rendered prompt**. Read it like a stranger would. Is the
-   instruction ambiguous? Could a careful reader pick a different
-   reasonable answer than the one you wanted? If yes: **class 2
-   (prompt)**. Stop here.
-
-3. **`raw_output` vs `output_after_postprocess`**. Are they
+2. **`raw_output` vs `output_after_postprocess`**. Are they
    different? Diff them. If post-processing changed something
    meaningful: **class 4 (parse)**. Stop here.
 
-4. **None of the above**. The retriever was fine, the prompt was
-   clear, your code didn't touch the output, and the answer is
-   still wrong. That's **class 3 (hallucination)**. The model
-   answered from priors when there was nothing to ground in.
+3. **`retrieved_chunks` is empty**. The retriever had nothing to
+   give the model, but the model answered anyway. That's
+   **class 3 (hallucination)**. Stop here.
+
+4. **None of the above**. Retrieval was fine, the trace is clean,
+   the post-processing didn't touch the output. The model still
+   went wrong. That points at **class 2 (prompt)**. Read the
+   rendered prompt by hand. Could a careful reader pick a different
+   reasonable answer than the one you wanted?
 
 ## Why this order
 

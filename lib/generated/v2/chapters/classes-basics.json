@@ -451,7 +451,7 @@
           "estSeconds": 90,
           "concept": "assigning-vs-shadowing",
           "brokenCode": "class Account:\n    rate = 0.02\n\n    def bump_rate(self):\n        # supposed to bump the rate for ALL accounts:\n        self.rate = 0.05\n\na = Account()\nb = Account()\na.bump_rate()\n\nprint(a.rate, b.rate)\n",
-          "prompt": "AI tried to update a class-level constant from inside an instance\nmethod. The intent was to change the rate for *all* `Account`\ninstances. But `self.rate = 0.05` doesn't update the class attribute —\nit creates a *new* instance attribute that shadows the class one,\nonly on this instance.\n\nFix line 6 so it updates the class attribute directly. Use\n`Account.rate = 0.05` instead of `self.rate = 0.05`.\n\nExpected output (both accounts share the new rate):\n```\n0.05 0.05\n```\n",
+          "prompt": "AI tried to update a class-level constant from inside an instance\nmethod. The intent was to change the rate for *all* `Account`\ninstances. But `self.rate = 0.05` doesn't update the class attribute.\nIt creates a *new* instance attribute that shadows the class one,\nonly on this instance.\n\nThe lesson here is the SHADOWING, not the fix. Mutating shared class\nstate from an instance method is rare and usually a design smell. A\ncleaner version would be a `@classmethod` or just `Account.rate =\n0.05` at module level. For this drill, fix line 6 to write to the\nclass so you can SEE the shadowing rule.\n\nExpected output (both accounts share the new rate):\n```\n0.05 0.05\n```\n",
           "grader": {
             "kind": "stdout-equality",
             "expected": "0.05 0.05",
