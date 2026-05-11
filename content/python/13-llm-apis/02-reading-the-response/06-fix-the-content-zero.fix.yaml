@@ -25,7 +25,7 @@ brokenCode: |
   # bug: assumes content[0] is always a text block. it isn't.
   print(response["content"][0]["text"])
 bugLines:
-  - 9
+  - 10
 grader:
   kind: stdout-equality
   expected: "found."

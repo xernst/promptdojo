@@ -737,8 +737,8 @@
           "phase": "build",
           "estSeconds": 80,
           "concept": "replace-range-len-with-enumerate",
-          "brokenCode": "items = [\"apple\", \"bread\", \"steak\"]\n\nfor i in range(len(items)):\n    print(f\"{i}: {items[i]}\")\n",
-          "prompt": "AI wrote the C-style version with `range(len(...))` and `items[i]`.\nReplace lines 3-4 with a single `for` loop using `enumerate` so the\noutput stays the same:\n\n```\n0: apple\n1: bread\n2: steak\n```\n",
+          "brokenCode": "items = [\"apple\", \"bread\", \"steak\"]\n\nfor i in range(len(items) + 1):\n    print(f\"{i}: {items[i]}\")\n",
+          "prompt": "AI wrote the C-style version with `range(len(...))` and `items[i]`,\nand slipped an off-by-one on line 3: `range(len(items) + 1)` runs\none iteration past the end of the list, and line 4 raises\n`IndexError` on the last pass.\n\nReplace lines 3-4 with a single `for` loop using `enumerate` so the\noutput is:\n\n```\n0: apple\n1: bread\n2: steak\n```\n",
           "grader": {
             "kind": "stdout-equality",
             "expected": "0: apple\n1: bread\n2: steak\n",

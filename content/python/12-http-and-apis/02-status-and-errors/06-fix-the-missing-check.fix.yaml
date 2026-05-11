@@ -17,18 +17,18 @@ prompt: |
   None
   ```
 brokenCode: |
+  class FakeResponse:
+      status_code = 401
+      def json(self):
+          return {"error": "auth required"}
+
   def fetch_user(response):
       data = response.json()
       return data["name"]
 
-  fake_response = type("R", (), {
-      "status_code": 401,
-      "json": lambda self: {"error": "auth required"},
-  })()
-
-  print(fetch_user(fake_response))
+  print(fetch_user(FakeResponse()))
 bugLines:
-  - 2
+  - 8
 grader:
   kind: stdout-equality
   expected: "None"
@@ -37,5 +37,5 @@ hint:
   - level: 1
     body: "Add a guard at the top of `fetch_user`: if the status isn't 200, return `None` before touching `.json()`."
   - level: 2
-    body: "Insert as a new line right before line 2: `if response.status_code != 200: return None`. Then the existing `data = response.json()` and `return data[\"name\"]` only run on success."
+    body: "Insert as a new line right after `def fetch_user(response):`: `if response.status_code != 200: return None`. Then the existing `data = response.json()` and `return data[\"name\"]` only run on success."
 revealAfter: 4

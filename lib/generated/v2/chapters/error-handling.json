@@ -677,12 +677,12 @@
           "hint": [
             {
               "level": 1,
-              "body": "Replace the whole `try/except/return None` block with a single `if qty <= 0: raise ValueError(\"qty must be positive\")`. Then wrap the call site in `try/except ValueError as e: print(e)`.",
+              "body": "Delete the whole `try/except: pass`. Keep `qty = int(qty)` and `if qty <= 0: raise ValueError(...)` as straight-line code so the exceptions propagate to the caller.",
               "cost": 0
             },
             {
               "level": 2,
-              "body": "Function body: `if qty <= 0: raise ValueError(\"qty must be positive\")` then `return qty`. Bottom: `try: validate_order(-3)\\nexcept ValueError as e: print(e)`.",
+              "body": "Function body becomes: `qty = int(qty)`, then `if qty <= 0: raise ValueError(\"qty must be positive\")`, then `return qty`. The bare `except: pass` was the bug.",
               "cost": 0
             }
           ],
@@ -690,8 +690,8 @@
           "phase": "build",
           "estSeconds": 85,
           "concept": "silent-error-antipattern",
-          "brokenCode": "def validate_order(qty):\n    try:\n        if qty <= 0:\n            return None\n    except:\n        pass\n    return qty\n\nprint(validate_order(-3))\n",
-          "prompt": "Claude shipped this and a teammate spent two days debugging a \"missing\ndata\" bug that turned out to be `validate_order` silently returning\n`None` for any bad input. The `except: pass` swallows every exception\nincluding bugs.\n\nReplace the `try/except` block with a single `raise ValueError(...)`\nthat fails loudly when `qty` is not positive. Keep the message\n`\"qty must be positive\"`. The expected output (a traceback) just needs\nto print `qty must be positive` somewhere — for this drill, change the\n`print` at the bottom to wrap the call in a `try/except ValueError as e:\nprint(e)` so the test can grade it.\n",
+          "brokenCode": "def validate_order(qty):\n    try:\n        qty = int(qty)\n        if qty <= 0:\n            raise ValueError(\"qty must be positive\")\n    except:\n        pass\n    return qty\n\ntry:\n    validate_order(-3)\nexcept ValueError as e:\n    print(e)\n",
+          "prompt": "Claude shipped this and a teammate spent two days debugging a \"missing\ndata\" bug. `validate_order` calls `int(qty)` which raises `ValueError`\non bad input, the `except: pass` swallows it, and the function falls\nthrough to return `None`. The caller has no idea anything went wrong.\n\nReplace the `try/except` block so bad input fails loudly with a\n`raise ValueError(\"qty must be positive\")`. The call site already\nhas the right `try/except` to print the message.\n\nExpected output:\n```\nqty must be positive\n```\n",
           "grader": {
             "kind": "stdout-equality",
             "expected": "qty must be positive",
@@ -702,7 +702,8 @@
             3,
             4,
             5,
-            6
+            6,
+            7
           ],
           "revealAfter": 4
         },

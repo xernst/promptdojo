@@ -17,17 +17,16 @@ brokenCode: |
       return path.read_text()
 
   missing = Path("/tmp/never-created.toml")
-  print(load_config(missing) if False else "default config")
+  print(load_config(missing))
 bugLines:
   - 4
-  - 7
 grader:
   kind: stdout-equality
   expected: "default config"
   normalize: collapse-trailing-newline
 hint:
   - level: 1
-    body: "Inside `load_config`, check `path.exists()` first. If it does, return `path.read_text()`. Otherwise return `\"default config\"`. Then simplify line 7 to `print(load_config(missing))`."
+    body: "Inside `load_config`, check `path.exists()` first. If it does, return `path.read_text()`. Otherwise return `\"default config\"`."
   - level: 2
-    body: "Function body: `if path.exists(): return path.read_text()` then `return \"default config\"`. Line 7: `print(load_config(missing))`."
+    body: "Function body: `if path.exists(): return path.read_text()` then `return \"default config\"`."
 revealAfter: 4

@@ -2,14 +2,22 @@ xp: 4
 estSeconds: 80
 concept: status-code-comparison
 prompt: |
-  Claude wrote this and the success check is wrong. It uses `=` (assignment)
-  instead of `==` (comparison), so the line tries to assign to `status` and
-  raises a `SyntaxError`. Fix line 4 so the script prints `ok`.
+  Claude wrote a truthy check for HTTP success: `if status:`. Any non-zero
+  status code is truthy in Python, including `404`, `500`, and every error.
+  The branch prints `ok` for an auth failure.
+
+  Fix line 4 so the check is `== 200` and the script prints `not ok` for
+  the `401` response below.
+
+  Expected output:
+  ```
+  not ok
+  ```
 brokenCode: |
   # pretend this came from response.status_code
-  status = 200
+  status = 401
 
-  if status = 200:
+  if status:
       print("ok")
   else:
       print("not ok")
@@ -17,11 +25,11 @@ bugLines:
   - 4
 grader:
   kind: stdout-equality
-  expected: "ok"
+  expected: "not ok"
   normalize: collapse-trailing-newline
 hint:
   - level: 1
-    body: "In Python, `=` assigns. To *compare* two values, use a different operator."
+    body: "Truthy checks pass for ANY non-zero status. Compare to a specific success code instead."
   - level: 2
-    body: "Change `if status = 200:` to `if status == 200:`. Two equals signs."
+    body: "Change `if status:` to `if status == 200:`. Now `401` falls into the else branch."
 revealAfter: 4

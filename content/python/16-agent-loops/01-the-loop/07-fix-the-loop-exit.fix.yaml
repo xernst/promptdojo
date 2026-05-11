@@ -2,42 +2,47 @@ xp: 4
 estSeconds: 100
 concept: agent-loop-must-check-stop-reason
 prompt: |
-  AI wrote an agent loop that checks `stop_reason == "tool_use"` to
-  CONTINUE, but never checks for `end_turn` to STOP. Without an iteration
-  cap, this would run forever in real life — here, the fake model returns
-  `end_turn` after one round, and the loop spins past it because the
-  break condition is wrong. Fix line 13 so the loop exits on `end_turn`.
+  AI wrote an agent loop that BREAKS on `tool_use`. That's backwards —
+  `tool_use` is the signal to KEEP GOING (run the tool, append the
+  result, loop again). `end_turn` is the signal to stop. The fake
+  model returns one `tool_use` then one `end_turn`. The broken loop
+  bails on the first response and never sees `"done"`.
+
+  Fix line 12 so the loop breaks on `end_turn`, runs the loop body
+  for the `tool_use` turn, and prints the final text.
 
   Expected output:
   ```
   done
   ```
 brokenCode: |
-  responses = [
+  responses = iter([
       {"stop_reason": "tool_use", "content": []},
       {"stop_reason": "end_turn", "content": [{"type": "text", "text": "done"}]},
-  ]
-  i = 0
+  ])
 
   def fake_model(messages):
-      nonlocal_i = i
-      return responses[nonlocal_i]
+      return next(responses)
 
-  while i < 5:
-      response = responses[i]
+  messages = [{"role": "user", "content": "go"}]
+
+  while len(messages) < 10:
+      response = fake_model(messages)
       if response["stop_reason"] == "tool_use":
           break
-      i += 1
-  print(response["content"][0]["text"] if response["content"] else "no text")
+      messages.append({"role": "assistant", "content": response["content"]})
+
+  text_blocks = [b for b in response["content"] if b.get("type") == "text"]
+  print(text_blocks[0]["text"] if text_blocks else "no text")
 bugLines:
-  - 13
+  - 14
 grader:
   kind: stdout-equality
   expected: "done"
   normalize: collapse-trailing-newline
 hint:
   - level: 1
-    body: 'The loop should break on `end_turn`, not `tool_use`. `tool_use` is the signal to KEEP going.'
+    body: 'The break condition is inverted. `tool_use` means "I want to call a tool, keep the loop running so you can give me the result." `end_turn` means "I''m done, exit."'
   - level: 2
-    body: 'Change line 13 to `if response["stop_reason"] == "end_turn":`. That''s the exit condition.'
+    body: 'Change line 14 to `if response["stop_reason"] == "end_turn":`. The loop body (append the assistant response, fetch next) only runs on tool_use turns.'
 revealAfter: 5

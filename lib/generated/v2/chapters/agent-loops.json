@@ -177,12 +177,12 @@
           "hint": [
             {
               "level": 1,
-              "body": "The loop should break on `end_turn`, not `tool_use`. `tool_use` is the signal to KEEP going.",
+              "body": "The break condition is inverted. `tool_use` means \"I want to call a tool, keep the loop running so you can give me the result.\" `end_turn` means \"I'm done, exit.\"",
               "cost": 0
             },
             {
               "level": 2,
-              "body": "Change line 13 to `if response[\"stop_reason\"] == \"end_turn\":`. That's the exit condition.",
+              "body": "Change line 14 to `if response[\"stop_reason\"] == \"end_turn\":`. The loop body (append the assistant response, fetch next) only runs on tool_use turns.",
               "cost": 0
             }
           ],
@@ -190,15 +190,15 @@
           "phase": "build",
           "estSeconds": 100,
           "concept": "agent-loop-must-check-stop-reason",
-          "brokenCode": "responses = [\n    {\"stop_reason\": \"tool_use\", \"content\": []},\n    {\"stop_reason\": \"end_turn\", \"content\": [{\"type\": \"text\", \"text\": \"done\"}]},\n]\ni = 0\n\ndef fake_model(messages):\n    nonlocal_i = i\n    return responses[nonlocal_i]\n\nwhile i < 5:\n    response = responses[i]\n    if response[\"stop_reason\"] == \"tool_use\":\n        break\n    i += 1\nprint(response[\"content\"][0][\"text\"] if response[\"content\"] else \"no text\")\n",
-          "prompt": "AI wrote an agent loop that checks `stop_reason == \"tool_use\"` to\nCONTINUE, but never checks for `end_turn` to STOP. Without an iteration\ncap, this would run forever in real life — here, the fake model returns\n`end_turn` after one round, and the loop spins past it because the\nbreak condition is wrong. Fix line 13 so the loop exits on `end_turn`.\n\nExpected output:\n```\ndone\n```\n",
+          "brokenCode": "responses = iter([\n    {\"stop_reason\": \"tool_use\", \"content\": []},\n    {\"stop_reason\": \"end_turn\", \"content\": [{\"type\": \"text\", \"text\": \"done\"}]},\n])\n\ndef fake_model(messages):\n    return next(responses)\n\nmessages = [{\"role\": \"user\", \"content\": \"go\"}]\n\nwhile len(messages) < 10:\n    response = fake_model(messages)\n    if response[\"stop_reason\"] == \"tool_use\":\n        break\n    messages.append({\"role\": \"assistant\", \"content\": response[\"content\"]})\n\ntext_blocks = [b for b in response[\"content\"] if b.get(\"type\") == \"text\"]\nprint(text_blocks[0][\"text\"] if text_blocks else \"no text\")\n",
+          "prompt": "AI wrote an agent loop that BREAKS on `tool_use`. That's backwards —\n`tool_use` is the signal to KEEP GOING (run the tool, append the\nresult, loop again). `end_turn` is the signal to stop. The fake\nmodel returns one `tool_use` then one `end_turn`. The broken loop\nbails on the first response and never sees `\"done\"`.\n\nFix line 12 so the loop breaks on `end_turn`, runs the loop body\nfor the `tool_use` turn, and prints the final text.\n\nExpected output:\n```\ndone\n```\n",
           "grader": {
             "kind": "stdout-equality",
             "expected": "done",
             "normalize": "collapse-trailing-newline"
           },
           "bugLines": [
-            13
+            14
           ],
           "revealAfter": 5
         },

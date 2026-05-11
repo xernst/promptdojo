@@ -2,9 +2,13 @@ xp: 4
 estSeconds: 80
 concept: replace-range-len-with-enumerate
 prompt: |
-  AI wrote the C-style version with `range(len(...))` and `items[i]`.
+  AI wrote the C-style version with `range(len(...))` and `items[i]`,
+  and slipped an off-by-one on line 3: `range(len(items) + 1)` runs
+  one iteration past the end of the list, and line 4 raises
+  `IndexError` on the last pass.
+
   Replace lines 3-4 with a single `for` loop using `enumerate` so the
-  output stays the same:
+  output is:
 
   ```
   0: apple
@@ -14,7 +18,7 @@ prompt: |
 brokenCode: |
   items = ["apple", "bread", "steak"]
 
-  for i in range(len(items)):
+  for i in range(len(items) + 1):
       print(f"{i}: {items[i]}")
 bugLines:
   - 3

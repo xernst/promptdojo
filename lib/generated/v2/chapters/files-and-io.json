@@ -440,12 +440,12 @@
           "hint": [
             {
               "level": 1,
-              "body": "Inside `load_config`, check `path.exists()` first. If it does, return `path.read_text()`. Otherwise return `\"default config\"`. Then simplify line 7 to `print(load_config(missing))`.",
+              "body": "Inside `load_config`, check `path.exists()` first. If it does, return `path.read_text()`. Otherwise return `\"default config\"`.",
               "cost": 0
             },
             {
               "level": 2,
-              "body": "Function body: `if path.exists(): return path.read_text()` then `return \"default config\"`. Line 7: `print(load_config(missing))`.",
+              "body": "Function body: `if path.exists(): return path.read_text()` then `return \"default config\"`.",
               "cost": 0
             }
           ],
@@ -453,7 +453,7 @@
           "phase": "build",
           "estSeconds": 85,
           "concept": "exists-check-before-read",
-          "brokenCode": "from pathlib import Path\n\ndef load_config(path):\n    return path.read_text()\n\nmissing = Path(\"/tmp/never-created.toml\")\nprint(load_config(missing) if False else \"default config\")\n",
+          "brokenCode": "from pathlib import Path\n\ndef load_config(path):\n    return path.read_text()\n\nmissing = Path(\"/tmp/never-created.toml\")\nprint(load_config(missing))\n",
           "prompt": "AI wrote a function that reads a config file and falls back to a\ndefault if the file is missing. Trouble is, the function calls\n`read_text` *first* and then has nothing to catch the\n`FileNotFoundError`. The script crashes when the path doesn't exist.\n\nAdd an `if path.exists():` guard so the function returns\n`\"default config\"` when the file is missing and the file's contents\nwhen it exists.\n",
           "grader": {
             "kind": "stdout-equality",
@@ -461,8 +461,7 @@
             "normalize": "collapse-trailing-newline"
           },
           "bugLines": [
-            4,
-            7
+            4
           ],
           "revealAfter": 4
         },

@@ -145,12 +145,12 @@
           "hint": [
             {
               "level": 1,
-              "body": "In Python, `=` assigns. To *compare* two values, use a different operator.",
+              "body": "Truthy checks pass for ANY non-zero status. Compare to a specific success code instead.",
               "cost": 0
             },
             {
               "level": 2,
-              "body": "Change `if status = 200:` to `if status == 200:`. Two equals signs.",
+              "body": "Change `if status:` to `if status == 200:`. Now `401` falls into the else branch.",
               "cost": 0
             }
           ],
@@ -158,11 +158,11 @@
           "phase": "build",
           "estSeconds": 80,
           "concept": "status-code-comparison",
-          "brokenCode": "# pretend this came from response.status_code\nstatus = 200\n\nif status = 200:\n    print(\"ok\")\nelse:\n    print(\"not ok\")\n",
-          "prompt": "Claude wrote this and the success check is wrong. It uses `=` (assignment)\ninstead of `==` (comparison), so the line tries to assign to `status` and\nraises a `SyntaxError`. Fix line 4 so the script prints `ok`.\n",
+          "brokenCode": "# pretend this came from response.status_code\nstatus = 401\n\nif status:\n    print(\"ok\")\nelse:\n    print(\"not ok\")\n",
+          "prompt": "Claude wrote a truthy check for HTTP success: `if status:`. Any non-zero\nstatus code is truthy in Python, including `404`, `500`, and every error.\nThe branch prints `ok` for an auth failure.\n\nFix line 4 so the check is `== 200` and the script prints `not ok` for\nthe `401` response below.\n\nExpected output:\n```\nnot ok\n```\n",
           "grader": {
             "kind": "stdout-equality",
-            "expected": "ok",
+            "expected": "not ok",
             "normalize": "collapse-trailing-newline"
           },
           "bugLines": [
@@ -410,7 +410,7 @@
             },
             {
               "level": 2,
-              "body": "Insert as a new line right before line 2: `if response.status_code != 200: return None`. Then the existing `data = response.json()` and `return data[\"name\"]` only run on success.",
+              "body": "Insert as a new line right after `def fetch_user(response):`: `if response.status_code != 200: return None`. Then the existing `data = response.json()` and `return data[\"name\"]` only run on success.",
               "cost": 0
             }
           ],
@@ -418,7 +418,7 @@
           "phase": "build",
           "estSeconds": 90,
           "concept": "status-check-before-json",
-          "brokenCode": "def fetch_user(response):\n    data = response.json()\n    return data[\"name\"]\n\nfake_response = type(\"R\", (), {\n    \"status_code\": 401,\n    \"json\": lambda self: {\"error\": \"auth required\"},\n})()\n\nprint(fetch_user(fake_response))\n",
+          "brokenCode": "class FakeResponse:\n    status_code = 401\n    def json(self):\n        return {\"error\": \"auth required\"}\n\ndef fetch_user(response):\n    data = response.json()\n    return data[\"name\"]\n\nprint(fetch_user(FakeResponse()))\n",
           "prompt": "Claude wrote a fetcher that calls `.json()` straight away without\nchecking the status. The fake response below is a 401 with a JSON\nerror body. The function returns `data[\"name\"]`, which doesn't exist\nin the error body, so it crashes with a `KeyError` — pointing at the\n*wrong* line.\n\nAdd an `if response.status_code != 200: return None` guard *before*\nthe `.json()` call so the function returns `None` cleanly when the\nrequest failed.\n\nExpected output:\n```\nNone\n```\n",
           "grader": {
             "kind": "stdout-equality",
@@ -426,7 +426,7 @@
             "normalize": "collapse-trailing-newline"
           },
           "bugLines": [
-            2
+            8
           ],
           "revealAfter": 4
         },
@@ -678,12 +678,12 @@
           "hint": [
             {
               "level": 1,
-              "body": "Replace the function body with: `choices = response.get(\"choices\", [])`, then `if not choices: return \"(blocked)\"`, then `return choices[0].get(\"message\", {}).get(\"content\", \"(missing)\")`.",
+              "body": "Replace the function body with: `content = response.get(\"content\", [])`, then `if not content: return \"(blocked)\"`, then return the first block's text with `.get(\"text\", \"(missing)\")`.",
               "cost": 0
             },
             {
               "level": 2,
-              "body": "Three-line body: `choices = response.get(\"choices\", [])`. `if not choices: return \"(blocked)\"`. `return choices[0].get(\"message\", {}).get(\"content\", \"(missing)\")`.",
+              "body": "Three-line body: `content = response.get(\"content\", [])`. `if not content: return \"(blocked)\"`. `return content[0].get(\"text\", \"(missing)\")`.",
               "cost": 0
             }
           ],
@@ -691,8 +691,8 @@
           "phase": "build",
           "estSeconds": 95,
           "concept": "replacing-strict-chain",
-          "brokenCode": "def extract_text(response):\n    return response[\"choices\"][0][\"message\"][\"content\"]\n\nblocked_response = {\"id\": \"abc\", \"model\": \"gpt-4o-mini\"}\n\nprint(extract_text(blocked_response))\n",
-          "prompt": "Claude wrote a parser that pulls the assistant text out of a fake\nLLM response. The chain uses strict `[]` access at every level. If\nthe response was filtered (no `choices`), the parser crashes with\n`KeyError`.\n\nReplace the strict chain on line 6 with the safe pattern: default\n`choices` to `[]`, return the string `\"(blocked)\"` if the list is\nempty, otherwise pull `message.content` out with chained `.get`s.\n\nThe starter has a content-filtered response (no `choices` key).\nExpected output:\n```\n(blocked)\n```\n",
+          "brokenCode": "def extract_text(response):\n    return response[\"content\"][0][\"text\"]\n\nblocked_response = {\"id\": \"abc\", \"model\": \"claude-sonnet-4-6\"}\n\nprint(extract_text(blocked_response))\n",
+          "prompt": "Claude wrote a parser that pulls the assistant text out of a fake\nAnthropic response. The chain uses strict `[]` access at every\nlevel. If the response was filtered (no `content` array), the\nparser crashes with `KeyError`.\n\nReplace the strict chain on line 2 with the safe pattern: default\n`content` to `[]`, return the string `\"(blocked)\"` if the list is\nempty, otherwise pull the first block's `text` out with `.get()`.\n\nThe starter has a content-filtered response (no `content` key).\nExpected output:\n```\n(blocked)\n```\n",
           "grader": {
             "kind": "stdout-equality",
             "expected": "(blocked)",
