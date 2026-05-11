@@ -86,9 +86,10 @@ const json = (body: unknown, status = 200): Response =>
   });
 
 // Constant-time string compare so a leaked secret can't be byte-guessed
-// via response-timing analysis. We HMAC both sides under the same key
-// and use crypto.subtle.verify, which is constant-time on the Workers
-// runtime.
+// via response-timing analysis. HMAC BOTH sides under the same key, then
+// byte-compare the digests in constant time. Prior version only HMACed
+// `a` then `verify`d against `b` plaintext — leaked length info through
+// the encode step. Fixed per launch-week security audit 2026-05-11.
 async function constantTimeEquals(a: string, b: string): Promise<boolean> {
   if (typeof a !== "string" || typeof b !== "string") return false;
   const key = await crypto.subtle.importKey(
@@ -96,10 +97,18 @@ async function constantTimeEquals(a: string, b: string): Promise<boolean> {
     enc.encode("revenuecat-bearer-compare"),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign", "verify"],
+    ["sign"],
   );
-  const sigA = await crypto.subtle.sign("HMAC", key, enc.encode(a));
-  return crypto.subtle.verify("HMAC", key, sigA, enc.encode(b));
+  const [sigA, sigB] = await Promise.all([
+    crypto.subtle.sign("HMAC", key, enc.encode(a)),
+    crypto.subtle.sign("HMAC", key, enc.encode(b)),
+  ]);
+  const va = new Uint8Array(sigA);
+  const vb = new Uint8Array(sigB);
+  if (va.length !== vb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
+  return diff === 0;
 }
 
 function readBearer(header: string | null): string | null {
