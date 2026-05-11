@@ -1,0 +1,98 @@
+xp: 5
+estSeconds: 200
+concept: boundary-audit-scoring
+prompt: |
+  Write `audit_boundaries(system)` that takes a system profile
+  (dict) and returns a dict with two fields:
+
+  - `score`: integer 0-100, higher means MORE boundaries are guarded
+    by a schema + validator
+  - `verdict`: string, one of:
+    - `"hardened"` if score >= 75
+    - `"mostly-safe"` if score >= 50
+    - `"leaky"` if score >= 25
+    - `"trust-everything"` if score < 25
+
+  Score the system on FOUR trust-boundary signals. Each `True`
+  adds 25 points:
+
+  - `validates_model_output`: schema check on every LLM response
+  - `validates_user_input`: schema check on every inbound HTTP body
+  - `validates_external_api_returns`: schema check on every 3rd-party API response
+  - `validates_db_reads`: schema check on rows coming OUT of the database
+    (yes — even your own DB is a trust boundary if a different team writes to it)
+
+  Two systems run. Expected output:
+  ```
+  GuardedApp:  {'score': 100, 'verdict': 'hardened'}
+  YOLOService: {'score': 25, 'verdict': 'leaky'}
+  ```
+starter: |
+  guarded_app = {
+      "name": "GuardedApp",
+      "validates_model_output": True,
+      "validates_user_input": True,
+      "validates_external_api_returns": True,
+      "validates_db_reads": True,
+  }
+
+  yolo_service = {
+      "name": "YOLOService",
+      "validates_model_output": True,
+      "validates_user_input": False,
+      "validates_external_api_returns": False,
+      "validates_db_reads": False,
+  }
+
+  # define audit_boundaries(system) below
+
+  print(f"GuardedApp:  {audit_boundaries(guarded_app)}")
+  print(f"YOLOService: {audit_boundaries(yolo_service)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    GuardedApp:  {'score': 100, 'verdict': 'hardened'}
+    YOLOService: {'score': 25, 'verdict': 'leaky'}
+  normalize: collapse-trailing-newline
+solution: |
+  guarded_app = {
+      "name": "GuardedApp",
+      "validates_model_output": True,
+      "validates_user_input": True,
+      "validates_external_api_returns": True,
+      "validates_db_reads": True,
+  }
+
+  yolo_service = {
+      "name": "YOLOService",
+      "validates_model_output": True,
+      "validates_user_input": False,
+      "validates_external_api_returns": False,
+      "validates_db_reads": False,
+  }
+
+  def audit_boundaries(system):
+      boundaries = [
+          "validates_model_output",
+          "validates_user_input",
+          "validates_external_api_returns",
+          "validates_db_reads",
+      ]
+      score = sum(25 for b in boundaries if system.get(b))
+      if score >= 75:
+          verdict = "hardened"
+      elif score >= 50:
+          verdict = "mostly-safe"
+      elif score >= 25:
+          verdict = "leaky"
+      else:
+          verdict = "trust-everything"
+      return {"score": score, "verdict": verdict}
+
+  print(f"GuardedApp:  {audit_boundaries(guarded_app)}")
+  print(f"YOLOService: {audit_boundaries(yolo_service)}")
+hint:
+  - level: 1
+    body: "Four booleans, 25 points each. Sum the True ones times 25. Then a four-way threshold for the verdict (>=75, >=50, >=25, else)."
+  - level: 2
+    body: "GuardedApp has all four True: 4 * 25 = 100, verdict 'hardened'. YOLOService has only one True: 1 * 25 = 25, verdict 'leaky' (because 25 is >= 25 but not >= 50). Order the if/elif from highest threshold down."

@@ -254,7 +254,207 @@
         }
       ],
       "xpTotal": 32
+    },
+    {
+      "slug": "schemas-eat-prompts",
+      "title": "Why schemas eat prompts — the boundary contract pattern",
+      "estMinutes": 18,
+      "prerequisites": [
+        "validation-with-pydantic"
+      ],
+      "steps": [
+        {
+          "type": "read",
+          "id": "structured-output/schemas-eat-prompts/s01-01-the-trust-boundary",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 220,
+          "concept": "trust-boundary",
+          "body": "# The model output is foreign currency — inspect it at the border\n\nLessons 01 and 02 of this chapter taught you the mechanics. Define a\nschema. Parse the JSON. Validate the shape. Catch `ValidationError`\nnarrowly. That's the toolkit. This lesson is the **mental model** that\nmakes the toolkit non-negotiable.\n\nThe model is not part of your system. It is a foreign system. It runs\non hardware you don't control, with weights you didn't train, returning\ntext shaped by a probabilistic process you can't audit. When its\noutput crosses into your code, that is a **trust boundary** — the same\nkind of boundary that exists between your backend and a third-party\nAPI, between a browser form and a server, between a Postgres database\nand the application reading from it.\n\nAt every trust boundary in computing, there is a customs officer.\nForms get filled out. Manifests get checked. Anything that doesn't\nmatch the declared shape gets stopped before it spreads.\n\nThe customs officer at the LLM-to-your-code boundary is the schema.\n\n## Why \"schema\" beats \"prompt\" at the boundary\n\nA prompt is a polite request to the model. \"Please return JSON with a\nname field and an age field.\" The model usually complies. Sometimes\nit adds a `notes` field you didn't ask for. Sometimes it drops the\n`age` field. Sometimes it returns `age` as a string. Sometimes it\nwraps the JSON in `\"Sure! Here's the JSON: { ... }\"`.\n\nA schema is a contract enforced on **both sides** of the boundary:\n\n- **The model side**: providers now expose schema-aware modes\n  (Anthropic tool-use with `input_schema`, OpenAI Structured Outputs\n  with `response_format={\"type\": \"json_schema\", ...}`, the\n  `instructor` library wrapping every major SDK). These modes\n  constrain the model's decoding so the output is guaranteed to\n  match the schema before it ever leaves the provider.\n- **Your side**: Pydantic validates the response when it crosses\n  into your process. If the schema-aware mode failed (or you didn't\n  use one), the validator raises `ValidationError` and your\n  downstream code never runs on a bad payload.\n\nThe polite request is gone. There is no prompt asking nicely. There\nis a contract, and at the border, every package gets opened.\n\n## The customs declaration analogy, formalized\n\n```\n+---------------------+              +-------------------+\n|                     |  <-- prompt  |                   |\n|  Your application   |              |   The model       |\n|  (trusted)          |   response   |   (foreign)       |\n|                     |  ----------> |                   |\n+---------------------+              +-------------------+\n                       ^\n                       |\n                  CUSTOMS OFFICER\n                  (schema + validator)\n                  - Inspects every response\n                  - Rejects malformed shapes\n                  - Returns typed objects to the inside\n                  - Sends ValidationError back outside\n```\n\nThe customs officer has three jobs:\n\n1. **Read the manifest.** The schema declares what fields are\n   required, what types they must be, what enum values are allowed,\n   what ranges are valid.\n2. **Inspect every package.** Every model response goes through the\n   validator. Not the ones you remember to check — all of them.\n3. **Reject early.** Rejection happens at the boundary, not three\n   call-stack frames later when your code finally trips over a\n   `None` it didn't expect.\n\nIf you skip the customs officer, what spreads through your system is\n*unverified foreign data*. It looks like a Python dict, but it has the\ninformational status of a string you got off the internet. Every\nfunction that touches it has to either re-validate (everyone forgets\nto) or assume the model didn't lie this time (everyone does).\n\n## What this lesson is about\n\nThree things, in order:\n\n1. Three real, shipped failures where engineers trusted the model\n   instead of the boundary.\n2. Why \"write a longer prompt\" loses to \"write a tighter schema\"\n   in 2026.\n3. The migration scar tissue — Pydantic v1 to v2 — that taught the\n   community where validation belongs (boundaries, not everywhere).\n\nBy the end you'll write `audit_boundaries(system)` — a function that\nscores any system on whether it actually has a customs officer at\nevery trust boundary, or whether it's running on faith.\n\nPress *Next* and we'll start with the breakages.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "structured-output/schemas-eat-prompts/s02-02-three-shipped-breakages",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 220,
+          "concept": "shipped-breakages-from-missing-boundaries",
+          "body": "# Three real breakages — what happens when nobody mans the border\n\nThe schema-at-the-boundary pattern sounds abstract until you see the\nbills. Here are three shipped failures from production AI features in\nthe last 18 months. Names changed. Symptoms identical.\n\n## Breakage 1: The receipt extractor that swapped fields\n\nA small-business expense app uses Claude to extract vendor and amount\nfrom a photographed receipt. Schema (in the developer's head, not in\ncode):\n\n```python\n{\n    \"vendor\": \"string\",\n    \"amount\": \"float (USD)\",\n}\n```\n\nThe team prompted the model carefully: *Return only valid JSON with\n`vendor` and `amount`.* In dev, on 50 test receipts, it always worked.\n\nIn prod, on a Saturday morning, the model started returning:\n\n```json\n{\"vendor\": \"12.99\", \"amount\": \"Whole Foods Market\"}\n```\n\nThe fields were swapped. The downstream code took whatever was in\n`amount`, parsed it as a float (failed silently on the string), fell\nthrough to a `try/except`, and **charged the customer's stored card\nthe value in `vendor` — except that value was now the vendor name,\nwhich the `float()` had thrown a `ValueError` on, which the catch-all\nhandler interpreted as \"use the last successful amount.\"**\n\nCustomers got charged the wrong amount. Some got charged twice. The\nsupport queue exploded. Two engineers spent a weekend rolling back.\n\nWhat would have stopped it: a schema-aware extraction mode plus a\nPydantic validator at the boundary. The moment the model returned\n`vendor` as a numeric-looking string and `amount` as text, the\nvalidator would have raised `ValidationError` and the charge would\nnever have been attempted.\n\n> **Cost**: ~$40k in refunds and ~$15k in support hours. **Root cause\n> in the postmortem**: \"No validation between model response and\n> billing code.\" Translation: no customs officer at the boundary.\n\n## Breakage 2: The ticket router that hallucinated an enum\n\nA B2B SaaS company built an agent to route inbound support tickets to\nthe right team. The agent classified each ticket with a `priority`\nfield. The intended values were `low`, `medium`, `high`.\n\nPager rules: anything with `priority=\"high\"` woke the on-call\nengineer. The team did *not* define `critical` as a valid value. They\njust didn't pager-page on it, because it didn't exist.\n\nThe model, in production, started occasionally returning\n`priority=\"critical\"` on tickets that were unusually angry.\nDownstream code did a string-equality check against `\"high\"`,\ncorrectly skipped the pager — but the **support dashboard counted\n`critical` as `high` for SLA purposes**, marking thousands of tickets\nas breached, triggering automated refund emails to customers whose\ntickets were actually fine.\n\nWhat would have stopped it: a Pydantic `Literal[\"low\", \"medium\", \"high\"]`\nor an `Enum`. The model would not have been able to return `critical`\nunder a schema-aware mode; if it had under a non-enforced mode, the\nvalidator would have rejected the response on arrival.\n\n> **Cost**: ~120 wrongly-issued refund emails, ~30 angry customer\n> calls. **Root cause**: \"Free-string priority field, no enum\n> validation at the API boundary.\"\n\n## Breakage 3: The eval harness that lost ground truth\n\nAn ML team built an eval harness to score Claude's answers to\ncustomer-service questions. The expected-answer field was typed\nloosely: `expected: str`. They scored the model's output with a\nstring-equality check against `expected`.\n\nThe expected answers came from a CSV. A junior engineer accidentally\nsaved one row with the answer wrapped in a list:\n\n```\nexpected\n\"yes\"\n\"no\"\n[\"yes\"]\n```\n\nThe CSV parser loaded `[\"yes\"]` as the literal string `'[\"yes\"]'`.\nThe model returned `\"yes\"`. String equality returned `False`. The\neval scored that case as a regression — even though the model was\nright. A week of \"the model got worse\" debugging followed. The team\nrolled back a perfectly fine prompt change to fix a problem that\nwasn't there.\n\nWhat would have stopped it: a schema on the eval CSV itself. The\nexpected-answer field, defined as `str` with a Pydantic validator,\nwould have rejected the `[\"yes\"]` row on ingest. The harness would\nhave refused to run with bad ground truth.\n\n> **Cost**: 6 engineer-days of false-alarm debugging, one good prompt\n> change reverted for no reason. **Root cause**: \"No schema\n> validation on eval inputs.\"\n\n## The pattern across all three\n\n| Breakage | Trust boundary that wasn't guarded |\n|---|---|\n| Receipt swap | Model output → billing logic |\n| Ticket pager | Model output → dashboard SLA logic |\n| Eval CSV     | File input → eval scoring logic |\n\nEvery one of these would have been caught — in seconds, on the first\nbad input — if the boundary had a schema and a validator on it. In\nall three cases, the team had Pydantic in their codebase. They just\ndidn't put it where the foreign data came in.\n\nThat's the lesson worth memorizing. The presence of Pydantic in\n`requirements.txt` doesn't protect you. **A schema at every boundary\nwhere untrusted data enters** is what protects you.\n\nNext: a quick check that you can distinguish a boundary failure from\na logic failure.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "structured-output/schemas-eat-prompts/s03-03-which-boundary-broke",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The defining signature of a schema-at-the-boundary failure: foreign data (typically from a model, an API, or a file) entered your system in a shape your downstream code wasn't expecting, AND no validator at the entry point caught it. Only one of these four matches.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 70,
+          "concept": "identify-boundary-failures",
+          "prompt": "Four real failures. Three of them are bugs in different layers\n(idempotency, cache config, SQL safety). ONE of them is the\nclassic \"schema-at-the-boundary would have caught it before\ndownstream code ran\" failure.\n\nWhich one?\n",
+          "options": [
+            {
+              "id": "one",
+              "label": "1 — the receipt extractor with swapped vendor/amount"
+            },
+            {
+              "id": "two",
+              "label": "2 — the double-click duplicate order",
+              "explain": "This is an idempotency bug, not a schema bug. The model wasn't involved. The fix is a unique request ID + dedupe at the order endpoint, not a Pydantic schema at the model boundary."
+            },
+            {
+              "id": "three",
+              "label": "3 — session token TTL mismatch with auth key rotation",
+              "explain": "This is a config / infra bug — two systems with mismatched assumptions about session lifetime. A schema can't help here; the data shape was fine, the lifecycle was wrong."
+            },
+            {
+              "id": "four",
+              "label": "4 — migration script with missing WHERE clause",
+              "explain": "This is a SQL safety / review-process bug. The data flowing in was a SQL statement, not an LLM response. The fix is a dry-run gate and a code review process, not a schema validator."
+            }
+          ],
+          "answerIds": [
+            "one"
+          ],
+          "shuffle": false,
+          "code": "# four shipped failures. one of them is a boundary failure that a\n# schema-at-the-border check would have caught BEFORE any downstream\n# code ran. the other three are real bugs, but in different layers.\nfailures = [\n    \"1. A model returned {'amount': 'Whole Foods'} and {'vendor': '12.99'} — the billing code charged the wrong field.\",\n    \"2. A user clicked 'submit' twice in 200ms; the backend created two duplicate orders because there was no idempotency key.\",\n    \"3. The cache TTL on a session token was set to 1 hour, but the auth service rotated keys every 30 minutes; logged-in users got 401s halfway through sessions.\",\n    \"4. A migration script ran on prod with a missing WHERE clause and updated every row in the users table.\",\n]\nfor f in failures:\n    print(f)\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "structured-output/schemas-eat-prompts/s04-04-schema-as-prompt-replacement",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 220,
+          "concept": "schema-replaces-prompt",
+          "body": "# The strategic shift: a 5-line schema beats a 30-word prompt\n\nIn 2023, the dominant pattern for getting structured data out of an\nLLM was **prompt-engineering**. You wrote progressively more elaborate\nprose at the top of the prompt:\n\n> *Return your answer as valid JSON. Use double quotes, not single\n> quotes. Do not include any text before or after the JSON. The JSON\n> must have a `name` field (string), an `age` field (integer), and a\n> `tags` field (list of strings). Do not include any additional\n> fields. If a field is missing, use null. Respond with ONLY the\n> JSON.*\n\nThis was the state of the art. It mostly worked. About 92% of the\ntime. The other 8% — across millions of API calls — broke production.\n\nThe 2024 shift, accelerated through 2025, was the **schema-first**\npattern. Every word of that prompt got replaced by a 5-line model:\n\n```python\nclass Person(BaseModel):\n    name: str\n    age: int\n    tags: list[str]\n```\n\nThen the model is constrained by the schema, not asked nicely. The\nprompt becomes one short instruction (*Extract a person from this\ntext*) plus the schema. The 8% failure rate drops to a fraction of a\npercent.\n\n## Why the shift happened\n\nThree pieces of infrastructure landed within 12 months of each other:\n\n1. **Anthropic tool-use** (mid-2024, mature by mid-2025). You define\n   a tool with `input_schema` (JSON Schema). The model is forced to\n   call the tool with arguments matching that schema. The schema\n   becomes a hard constraint on the model's output, not a request.\n\n2. **OpenAI Structured Outputs** (August 2024). The\n   `response_format={\"type\": \"json_schema\", \"json_schema\": {...},\n   \"strict\": true}` mode constrains the model's decoding such that\n   every token sampled must keep the output on a path that produces\n   schema-valid JSON. Guaranteed parseability. Guaranteed shape.\n\n3. **The `instructor` library** (Jason Liu's project, the de facto\n   bridge). Wraps every major provider and lets you call\n   `client.chat.completions.create(response_model=MyPydanticModel)`.\n   The library handles the schema export, the constraint, the\n   re-prompt on validation failure, and returns a typed Python\n   object. Took the schema-first pattern from \"advanced\" to\n   \"default\" inside 18 months.\n\nSimon Willison's \"JSON mode vs structured outputs\" post made the\ndistinction explicit: **JSON mode** guarantees the output parses as\nJSON. **Structured Outputs** guarantees the output matches *your\nshape*. Those are different things. JSON mode lets the model return\nany JSON it wants. Structured Outputs lets the model return only the\nJSON you defined.\n\n## What the schema-first pattern looks like end-to-end\n\n```python\n# 1. Define the shape once.\nclass SupportTicket(BaseModel):\n    customer_id: str\n    severity: Literal[\"low\", \"medium\", \"high\"]\n    summary: str\n    requires_human: bool\n\n# 2. The prompt is short. The schema does the heavy lifting.\nprompt = \"Classify the support ticket below.\"\n\n# 3. The provider is told to respect the schema (Anthropic example).\nresponse = client.messages.create(\n    model=\"claude-sonnet-4-6\",\n    tools=[{\n        \"name\": \"classify_ticket\",\n        \"input_schema\": SupportTicket.model_json_schema(),\n    }],\n    tool_choice={\"type\": \"tool\", \"name\": \"classify_ticket\"},\n    messages=[{\"role\": \"user\", \"content\": f\"{prompt}\\n\\n{ticket_text}\"}],\n)\n\n# 4. The validator is the customs officer at the boundary.\nraw_args = response.content[0].input\nticket = SupportTicket.model_validate(raw_args)  # typed, validated, safe\n```\n\nFour lines do what 30 words of prompt-engineering used to do, and they\nwork on the first call instead of the 92nd. The schema is the\ndeclaration. The validator is the enforcement.\n\n## Why this is a strategic shift, not a tactical one\n\nPrompts are stylistic. Two engineers writing the same JSON-extraction\nprompt will produce two different prompts, and both will mostly work,\nand both will fail differently. Prompts are also invisible to your\ntype system — they're strings in your code, and Cursor can't tell you\nwhen they drift from what your downstream code expects.\n\nSchemas are structural. The schema lives in your codebase as a class.\nYour IDE knows about it. Your downstream code uses it (`Receipt(...)`\nis a real type). Your linter checks usages. Your tests can construct\nfixtures from it. The model is constrained by the same artifact your\nown code consumes. **The schema is one source of truth.** The prompt\nis one *attempt* at conveying that truth in prose.\n\nWhen the schema changes, every consumer breaks at compile time\n(roughly speaking — Python is dynamic, but mypy / Pyright + Pydantic\ntogether get you 90% of the way there). When a prompt changes, you\nfind out at 3am that the model started returning a new field.\n\nThe takeaway, in one line:\n\n> **Every word of a prompt that describes the output shape is a word\n> the schema should be saying instead.**\n\nIf your prompt has \"return JSON with the following fields…\" in it,\ndelete that sentence and pass the schema to the provider directly.\nThe prompt should describe the *task* (\"classify this ticket\"), not\nthe *shape* (\"return JSON with fields a, b, c\"). The shape is the\nschema's job.\n\nNext: a quick check on where validation belongs in your architecture.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "structured-output/schemas-eat-prompts/s05-05-where-validation-belongs",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "The principle: validate ONCE, at the trust boundary, on the way IN. After that, the data is a typed Python object that downstream code can trust without re-checking. Three of the four options either validate too late, too often, or both.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 70,
+          "concept": "validation-layer-placement",
+          "prompt": "Four ways to place validation in the architecture. Which one\nmatches the trust-boundary principle: validate ONCE, at the\ninbound boundary, before anything trusted runs on the data?\n",
+          "options": [
+            {
+              "id": "a",
+              "label": "A — validate at the database adapter",
+              "explain": "Too late. By the time data reaches the DB adapter it has already passed through your business logic, which has already made decisions on it (charged a card, sent an email, paged a human). Boundary validation has to happen at the entry point, not the exit point."
+            },
+            {
+              "id": "b",
+              "label": "B — validate immediately at the model boundary"
+            },
+            {
+              "id": "c",
+              "label": "C — validate at every layer (model, business, database)",
+              "explain": "This is the Pydantic-v1-everywhere mistake from 2023 that the v2 migration exposed. Re-validating at every layer adds latency, couples your modules to validation logic, and creates double-error scenarios where one bad input throws three different ValidationErrors at three layers. Validate once, at the boundary, and trust the typed object inside."
+            },
+            {
+              "id": "d",
+              "label": "D — validate inside each business-logic function",
+              "explain": "Even worse than C. Now every consumer has to know the shape AND repeat the validation. Skip one function, you have a hole. This is the failure mode the trust-boundary pattern was designed to eliminate."
+            }
+          ],
+          "answerIds": [
+            "b"
+          ],
+          "shuffle": false,
+          "code": "# four architectures for the same feature: an LLM extracts a Receipt\n# from a photo, your code stores it in the database. where does the\n# validator run?\narchitectures = {\n    \"A\": \"Validate inside the database adapter — right before INSERT runs. Anything that gets that far is assumed shape-correct.\",\n    \"B\": \"Validate immediately after the model response is parsed, BEFORE any business logic touches the data.\",\n    \"C\": \"Validate at three layers: model boundary, business logic, AND database adapter. Belt-and-suspenders.\",\n    \"D\": \"Validate inside each business-logic function that uses the data, on every call.\",\n}\nfor k, v in architectures.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "structured-output/schemas-eat-prompts/s06-06-the-pydantic-migration-as-war-story",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "pydantic-migration-lesson",
+          "body": "# Pydantic v1 → v2: the migration that taught the community where validation belongs\n\nIn June 2023, Pydantic v2 shipped. It was rewritten in Rust under the\nhood. It was 10x faster. It deprecated `@validator` in favor of\n`@field_validator` and `@model_validator`. It renamed `.dict()` to\n`.model_dump()`. It changed how `Config` was declared. It changed the\nshape of validators' return values.\n\nThe migration was brutal. **Half the LLM ecosystem broke for weeks.**\nLangChain users got cryptic errors. FastAPI users found their request\nhandlers raising new validation paths. Internal tooling at half a\ndozen large AI startups failed silently because v1 validators got\ncalled with v2 semantics and returned different types.\n\nWhy was the blast radius so wide? Because of where Pydantic was\n*being used* in 2023.\n\n## The 2023 anti-pattern: Pydantic everywhere\n\nPydantic v1 was cheap. The community used it for everything:\n\n- **At the API boundary** (FastAPI request bodies) — correct.\n- **At the LLM boundary** (validate model output) — correct.\n- **Inside business logic** to enforce invariants on intermediate\n  values — questionable.\n- **As the canonical data model for entities** passed through every\n  function in a service — wrong.\n- **Inside data-transformation pipelines**, with `@validator` methods\n  doing actual business logic mid-validation — very wrong.\n\nBy 2023, \"is Pydantic\" was effectively a synonym for \"is a Python\nobject.\" Engineers stuck `BaseModel` on every class because validation\nwas free and felt like good hygiene. Validators contained side\neffects: logging, database lookups, even API calls. The migration\nexposed all of it. Anything doing real work inside `@validator` broke\nhard when v2 changed the validation lifecycle.\n\nThe hardest-hit cases:\n\n1. **Validators that mutated other fields.** v1 silently allowed it.\n   v2 requires explicit `model_validator(mode=\"after\")`. Hidden\n   mutations became loud errors.\n2. **Validators with side effects** (writes, API calls, logging).\n   v2's stricter execution semantics meant these ran in different\n   orders, ran more times, or stopped running entirely depending on\n   the field. Half the AI startups had \"magic\" Pydantic models that\n   were quietly logging to Datadog inside their validators. Those\n   logs stopped during the migration. Nobody noticed for weeks.\n3. **Validators used as business rules.** Things like *\"if the\n   user's plan is free, the daily quota field can't exceed 100\"* —\n   that's business logic, not schema validation. v1 let you stuff\n   it in. v2 forced the cleanup.\n\n## The lesson the community pulled out of the rubble\n\nWhen the dust settled, the agreed-upon best practice was the\n**boundary-only rule**:\n\n- **Validate at boundaries** (API ingress, LLM response, file\n  ingest, queue consumer).\n- **Transform inside.** Once data has passed validation and is a\n  typed Pydantic instance, downstream code uses plain function calls\n  and immutable transformations. No `@validator` for business\n  rules. No re-validation in the middle of the pipeline.\n\nThis is the rule chapter 14 lesson 02 implied when it taught you\n`model_validate_json` at the LLM boundary. This lesson makes it\nexplicit: **the validator is a customs officer, not a referee\nrunning alongside you on the field.** Customs runs at the border.\nAfter that, the data is in.\n\n## How this changes your code structure\n\nBefore (v1-era anti-pattern):\n\n```python\nclass Receipt(BaseModel):\n    vendor: str\n    amount: float\n    is_taxable: bool\n\n    @validator(\"amount\")\n    def must_match_currency_rules(cls, v):\n        # business logic stuffed into a validator\n        if v > 10_000:\n            raise ValueError(\"requires manager approval\")\n        return v\n```\n\nAfter (post-migration discipline):\n\n```python\nclass Receipt(BaseModel):\n    vendor: str\n    amount: float\n    is_taxable: bool\n    # NO business rules here. Just shape.\n\n# business rules live in regular functions that consume the\n# already-validated typed object.\ndef requires_manager_approval(r: Receipt) -> bool:\n    return r.amount > 10_000\n```\n\nThe schema only knows what shape the data must have. The business\nlogic only knows what to do with shape-correct data. The two never\nmix. When the schema changes, the business logic doesn't have to be\nre-untangled from validator decorators.\n\n## Why this matters for AI code specifically\n\nLLM responses are foreign data. They cross *one* boundary into your\ncode. That is the only place validation belongs. The temptation —\nespecially when AI is writing your code — is to add another\nvalidator inside the function that uses the response, \"just to be\nsafe.\" Don't. Two validators means two sources of truth for the\nshape. When they drift (and they will, because Cursor will update\none and forget the other), you get bugs that don't look like\nvalidation bugs at all.\n\nOne schema. One validator. One boundary. Everything downstream is a\ntyped object.\n\nThat's the discipline the Pydantic migration taught the community.\nThe breakages from lesson step 02 of this lesson are what happens\nwhen the discipline isn't there.\n\nTime to encode the rule. Next step: you write the boundary auditor.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "write",
+          "id": "structured-output/schemas-eat-prompts/s07-07-write-the-boundary-audit",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Four booleans, 25 points each. Sum the True ones times 25. Then a four-way threshold for the verdict (>=75, >=50, >=25, else).",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "GuardedApp has all four True: 4 * 25 = 100, verdict 'hardened'. YOLOService has only one True: 1 * 25 = 25, verdict 'leaky' (because 25 is >= 25 but not >= 50). Order the if/elif from highest threshold down.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "boundary-audit-scoring",
+          "prompt": "Write `audit_boundaries(system)` that takes a system profile\n(dict) and returns a dict with two fields:\n\n- `score`: integer 0-100, higher means MORE boundaries are guarded\n  by a schema + validator\n- `verdict`: string, one of:\n  - `\"hardened\"` if score >= 75\n  - `\"mostly-safe\"` if score >= 50\n  - `\"leaky\"` if score >= 25\n  - `\"trust-everything\"` if score < 25\n\nScore the system on FOUR trust-boundary signals. Each `True`\nadds 25 points:\n\n- `validates_model_output`: schema check on every LLM response\n- `validates_user_input`: schema check on every inbound HTTP body\n- `validates_external_api_returns`: schema check on every 3rd-party API response\n- `validates_db_reads`: schema check on rows coming OUT of the database\n  (yes — even your own DB is a trust boundary if a different team writes to it)\n\nTwo systems run. Expected output:\n```\nGuardedApp:  {'score': 100, 'verdict': 'hardened'}\nYOLOService: {'score': 25, 'verdict': 'leaky'}\n```\n",
+          "starter": "guarded_app = {\n    \"name\": \"GuardedApp\",\n    \"validates_model_output\": True,\n    \"validates_user_input\": True,\n    \"validates_external_api_returns\": True,\n    \"validates_db_reads\": True,\n}\n\nyolo_service = {\n    \"name\": \"YOLOService\",\n    \"validates_model_output\": True,\n    \"validates_user_input\": False,\n    \"validates_external_api_returns\": False,\n    \"validates_db_reads\": False,\n}\n\n# define audit_boundaries(system) below\n\nprint(f\"GuardedApp:  {audit_boundaries(guarded_app)}\")\nprint(f\"YOLOService: {audit_boundaries(yolo_service)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "GuardedApp:  {'score': 100, 'verdict': 'hardened'}\nYOLOService: {'score': 25, 'verdict': 'leaky'}\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "guarded_app = {\n    \"name\": \"GuardedApp\",\n    \"validates_model_output\": True,\n    \"validates_user_input\": True,\n    \"validates_external_api_returns\": True,\n    \"validates_db_reads\": True,\n}\n\nyolo_service = {\n    \"name\": \"YOLOService\",\n    \"validates_model_output\": True,\n    \"validates_user_input\": False,\n    \"validates_external_api_returns\": False,\n    \"validates_db_reads\": False,\n}\n\ndef audit_boundaries(system):\n    boundaries = [\n        \"validates_model_output\",\n        \"validates_user_input\",\n        \"validates_external_api_returns\",\n        \"validates_db_reads\",\n    ]\n    score = sum(25 for b in boundaries if system.get(b))\n    if score >= 75:\n        verdict = \"hardened\"\n    elif score >= 50:\n        verdict = \"mostly-safe\"\n    elif score >= 25:\n        verdict = \"leaky\"\n    else:\n        verdict = \"trust-everything\"\n    return {\"score\": score, \"verdict\": verdict}\n\nprint(f\"GuardedApp:  {audit_boundaries(guarded_app)}\")\nprint(f\"YOLOService: {audit_boundaries(yolo_service)}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "structured-output/schemas-eat-prompts/s08-08-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 240,
+          "concept": "synthesize-boundary-triage",
+          "prompt": "Final drill. Synthesize the boundary-audit method into a triage\ntool: `triage_systems(systems)` that takes a list of system\nprofiles and returns a tuple `(verdicts, riskiest)`:\n\n- `verdicts`: dict mapping each system's `name` to its verdict\n  string (same four verdicts as the previous step: `\"hardened\"`,\n  `\"mostly-safe\"`, `\"leaky\"`, `\"trust-everything\"`)\n- `riskiest`: string, the name of the system with the LOWEST\n  score — the one most likely to ship a customer-visible failure\n  first. On a tie, return the FIRST one in the input list (Python's\n  `min` with `key=` preserves stable order).\n\nScoring rules are unchanged from the previous step:\n- 25 points per `True` for each of the four boundary fields\n  (`validates_model_output`, `validates_user_input`,\n  `validates_external_api_returns`, `validates_db_reads`)\n- Verdicts: `>=75 hardened`, `>=50 mostly-safe`, `>=25 leaky`,\n  `<25 trust-everything`\n\nFive systems run. Expected output:\n```\nverdicts: {'BillingApp': 'hardened', 'MailerBot': 'hardened', 'AnalyticsDash': 'mostly-safe', 'ChatWidget': 'leaky', 'PrototypeX': 'trust-everything'}\nriskiest: PrototypeX\n```\n",
+          "starter": "systems = [\n    {\"name\": \"BillingApp\",     \"validates_model_output\": True,  \"validates_user_input\": True,  \"validates_external_api_returns\": True,  \"validates_db_reads\": True},\n    {\"name\": \"MailerBot\",      \"validates_model_output\": True,  \"validates_user_input\": True,  \"validates_external_api_returns\": True,  \"validates_db_reads\": False},\n    {\"name\": \"AnalyticsDash\",  \"validates_model_output\": True,  \"validates_user_input\": True,  \"validates_external_api_returns\": False, \"validates_db_reads\": False},\n    {\"name\": \"ChatWidget\",     \"validates_model_output\": True,  \"validates_user_input\": False, \"validates_external_api_returns\": False, \"validates_db_reads\": False},\n    {\"name\": \"PrototypeX\",     \"validates_model_output\": False, \"validates_user_input\": False, \"validates_external_api_returns\": False, \"validates_db_reads\": False},\n]\n\n# define triage_systems(systems) below\n\nverdicts, riskiest = triage_systems(systems)\nprint(f\"verdicts: {verdicts}\")\nprint(f\"riskiest: {riskiest}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "verdicts: {'BillingApp': 'hardened', 'MailerBot': 'hardened', 'AnalyticsDash': 'mostly-safe', 'ChatWidget': 'leaky', 'PrototypeX': 'trust-everything'}\nriskiest: PrototypeX\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "systems = [\n    {\"name\": \"BillingApp\",     \"validates_model_output\": True,  \"validates_user_input\": True,  \"validates_external_api_returns\": True,  \"validates_db_reads\": True},\n    {\"name\": \"MailerBot\",      \"validates_model_output\": True,  \"validates_user_input\": True,  \"validates_external_api_returns\": True,  \"validates_db_reads\": False},\n    {\"name\": \"AnalyticsDash\",  \"validates_model_output\": True,  \"validates_user_input\": True,  \"validates_external_api_returns\": False, \"validates_db_reads\": False},\n    {\"name\": \"ChatWidget\",     \"validates_model_output\": True,  \"validates_user_input\": False, \"validates_external_api_returns\": False, \"validates_db_reads\": False},\n    {\"name\": \"PrototypeX\",     \"validates_model_output\": False, \"validates_user_input\": False, \"validates_external_api_returns\": False, \"validates_db_reads\": False},\n]\n\nBOUNDARIES = (\n    \"validates_model_output\",\n    \"validates_user_input\",\n    \"validates_external_api_returns\",\n    \"validates_db_reads\",\n)\n\ndef score_system(system):\n    return sum(25 for b in BOUNDARIES if system.get(b))\n\ndef verdict_for(score):\n    if score >= 75:\n        return \"hardened\"\n    if score >= 50:\n        return \"mostly-safe\"\n    if score >= 25:\n        return \"leaky\"\n    return \"trust-everything\"\n\ndef triage_systems(systems):\n    verdicts = {s[\"name\"]: verdict_for(score_system(s)) for s in systems}\n    riskiest = min(systems, key=score_system)[\"name\"]\n    return verdicts, riskiest\n\nverdicts, riskiest = triage_systems(systems)\nprint(f\"verdicts: {verdicts}\")\nprint(f\"riskiest: {riskiest}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 21
     }
   ],
-  "xpTotal": 32
+  "xpTotal": 53
 }

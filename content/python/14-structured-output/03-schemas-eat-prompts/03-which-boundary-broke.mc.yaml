@@ -1,0 +1,39 @@
+xp: 2
+estSeconds: 70
+concept: identify-boundary-failures
+code: |
+  # four shipped failures. one of them is a boundary failure that a
+  # schema-at-the-border check would have caught BEFORE any downstream
+  # code ran. the other three are real bugs, but in different layers.
+  failures = [
+      "1. A model returned {'amount': 'Whole Foods'} and {'vendor': '12.99'} — the billing code charged the wrong field.",
+      "2. A user clicked 'submit' twice in 200ms; the backend created two duplicate orders because there was no idempotency key.",
+      "3. The cache TTL on a session token was set to 1 hour, but the auth service rotated keys every 30 minutes; logged-in users got 401s halfway through sessions.",
+      "4. A migration script ran on prod with a missing WHERE clause and updated every row in the users table.",
+  ]
+  for f in failures:
+      print(f)
+prompt: |
+  Four real failures. Three of them are bugs in different layers
+  (idempotency, cache config, SQL safety). ONE of them is the
+  classic "schema-at-the-boundary would have caught it before
+  downstream code ran" failure.
+
+  Which one?
+options:
+  - id: one
+    label: "1 — the receipt extractor with swapped vendor/amount"
+  - id: two
+    label: "2 — the double-click duplicate order"
+    explain: "This is an idempotency bug, not a schema bug. The model wasn't involved. The fix is a unique request ID + dedupe at the order endpoint, not a Pydantic schema at the model boundary."
+  - id: three
+    label: "3 — session token TTL mismatch with auth key rotation"
+    explain: "This is a config / infra bug — two systems with mismatched assumptions about session lifetime. A schema can't help here; the data shape was fine, the lifecycle was wrong."
+  - id: four
+    label: "4 — migration script with missing WHERE clause"
+    explain: "This is a SQL safety / review-process bug. The data flowing in was a SQL statement, not an LLM response. The fix is a dry-run gate and a code review process, not a schema validator."
+answerIds:
+  - one
+hint:
+  - level: 1
+    body: "The defining signature of a schema-at-the-boundary failure: foreign data (typically from a model, an API, or a file) entered your system in a shape your downstream code wasn't expecting, AND no validator at the entry point caught it. Only one of these four matches."

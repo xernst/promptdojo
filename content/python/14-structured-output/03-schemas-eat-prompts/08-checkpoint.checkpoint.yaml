@@ -1,0 +1,85 @@
+xp: 8
+estSeconds: 240
+concept: synthesize-boundary-triage
+prompt: |
+  Final drill. Synthesize the boundary-audit method into a triage
+  tool: `triage_systems(systems)` that takes a list of system
+  profiles and returns a tuple `(verdicts, riskiest)`:
+
+  - `verdicts`: dict mapping each system's `name` to its verdict
+    string (same four verdicts as the previous step: `"hardened"`,
+    `"mostly-safe"`, `"leaky"`, `"trust-everything"`)
+  - `riskiest`: string, the name of the system with the LOWEST
+    score — the one most likely to ship a customer-visible failure
+    first. On a tie, return the FIRST one in the input list (Python's
+    `min` with `key=` preserves stable order).
+
+  Scoring rules are unchanged from the previous step:
+  - 25 points per `True` for each of the four boundary fields
+    (`validates_model_output`, `validates_user_input`,
+    `validates_external_api_returns`, `validates_db_reads`)
+  - Verdicts: `>=75 hardened`, `>=50 mostly-safe`, `>=25 leaky`,
+    `<25 trust-everything`
+
+  Five systems run. Expected output:
+  ```
+  verdicts: {'BillingApp': 'hardened', 'MailerBot': 'hardened', 'AnalyticsDash': 'mostly-safe', 'ChatWidget': 'leaky', 'PrototypeX': 'trust-everything'}
+  riskiest: PrototypeX
+  ```
+starter: |
+  systems = [
+      {"name": "BillingApp",     "validates_model_output": True,  "validates_user_input": True,  "validates_external_api_returns": True,  "validates_db_reads": True},
+      {"name": "MailerBot",      "validates_model_output": True,  "validates_user_input": True,  "validates_external_api_returns": True,  "validates_db_reads": False},
+      {"name": "AnalyticsDash",  "validates_model_output": True,  "validates_user_input": True,  "validates_external_api_returns": False, "validates_db_reads": False},
+      {"name": "ChatWidget",     "validates_model_output": True,  "validates_user_input": False, "validates_external_api_returns": False, "validates_db_reads": False},
+      {"name": "PrototypeX",     "validates_model_output": False, "validates_user_input": False, "validates_external_api_returns": False, "validates_db_reads": False},
+  ]
+
+  # define triage_systems(systems) below
+
+  verdicts, riskiest = triage_systems(systems)
+  print(f"verdicts: {verdicts}")
+  print(f"riskiest: {riskiest}")
+grader:
+  kind: stdout-equality
+  expected: |
+    verdicts: {'BillingApp': 'hardened', 'MailerBot': 'hardened', 'AnalyticsDash': 'mostly-safe', 'ChatWidget': 'leaky', 'PrototypeX': 'trust-everything'}
+    riskiest: PrototypeX
+  normalize: collapse-trailing-newline
+solution: |
+  systems = [
+      {"name": "BillingApp",     "validates_model_output": True,  "validates_user_input": True,  "validates_external_api_returns": True,  "validates_db_reads": True},
+      {"name": "MailerBot",      "validates_model_output": True,  "validates_user_input": True,  "validates_external_api_returns": True,  "validates_db_reads": False},
+      {"name": "AnalyticsDash",  "validates_model_output": True,  "validates_user_input": True,  "validates_external_api_returns": False, "validates_db_reads": False},
+      {"name": "ChatWidget",     "validates_model_output": True,  "validates_user_input": False, "validates_external_api_returns": False, "validates_db_reads": False},
+      {"name": "PrototypeX",     "validates_model_output": False, "validates_user_input": False, "validates_external_api_returns": False, "validates_db_reads": False},
+  ]
+
+  BOUNDARIES = (
+      "validates_model_output",
+      "validates_user_input",
+      "validates_external_api_returns",
+      "validates_db_reads",
+  )
+
+  def score_system(system):
+      return sum(25 for b in BOUNDARIES if system.get(b))
+
+  def verdict_for(score):
+      if score >= 75:
+          return "hardened"
+      if score >= 50:
+          return "mostly-safe"
+      if score >= 25:
+          return "leaky"
+      return "trust-everything"
+
+  def triage_systems(systems):
+      verdicts = {s["name"]: verdict_for(score_system(s)) for s in systems}
+      riskiest = min(systems, key=score_system)["name"]
+      return verdicts, riskiest
+
+  verdicts, riskiest = triage_systems(systems)
+  print(f"verdicts: {verdicts}")
+  print(f"riskiest: {riskiest}")
+passThreshold: 0.66

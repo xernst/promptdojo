@@ -1,0 +1,14 @@
+slug: schemas-eat-prompts
+title: "Why schemas eat prompts — the boundary contract pattern"
+estMinutes: 18
+prerequisites:
+  - validation-with-pydantic
+order:
+  - 01-the-trust-boundary.read.md
+  - 02-three-shipped-breakages.read.md
+  - 03-which-boundary-broke.mc.yaml
+  - 04-schema-as-prompt-replacement.read.md
+  - 05-where-validation-belongs.mc.yaml
+  - 06-the-pydantic-migration-as-war-story.read.md
+  - 07-write-the-boundary-audit.write.yaml
+  - 08-checkpoint.checkpoint.yaml

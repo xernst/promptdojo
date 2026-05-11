@@ -1,0 +1,36 @@
+xp: 2
+estSeconds: 70
+concept: validation-layer-placement
+code: |
+  # four architectures for the same feature: an LLM extracts a Receipt
+  # from a photo, your code stores it in the database. where does the
+  # validator run?
+  architectures = {
+      "A": "Validate inside the database adapter — right before INSERT runs. Anything that gets that far is assumed shape-correct.",
+      "B": "Validate immediately after the model response is parsed, BEFORE any business logic touches the data.",
+      "C": "Validate at three layers: model boundary, business logic, AND database adapter. Belt-and-suspenders.",
+      "D": "Validate inside each business-logic function that uses the data, on every call.",
+  }
+  for k, v in architectures.items():
+      print(f"{k}: {v}")
+prompt: |
+  Four ways to place validation in the architecture. Which one
+  matches the trust-boundary principle: validate ONCE, at the
+  inbound boundary, before anything trusted runs on the data?
+options:
+  - id: a
+    label: "A — validate at the database adapter"
+    explain: "Too late. By the time data reaches the DB adapter it has already passed through your business logic, which has already made decisions on it (charged a card, sent an email, paged a human). Boundary validation has to happen at the entry point, not the exit point."
+  - id: b
+    label: "B — validate immediately at the model boundary"
+  - id: c
+    label: "C — validate at every layer (model, business, database)"
+    explain: "This is the Pydantic-v1-everywhere mistake from 2023 that the v2 migration exposed. Re-validating at every layer adds latency, couples your modules to validation logic, and creates double-error scenarios where one bad input throws three different ValidationErrors at three layers. Validate once, at the boundary, and trust the typed object inside."
+  - id: d
+    label: "D — validate inside each business-logic function"
+    explain: "Even worse than C. Now every consumer has to know the shape AND repeat the validation. Skip one function, you have a hole. This is the failure mode the trust-boundary pattern was designed to eliminate."
+answerIds:
+  - b
+hint:
+  - level: 1
+    body: "The principle: validate ONCE, at the trust boundary, on the way IN. After that, the data is a typed Python object that downstream code can trust without re-checking. Three of the four options either validate too late, too often, or both."
