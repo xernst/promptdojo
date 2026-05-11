@@ -183,8 +183,8 @@ body {
   /* clamp floor lowered 64→48 so headline fits on iPhone SE (375px wide).
      UI audit 2026-05-07. */
   font-size: clamp(48px, 11vw, 120px);
-  line-height: 0.92;
-  letter-spacing: -0.045em;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
   font-variation-settings: "opsz" 144;
   color: var(--color-ink-100);
 }

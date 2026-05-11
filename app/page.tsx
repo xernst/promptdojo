@@ -97,10 +97,10 @@ export default async function Home() {
   }));
 
   return (
-    <main id="main" className="mx-auto max-w-6xl px-6 pt-20 pb-10 sm:pt-24 sm:pb-16">
+    <main id="main" className="mx-auto max-w-6xl px-5 pt-10 pb-10 sm:px-6 sm:pt-14 sm:pb-16">
       <PyodidePreloader />
 
-      <header className="relative mb-24 pt-8 sm:pt-14">
+      <header className="relative mb-16 pt-2 sm:pt-6">
         <div className="mb-10 flex items-start justify-between gap-4">
           <Wordmark size="text-base sm:text-lg" className="lowercase tracking-tight" />
           <StreakWidget />
@@ -117,25 +117,17 @@ export default async function Home() {
           in your browser · free forever.
         </p>
 
-        <div className="mt-16">
+        <div className="mt-10">
           <HeroBugSnippet />
         </div>
 
-        <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
-          {/* Primary CTA points at chapter 16 (Agent Loops) — the demo
-              that pays off "ai writes this. it's wrong." Per growth audit
-              2026-05-07: variables-first sent the AI-curious audience
-              into the boring part. */}
+        <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
           <Link
             href="/learn/v2/agent-loops/the-loop/0"
             className="dojo-btn-primary"
           >
             catch ai&apos;s first bug <span aria-hidden>→</span>
           </Link>
-          {/* Follow-on-X CTA. Same visual weight as the primary so the
-              X-follower gate (V1→V2 = 1000 follows) gets a real funnel.
-              Per audit-v6/product.md — "no follow-@TFisPython CTA above
-              the footer" was the #1 product call. */}
           <a
             href="https://x.com/intent/follow?screen_name=TFisPython"
             target="_blank"
@@ -144,12 +136,6 @@ export default async function Home() {
           >
             follow on x for daily bugs <span aria-hidden>↗</span>
           </a>
-          <a
-            href="#chapters"
-            className="dojo-btn-tertiary"
-          >
-            or pick your chapter ↓
-          </a>
         </div>
         <p className="mt-4 t-mono-meta">
           new to python?{" "}
@@ -157,8 +143,15 @@ export default async function Home() {
             href="/learn/v2/variables/naming-things/0"
             className="text-ink-300 underline decoration-ink-700 underline-offset-4 hover:text-green-400 hover:decoration-green-500"
           >
-            start at chapter 1 →
+            start at chapter 1
           </Link>
+          {" · or "}
+          <a
+            href="#chapters"
+            className="text-ink-300 underline decoration-ink-700 underline-offset-4 hover:text-green-400 hover:decoration-green-500"
+          >
+            pick a chapter ↓
+          </a>
         </p>
       </header>
 
