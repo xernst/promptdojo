@@ -98,11 +98,25 @@ const LlmJudgeGrader: z.ZodType<{
   }),
 );
 
+// Compound: every child grader must pass. Lets authors check stdout AND
+// AST shape in the same step ("write a comprehension that prints
+// [50, 99, 30] — and don't smuggle in a for-loop").
+const CompoundGrader: z.ZodType<{
+  kind: "compound";
+  graders: Grader[];
+}> = z.lazy(() =>
+  z.object({
+    kind: z.literal("compound"),
+    graders: z.array(Grader).min(2),
+  }),
+);
+
 export const Grader = z.union([
   StringEqualityGrader,
   StdoutEqualityGrader,
   AstMatchGrader,
   LlmJudgeGrader,
+  CompoundGrader,
 ]);
 export type Grader = z.infer<typeof Grader>;
 

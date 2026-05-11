@@ -42,7 +42,9 @@ function tasksFromChapter(chapter) {
   for (const lesson of chapter.lessons) {
     for (const step of lesson.steps) {
       const task = taskFromStep(chapter, lesson, step);
-      if (task) tasks.push(task);
+      if (!task) continue;
+      if (Array.isArray(task)) tasks.push(...task);
+      else tasks.push(task);
     }
   }
   return tasks;
@@ -63,6 +65,15 @@ function taskFromStep(chapter, lesson, step) {
 
 function wrapTask({ chapter, lesson, step }, code, grader) {
   const where = `${chapter.slug}/${lesson.slug} · ${step.id ?? step.type}`;
+  return tasksForGrader(where, code, step, grader);
+}
+
+/**
+ * Returns either a single task object, an array of tasks (for compound
+ * graders, which expand into one task per child), or null when the
+ * grader kind isn't validatable here (llm-judge, string-equality).
+ */
+function tasksForGrader(where, code, step, grader) {
   if (grader.kind === "stdout-equality") {
     return {
       id: where,
@@ -82,8 +93,20 @@ function wrapTask({ chapter, lesson, step }, code, grader) {
       mustNot: grader.mustNot ?? [],
     };
   }
-  // Silently skip llm-judge and string-equality — neither is appropriate
-  // for prebuild validation.
+  if (grader.kind === "compound") {
+    // Expand each child into its own task. If a child grader is itself
+    // unsupported (llm-judge, string-equality), it's silently skipped —
+    // the runtime will still gate, the prebuild just can't validate it.
+    const out = [];
+    grader.graders.forEach((child, i) => {
+      const childWhere = `${where} [compound#${i + 1}]`;
+      const expanded = tasksForGrader(childWhere, code, step, child);
+      if (expanded == null) return;
+      if (Array.isArray(expanded)) out.push(...expanded);
+      else out.push(expanded);
+    });
+    return out;
+  }
   return null;
 }
 

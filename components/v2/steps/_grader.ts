@@ -79,14 +79,22 @@ export function gradeRunResult(grader: Grader, result: RunResult): GradeResult {
 }
 
 /**
- * Async grader for steps that may use ast-match. Falls through to the
- * sync grader for non-AST kinds so step views don't have to branch.
+ * Async grader for steps that may use ast-match or compound. Falls
+ * through to the sync grader for the simple kinds so step views don't
+ * have to branch.
  */
 export async function gradeRunResultAsync(
   grader: Grader,
   result: RunResult,
   ide: StepIDEBridge,
 ): Promise<GradeResult> {
+  if (grader.kind === "compound") {
+    for (const child of grader.graders) {
+      const res = await gradeRunResultAsync(child, result, ide);
+      if (!res.passed) return res;
+    }
+    return { passed: true };
+  }
   if (grader.kind === "ast-match") {
     if (!result.ok || result.stderr) {
       return {

@@ -94,11 +94,19 @@ const LlmJudgeGrader = z.lazy(() =>
   }),
 );
 
+const CompoundGrader = z.lazy(() =>
+  z.object({
+    kind: z.literal("compound"),
+    graders: z.array(Grader).min(2),
+  }),
+);
+
 const Grader = z.union([
   StringEqualityGrader,
   StdoutEqualityGrader,
   AstMatchGrader,
   LlmJudgeGrader,
+  CompoundGrader,
 ]);
 
 const StepBaseFields = {

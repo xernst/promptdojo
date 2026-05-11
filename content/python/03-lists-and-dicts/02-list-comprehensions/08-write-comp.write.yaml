@@ -16,9 +16,15 @@ starter: |
   # one-line list comprehension below:
 
 grader:
-  kind: stdout-equality
-  expected: "[50, 99, 30]"
-  normalize: collapse-trailing-newline
+  kind: compound
+  graders:
+    - kind: stdout-equality
+      expected: "[50, 99, 30]"
+      normalize: collapse-trailing-newline
+    - kind: ast-match
+      must: []
+      mustNot:
+        - kind: uses-loop
 solution: |
   prices = [12, 50, 8, 99, 30]
   expensive = [p for p in prices if p > 15]

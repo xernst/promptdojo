@@ -503,9 +503,23 @@
           "prompt": "Write a list comprehension that takes the list `prices = [12, 50, 8, 99, 30]`\nand produces a new list containing only the prices over `15`. Print the\nresult.\n\nExpected output:\n```\n[50, 99, 30]\n```\n",
           "starter": "prices = [12, 50, 8, 99, 30]\n\n# one-line list comprehension below:\n",
           "grader": {
-            "kind": "stdout-equality",
-            "expected": "[50, 99, 30]",
-            "normalize": "collapse-trailing-newline"
+            "kind": "compound",
+            "graders": [
+              {
+                "kind": "stdout-equality",
+                "expected": "[50, 99, 30]",
+                "normalize": "collapse-trailing-newline"
+              },
+              {
+                "kind": "ast-match",
+                "must": [],
+                "mustNot": [
+                  {
+                    "kind": "uses-loop"
+                  }
+                ]
+              }
+            ]
           },
           "solution": "prices = [12, 50, 8, 99, 30]\nexpensive = [p for p in prices if p > 15]\nprint(expensive)\n",
           "hiddenTests": []
