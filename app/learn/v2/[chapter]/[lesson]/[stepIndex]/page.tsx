@@ -7,6 +7,7 @@ import {
   listAllV2StepRoutes,
 } from "@/lib/content-v2";
 import LessonStepClient from "@/components/v2/LessonStepClient";
+import JsonLd, { SITE_URL } from "@/components/JsonLd";
 
 export async function generateStaticParams() {
   return listAllV2StepRoutes();
@@ -65,14 +66,65 @@ export default async function V2StepPage({
 
   const next = await getNextV2Step(chapter, lesson, idx);
 
+  const stepNum = idx + 1;
+  const totalSteps = found.lesson.steps.length;
+  const stepUrl = `${SITE_URL}/learn/v2/${chapter}/${lesson}/${idx}/`;
+  const chapterUrl = `${SITE_URL}/learn/v2/${chapter}/`;
+
+  // LearningResource is the right type for an interactive lesson step. Pairs
+  // with BreadcrumbList so AI engines can place this in the school hierarchy
+  // and link back up to chapter + curriculum + home.
+  const lessonSchema = {
+    "@type": "LearningResource",
+    "@id": `${stepUrl}#resource`,
+    name: `${found.lesson.title} — step ${stepNum} of ${totalSteps}`,
+    url: stepUrl,
+    isPartOf: { "@id": `${chapterUrl}#course` },
+    inLanguage: "en",
+    educationalLevel: "Beginner",
+    learningResourceType: "Interactive Tutorial",
+    interactivityType: "active",
+    isAccessibleForFree: true,
+    provider: { "@id": `${SITE_URL}/#org` },
+    teaches: found.lesson.title,
+  };
+
+  const breadcrumbSchema = {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "home", item: SITE_URL },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "curriculum",
+        item: `${SITE_URL}/curriculum/`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: found.chapter.title,
+        item: chapterUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: found.lesson.title,
+        item: stepUrl,
+      },
+    ],
+  };
+
   return (
-    <LessonStepClient
-      tree={{ toc: getV2Toc(), detail: found.chapter }}
-      chapter={found.chapter}
-      lesson={found.lesson}
-      step={found.step}
-      stepIndex={found.stepIndex}
-      next={next}
-    />
+    <>
+      <JsonLd data={[lessonSchema, breadcrumbSchema]} />
+      <LessonStepClient
+        tree={{ toc: getV2Toc(), detail: found.chapter }}
+        chapter={found.chapter}
+        lesson={found.lesson}
+        step={found.step}
+        stepIndex={found.stepIndex}
+        next={next}
+      />
+    </>
   );
 }

@@ -19,6 +19,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/terms/`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE}/changelog/`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${SITE}/roast/`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    // AEO surface added 2026-05-11 — comparison + AI-bug catalog pages.
+    { url: `${SITE}/ai-bugs/`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+    { url: `${SITE}/vs/scrimba/`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE}/vs/real-python/`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE}/vs/codecademy/`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
   ];
 
   for (const entry of toc.chapters) {

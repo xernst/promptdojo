@@ -13,6 +13,7 @@ import {
 import V2ChapterNav, {
   type ChapterNavTree,
 } from "@/components/v2/ChapterNav";
+import JsonLd, { SITE_URL } from "@/components/JsonLd";
 
 export async function generateStaticParams() {
   return listAllV2ChapterRoutes();
@@ -81,8 +82,66 @@ export default async function V2ChapterOverviewPage({
   const toc = getV2Toc();
   const tree: ChapterNavTree = { toc, detail: chapter };
 
+  // Per-chapter Course schema + BreadcrumbList. The chapter is modeled as a
+  // sub-course of the parent school, with `hasPart` LearningResource entries
+  // for each lesson so AI engines can map chapter → lesson hierarchy.
+  const chapterUrl = `${SITE_URL}/learn/v2/${chapter.slug}/`;
+  const stepCount = chapter.lessons.reduce((a, l) => a + l.steps.length, 0);
+  const estMinutes = chapter.lessons.reduce(
+    (a, l) => a + (l.estMinutes ?? 0),
+    0,
+  );
+  const chapterSchema = {
+    "@type": "Course",
+    "@id": `${chapterUrl}#course`,
+    name: chapter.title,
+    description: chapter.blurb,
+    url: chapterUrl,
+    provider: { "@id": `${SITE_URL}/#org` },
+    isPartOf: { "@id": `${SITE_URL}/#course` },
+    inLanguage: "en",
+    educationalLevel: "Beginner",
+    learningResourceType: "Interactive Tutorial",
+    isAccessibleForFree: true,
+    timeRequired: estMinutes > 0 ? `PT${estMinutes}M` : undefined,
+    hasPart: chapter.lessons.map((l) => ({
+      "@type": "LearningResource",
+      name: l.title,
+      url: `${SITE_URL}/learn/v2/${chapter.slug}/${l.slug}/0/`,
+    })),
+    hasCourseInstance: [
+      {
+        "@type": "CourseInstance",
+        courseMode: "online",
+        courseWorkload: `PT${Math.max(stepCount * 3, 15)}M`,
+        inLanguage: "en",
+        location: { "@type": "VirtualLocation", url: chapterUrl },
+      },
+    ],
+  };
+
+  const breadcrumbSchema = {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "home", item: SITE_URL },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "curriculum",
+        item: `${SITE_URL}/curriculum/`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: chapter.title,
+        item: chapterUrl,
+      },
+    ],
+  };
+
   return (
     <div className="flex h-[calc(100dvh-40px)] min-h-0 flex-col bg-ink-950 text-ink-100">
+      <JsonLd data={[chapterSchema, breadcrumbSchema]} />
       <div className="flex h-full min-h-0 flex-1">
         <aside className="hidden w-56 shrink-0 border-r border-ink-800 bg-ink-900 md:flex md:flex-col lg:w-60">
           <V2ChapterNav

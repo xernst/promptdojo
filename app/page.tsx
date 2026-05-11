@@ -10,6 +10,7 @@ import StreakWidget from "@/components/StreakWidget";
 import PyodidePreloader from "@/components/PyodidePreloader";
 import Wordmark from "@/components/Wordmark";
 import HeroBugSnippet from "@/components/HeroBugSnippet";
+import JsonLd, { SITE_URL } from "@/components/JsonLd";
 import { formatDateShort, githubStats } from "@/lib/github-stats";
 
 // Dynamic metadata so the description always reflects the actual chapter
@@ -96,8 +97,61 @@ export default async function Home() {
     lessons: c.lessons,
   }));
 
+  // Course schema describes the whole school. `Course.hasCourseInstance` is
+  // the modern shape Google + AI engines actually consume; we mark it free
+  // and self-paced with the per-build chapter count baked in. Per launch-week
+  // SEO audit 2026-05-11.
+  const courseSchema = {
+    "@type": "Course",
+    "@id": `${SITE_URL}/#course`,
+    name: "promptdojo — python school for ai builders",
+    description: `free, runnable python school for people who already use cursor and claude code daily. ${totalChapters} chapters, ${totalSteps} steps, runs in your browser via pyodide. free preview on the web, paid app coming after.`,
+    url: SITE_URL,
+    provider: { "@id": `${SITE_URL}/#org` },
+    inLanguage: "en",
+    educationalLevel: "Beginner",
+    learningResourceType: "Interactive Tutorial",
+    isAccessibleForFree: true,
+    teaches: [
+      "reading ai-generated python",
+      "catching ai-introduced bugs",
+      "directing ai coding agents deliberately",
+      "mutation, scope, and state in python",
+      "calling llm apis from python",
+    ],
+    hasCourseInstance: [
+      {
+        "@type": "CourseInstance",
+        courseMode: "online",
+        courseWorkload: `PT${Math.round(totalSteps * 3)}M`,
+        inLanguage: "en",
+        location: { "@type": "VirtualLocation", url: SITE_URL },
+      },
+    ],
+    offers: [
+      {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+        category: "free preview",
+        availability: "https://schema.org/InStock",
+        url: SITE_URL,
+      },
+      {
+        "@type": "Offer",
+        price: "9.99",
+        priceCurrency: "USD",
+        category: "subscription",
+        availability: "https://schema.org/PreOrder",
+        url: `${SITE_URL}/pro/`,
+        description: "full school in the app · $9.99/mo · $59/yr · $129 founders",
+      },
+    ],
+  };
+
   return (
     <main id="main" className="mx-auto max-w-6xl px-5 pt-10 pb-10 sm:px-6 sm:pt-14 sm:pb-16">
+      <JsonLd data={courseSchema} />
       <PyodidePreloader />
 
       <header className="relative mb-16 pt-2 sm:pt-6">

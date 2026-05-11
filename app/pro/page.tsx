@@ -13,12 +13,30 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Check, X } from "lucide-react";
 import EmailSignup from "@/components/EmailSignup";
+import JsonLd, { SITE_URL } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
   title: "early access · the python school for the ai era — promptdojo",
   description:
     "the web is launching now. the app comes after. join early access for the app drop, or lock in the $129 founders lifetime rate before iOS ships. 26 chapters, pyodide ide, ai tutor, cloud sync.",
   alternates: { canonical: "/pro" },
+  openGraph: {
+    type: "article",
+    title: "promptdojo pro — the python school in the app",
+    description:
+      "the web preview stays free forever. the full school ships in the native app at $9.99/mo, $59/yr, or $129 founders lifetime.",
+    url: "/pro",
+    siteName: "promptdojo",
+    images: [{ url: "/og/launch/price", width: 1600, height: 900 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "promptdojo pro — early access",
+    description:
+      "free web preview forever. paid native app at $9.99/mo, $59/yr, or $129 founders lifetime.",
+    creator: "@TFisPython",
+    images: ["/og/launch/price"],
+  },
 };
 
 const FOUNDERS_CLAIMED = 0; // counts climb once founders form ships
@@ -101,12 +119,104 @@ function Cell({ v }: { v: boolean | string }) {
   return <span className="t-body-sm text-ink-200">{v}</span>;
 }
 
+// FAQPage schema is the highest-yield AEO pattern for yes/no pricing intent
+// ("is promptdojo free?", "do i need an account?"). Answers are short and
+// direct so AI engines extract them cleanly. Per launch-week SEO audit
+// 2026-05-11.
+const FAQ_ITEMS = [
+  {
+    q: "is promptdojo free?",
+    a: "the web preview is free forever. three chapters, runs in your browser via pyodide, no signup. the full 26-chapter school ships in the native app at $9.99/mo, $59/yr, or $129 founders lifetime.",
+  },
+  {
+    q: "do i need to sign up to use the free preview?",
+    a: "no. the web preview requires no account. open the page, run the code. signup is only needed if you want progress to sync across devices, which is a pro feature.",
+  },
+  {
+    q: "do i need to install python?",
+    a: "no. every lesson runs in your browser via pyodide. no python install, no virtualenv, no anaconda. mobile and desktop both work.",
+  },
+  {
+    q: "is there a paid tier?",
+    a: "yes — the native app. $9.99/mo, $59/yr (41% off monthly), or $129 founders lifetime (first 100 only). the web preview remains free forever for the first three chapters.",
+  },
+  {
+    q: "what do i get for $129 founders?",
+    a: "lifetime access to every chapter promptdojo ever ships, in the native app. no renewal. first 100 reservations only, then the price moves to $199.",
+  },
+  {
+    q: "who is this for?",
+    a: "people who use cursor, claude code, copilot, or windsurf every day and need to read what the ai writes, catch the bugs ai introduces, and direct the ai deliberately. pms, marketers, ops folks, and beginners who already build with ai assistance.",
+  },
+  {
+    q: "when does the native app ship?",
+    a: "when the waitlist clears 1,000. join the waitlist on this page for the launch ping and a founders code.",
+  },
+];
+
+const PRODUCT_SCHEMA = {
+  "@type": "Product",
+  "@id": `${SITE_URL}/pro/#product`,
+  name: "promptdojo — the python school for the ai era",
+  description:
+    "26 chapters, 500+ runnable steps. read what ai wrote, catch what it got wrong, direct it deliberately. pyodide ide, ai tutor, cloud sync. free web preview, paid native app.",
+  url: `${SITE_URL}/pro/`,
+  brand: { "@id": `${SITE_URL}/#org` },
+  offers: [
+    {
+      "@type": "Offer",
+      name: "monthly",
+      price: "9.99",
+      priceCurrency: "USD",
+      availability: "https://schema.org/PreOrder",
+      url: `${SITE_URL}/pro/`,
+    },
+    {
+      "@type": "Offer",
+      name: "yearly",
+      price: "59.00",
+      priceCurrency: "USD",
+      availability: "https://schema.org/PreOrder",
+      url: `${SITE_URL}/pro/`,
+    },
+    {
+      "@type": "Offer",
+      name: "founders lifetime",
+      price: "129.00",
+      priceCurrency: "USD",
+      availability: "https://schema.org/PreOrder",
+      url: `${SITE_URL}/pro/`,
+      description: "lifetime, first 100 only, then $199",
+    },
+  ],
+};
+
+const FAQ_SCHEMA = {
+  "@type": "FAQPage",
+  "@id": `${SITE_URL}/pro/#faq`,
+  mainEntity: FAQ_ITEMS.map(({ q, a }) => ({
+    "@type": "Question",
+    name: q,
+    acceptedAnswer: { "@type": "Answer", text: a },
+  })),
+};
+
+const BREADCRUMB_SCHEMA = {
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "home", item: SITE_URL },
+    { "@type": "ListItem", position: 2, name: "early access", item: `${SITE_URL}/pro/` },
+  ],
+};
+
 export default function ProPage() {
   return (
     <main
       id="main"
       className="mx-auto max-w-5xl px-6 pt-20 pb-12 sm:pt-24 sm:pb-16"
     >
+      <JsonLd data={[PRODUCT_SCHEMA, FAQ_SCHEMA, BREADCRUMB_SCHEMA]} />
+
       {/* ───────── 1. HERO ─────────────────────────────────────── */}
       <section className="pb-12">
         <div className="mb-6 inline-flex items-center gap-2 t-eyebrow">
@@ -266,6 +376,22 @@ export default function ProPage() {
           these are best-guesses. the launch slips if i find a bug worth
           fixing first. you&apos;ll get an email either way.
         </p>
+      </section>
+
+      {/* ───────── 5b. FAQ — paired with FAQPage schema ─────────── */}
+      <section className="pb-16">
+        <div className="t-eyebrow mb-3">questions people actually ask</div>
+        <h2 className="t-section">
+          the short answers. <em className="t-emph">no fluff.</em>
+        </h2>
+        <dl className="mt-10 space-y-8 max-w-2xl">
+          {FAQ_ITEMS.map((f) => (
+            <div key={f.q}>
+              <dt className="t-h3">{f.q}</dt>
+              <dd className="t-body-sm mt-2">{f.a}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       {/* ───────── 6. FINE PRINT ───────────────────────────────── */}

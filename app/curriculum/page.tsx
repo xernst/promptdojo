@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 
 import StatStrip from "@/components/StatStrip";
 import CurriculumAccordion from "@/components/v2/CurriculumAccordion";
+import JsonLd, { SITE_URL } from "@/components/JsonLd";
 import { getV2Toc, getV2Chapter } from "@/lib/content-v2";
 
 // Dynamic metadata so chapter/step counts always match getV2Toc.
@@ -67,8 +68,37 @@ export default async function Curriculum() {
 
   const totalSteps = chapters.reduce((a, c) => a + c.stepCount, 0);
 
+  // CollectionPage + ItemList of all chapters. Lets AI engines see the full
+  // syllabus at one URL and link chapter titles back to their detail pages.
+  const collectionSchema = {
+    "@type": "CollectionPage",
+    "@id": `${SITE_URL}/curriculum/#page`,
+    url: `${SITE_URL}/curriculum/`,
+    name: "the curriculum · promptdojo",
+    description: `the full ${chapters.length}-chapter path from cursor-passenger to cursor-driver. ${totalSteps} runnable steps.`,
+    isPartOf: { "@id": `${SITE_URL}/#site` },
+    breadcrumb: {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "home", item: SITE_URL },
+        { "@type": "ListItem", position: 2, name: "curriculum", item: `${SITE_URL}/curriculum/` },
+      ],
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: chapters.length,
+      itemListElement: chapters.map((c, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: c.title,
+        url: `${SITE_URL}/learn/v2/${c.slug}/`,
+      })),
+    },
+  };
+
   return (
     <main id="main" className="mx-auto max-w-6xl px-6 pt-20 pb-10 sm:pt-24 sm:pb-16">
+      <JsonLd data={collectionSchema} />
       <div className="t-eyebrow">the whole school</div>
       <h1 className="t-section mt-3">
         {chapters.length} chapters · {totalSteps} runnable steps · 8–15h

@@ -12,6 +12,5 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: "https://promptdojo.dev/sitemap.xml",
-    host: "https://promptdojo.dev",
   };
 }
