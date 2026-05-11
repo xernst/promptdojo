@@ -1,89 +1,102 @@
-# promptdojo-mobile launch thread (5+3 tweets)
+# promptdojo launch thread (web-first · 5+3 tweets)
 
 voice: lowercase, terse, anti-corporate. no emojis. no exclamation points.
 hard cap: 280 characters per tweet. character counts confirmed below each draft.
-order: 1-5 ship together on launch day. 6-8 are optional follow-ups (badges/early-access, 1-week mark, 4-week reflection).
+order: 1-5 ship together on web-launch day. 6-8 are follow-ups (waitlist signal at 1 week, founders sold-out moment, app-store launch).
+
+context: the website is launching first. the native app comes after the
+waitlist proves the demand. the thread is built to convert X visitors into
+the early-access list, not into IAP buyers yet.
 
 ---
 
-<!-- char count: 247 -->
-1/ the school is launching as an app this week.
+<!-- char count: 230 -->
+1/ promptdojo is live.
 
-26 chapters. the python ide on your phone. an ai tutor that explains your bugs in plain english. cloud sync. offline mode.
+a python school for builders whose code is mostly written by ai now.
 
-the web stays online as a free preview. the app is where the school lives.
+26 chapters. ~250 runnable steps. three free, the rest by waitlist for the app.
+
+the school is read · run · fix. nothing else.
+
+promptdojo.dev
 
 ---
 
-<!-- char count: 217 -->
-2/ what changes on the web:
+<!-- char count: 234 -->
+2/ what's free:
 
-three chapters stay open forever — variables, llm apis, agent loops. read every step. no signup. no time limit. about 30 minutes of content.
+three full chapters open at promptdojo.dev — variables, llm apis, agent loops. about 30 minutes of content. no signup, no time limit, no streak shame.
 
 the preview is the preview. it doesn't expire.
 
 ---
 
-<!-- char count: 262 -->
-3/ what's in the app:
+<!-- char count: 256 -->
+3/ what's coming:
 
 — all 26 chapters, ~250 runnable steps
 — pyodide ide tuned for a soft keyboard
 — ai tutor that reads your code and tells you what broke
 — cloud sync across phone, ipad, web
 — offline mode for the subway
-— founders pricing for the first 100
+
+ships once the waitlist clears 1,000.
 
 ---
 
-<!-- char count: 251 -->
-4/ pricing:
+<!-- char count: 247 -->
+4/ pricing when it ships:
 
 — $9.99 monthly
 — $59 yearly (41% off, the default)
-— $129 lifetime, locked in, first 100 buyers only
+— $129 lifetime, locked in, first 100 spots only
 — $199 lifetime after that
 
-no trial. the free preview is the trial. if three chapters didn't earn your money, the next 23 won't either.
+reserve a founders spot today: promptdojo.dev/pro
+
+no charge now. you pay when the app drops.
 
 ---
 
-<!-- char count: 272 -->
+<!-- char count: 263 -->
 5/ the why, plain:
 
-the web tier is free because i want the lessons read. the app is paid because i want the school to fund itself so i can keep building it.
+the web is free because i want the lessons read. the app will be paid because i want the school to fund itself so i can keep building it.
 
 apple and google take a cut. claude tokens cost money. one maintainer, full-time on this, no vc. that's the deal.
 
 ---
 
-optional follow-ups (post within 24-72h depending on signal)
+optional follow-ups (post within days/weeks depending on signal)
 
 ---
 
-<!-- char count: 190 -->
-6/ links:
+<!-- char count: 198 -->
+6/ links + waitlist:
 
-app store: [link]
-play store: [link]
-early access (founders waitlist, closes at 100): promptdojo.dev/pro
+read free: promptdojo.dev
+early access (founders waitlist, $129 lifetime locked in): promptdojo.dev/pro
 
-the web preview is live now at promptdojo.dev. start there. decide later.
+the web preview is live now. start there. decide on the app later.
 
 ---
 
-<!-- char count: 241 -->
-7/ one week in:
+<!-- char count: 251 -->
+7/ one-week update:
 
-[N] founders claimed. [N] subscribers on annual. [N] on monthly.
+[N] readers on the free preview.
+[N] reservations on the founders list.
 
-what i've learned: [one honest observation about user behavior, paywall response, or content gap]
+what surprised me: [one observation — common misconception, popular chapter, paywall hesitation].
 
 next ship: [one concrete change going into the next build].
 
 ---
 
-<!-- char count: 275 -->
-8/ four weeks in, a reflection:
+<!-- char count: 245 -->
+8/ founders is full.
 
-the move from "free forever" to "free preview" was the hardest copy change i've ever shipped. the inbox was split. the metric that mattered was whether people learned python — and the app converts to learning at [N]x the rate of the web tier.
+100 spots claimed in [N days]. lifetime jumps to $199 effective now.
+
+the app build is now funded for the next 6 months. testflight invites go out in [N weeks]. thanks to the first 100. you bought me time to ship the rest.

@@ -145,7 +145,7 @@ export default async function Home() {
             href="/pro"
             className="t-mono-meta text-ink-300 underline decoration-ink-700 underline-offset-4 hover:text-green-400 hover:decoration-green-500"
           >
-            see the app · pricing →
+            see the app · join early access →
           </Link>
         </div>
         <p className="mt-4 t-mono-meta">

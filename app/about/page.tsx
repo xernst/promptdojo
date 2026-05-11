@@ -272,11 +272,19 @@ export default async function AboutPage() {
 
         <p className="t-body mt-8 max-w-2xl text-ink-300">
           honest update: this site used to promise &ldquo;free forever, no
-          paid tier, ever.&rdquo; that&apos;s no longer true. the app stores
-          have a school in them now, and that school costs money.{" "}
+          paid tier, ever.&rdquo; the web preview part stays true forever.
+          but the native app is coming after, and that one costs money.{" "}
           <em className="italic text-ink-100">
             i&apos;d rather tell you the trade than hide it.
           </em>
+        </p>
+        <p className="t-body mt-4 max-w-2xl text-ink-400">
+          the web launches now. the app drops once enough of you are in. you
+          can{" "}
+          <Link href="/pro" className="text-green-400 underline underline-offset-2 hover:text-green-300">
+            join early access
+          </Link>
+          {" "}to lock in the founders rate before iOS ships.
         </p>
 
         <div className="mt-10 space-y-6 font-display text-lg leading-relaxed text-ink-300">
