@@ -1,8 +1,14 @@
 # Cloudflare Pages redirects.
 # Format: <from> <to> <status>
 
+# Keep the live v2 lesson tree untouched. Without these pass-through rules,
+# the legacy /learn/:chapter redirects also catch /learn/v2/... and bounce
+# real lesson URLs to /curriculum.
+/learn/v2            /learn/v2            200
+/learn/v2/*          /learn/v2/:splat     200
+
 # v1 lesson routes were deleted in audit-v5 cleanup. Anything that
 # landed under /learn/<chapter>/... from old tweet links now bounces
 # to the curriculum index so users find the v2 equivalent.
-/learn/:chapter           /curriculum   301
-/learn/:chapter/*         /curriculum   301
+/learn/:chapter      /curriculum          301
+/learn/:chapter/*    /curriculum          301
