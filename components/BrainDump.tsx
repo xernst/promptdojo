@@ -2,7 +2,7 @@
 // One-keypress tangent inbox. ADHD rule #6 — capture intrusive thoughts and
 // keep going. Stored in localStorage; can be exported to Obsidian later.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Brain, X } from "lucide-react";
 import { loadProgress, updateProgress } from "@/lib/storage";
 
@@ -10,6 +10,8 @@ export default function BrainDump() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [items, setItems] = useState<string[]>(() => loadProgress().brainDump);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -22,6 +24,17 @@ export default function BrainDump() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Focus management: on open land focus in the textarea so the user can
+  // start typing immediately; on close return focus to the trigger so
+  // keyboard nav doesn't get stranded.
+  useEffect(() => {
+    if (open) {
+      textareaRef.current?.focus();
+    } else if (document.activeElement === document.body) {
+      triggerRef.current?.focus();
+    }
+  }, [open]);
 
   function add() {
     const text = draft.trim();
@@ -46,16 +59,21 @@ export default function BrainDump() {
   return (
     <>
       <button
+        ref={triggerRef}
         onClick={() => setOpen((v) => !v)}
         title="brain dump (⌘⇧B)"
-        className="fixed bottom-4 right-4 z-30 inline-flex items-center gap-1.5 rounded-full border border-ink-800 bg-ink-900 px-3 py-2 text-xs text-ink-400 shadow-lg hover:bg-ink-800 hover:text-ink-200 transition"
+        aria-expanded={open}
+        aria-controls="braindump-dialog"
+        className="fixed bottom-4 right-4 z-30 inline-flex items-center gap-1.5 rounded-full border border-ink-800 bg-ink-900 px-3 py-2 text-xs text-ink-300 shadow-lg hover:bg-ink-800 hover:text-ink-200 transition"
       >
         <Brain size={14} />
         park a thought
       </button>
       {open && (
         <div
+          id="braindump-dialog"
           role="dialog"
+          aria-modal="false"
           aria-labelledby="braindump-title"
           className="fixed bottom-16 right-4 z-30 w-80 rounded-lg border border-ink-800 bg-ink-950 shadow-xl"
         >
@@ -78,6 +96,7 @@ export default function BrainDump() {
             park a thought
           </label>
           <textarea
+            ref={textareaRef}
             id="braindump-textarea"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
