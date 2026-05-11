@@ -72,27 +72,42 @@ export default function LessonShell({
               {ide}
             </section>
           </div>
-          {/* Mobile gate (< md) — honest "ship on desktop" message. The V3
-              drawer-toggle was a no-op because the IDE pane mounted at 0×0. */}
+          {/* Mobile gate (< md). The lesson body reads fine here — only the
+              IDE column is hidden, since pyodide is a battery tax on phone.
+              Audit 2026-05-11: previously this was a single dead-end button
+              ("resume on desktop"), which leaked ~70% of X traffic. Now we
+              acknowledge they can read the lesson, save their spot, AND
+              feed the X funnel which is the actual growth metric. */}
           <div className="flex min-h-0 w-full flex-1 flex-col md:hidden">
             <div className="flex-1 min-h-0 overflow-auto px-4 py-5">
               {prompt}
             </div>
             <div className="border-t border-ink-800 bg-ink-900 p-5">
-              <div className="t-eyebrow mb-2">desktop required</div>
+              <h2 className="t-eyebrow mb-2">editor lives on desktop</h2>
               <p className="t-body-sm">
-                the editor runs python in your browser via pyodide
-                (~6&thinsp;mb of webassembly). it ships clean on a laptop;
-                on a phone it is a battery tax.
+                you can read the chapter here. the editor itself runs python
+                in your browser via pyodide (~6&thinsp;mb of webassembly) and
+                ships clean on a laptop. on a phone it&apos;s a battery tax,
+                so we don&apos;t mount it.
               </p>
-              <Link
-                href="/lesson/resume"
-                className="dojo-btn-primary mt-4 inline-flex"
-              >
-                ↵ resume on desktop <span aria-hidden>→</span>
-              </Link>
+              <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <Link
+                  href="/lesson/resume"
+                  className="dojo-btn-primary inline-flex justify-center"
+                >
+                  save my spot <span aria-hidden>→</span>
+                </Link>
+                <a
+                  href="https://x.com/intent/follow?screen_name=TFisPython"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="dojo-btn-secondary inline-flex justify-center"
+                >
+                  follow on x for daily bugs <span aria-hidden>↗</span>
+                </a>
+              </div>
               <p className="mt-3 t-mono-meta">
-                we save your spot. open this same url on a laptop.
+                open this same url on a laptop to keep going.
               </p>
             </div>
           </div>
