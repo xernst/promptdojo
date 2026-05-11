@@ -87,8 +87,8 @@ type Props = {
 };
 
 const STATUS_COPY: Record<"idle" | "loading" | "ready", string> = {
-  idle: "booting python…",
-  loading: "loading wasm…",
+  idle: "booting python in your browser…",
+  loading: "warming up python (~12 mb of wasm)…",
   ready: "press run · ⌘↵",
 };
 
@@ -366,7 +366,7 @@ const PersistentIDE = forwardRef<PersistentIDEHandle, Props>(function Persistent
             id={`ide-status-${stepId}`}
             aria-live="polite"
             aria-atomic="true"
-            className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-ink-500"
+            className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-ink-300"
           >
             <span className="text-green-500" aria-hidden="true">❯</span>
             stdout

@@ -57,8 +57,8 @@ export default function PredictStepView({
         </ReactMarkdown>
       </div>
       <label className="flex flex-col gap-1.5">
-        <span className="text-xs uppercase tracking-wide text-ink-400">
-          Your prediction
+        <span className="text-xs uppercase tracking-wide text-ink-300">
+          your prediction
         </span>
         <textarea
           value={prediction}

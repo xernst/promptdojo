@@ -319,19 +319,19 @@ export default async function AboutPage() {
         <div className="t-eyebrow mb-3">faq</div>
         <h2 className="t-section">quick <em className="t-emph">answers</em>.</h2>
         <p className="t-mono-meta mt-3">last revised 2026-05-06</p>
-        <dl className="mt-8 divide-y divide-ink-800 border-y border-ink-800">
+        <div className="mt-8 divide-y divide-ink-800 border-y border-ink-800">
           {faqs.map((f) => (
             <details key={f.q} className="group py-5">
               <summary className="flex cursor-pointer list-none items-baseline gap-3">
                 <span className="font-mono text-green-500 transition group-open:rotate-90">
                   ❯
                 </span>
-                <dt className="t-h3 font-display">{f.q}</dt>
+                <h3 className="t-h3 font-display">{f.q}</h3>
               </summary>
-              <dd className="mt-3 pl-6 t-body-sm">{f.a}</dd>
+              <div className="mt-3 pl-6 t-body-sm">{f.a}</div>
             </details>
           ))}
-        </dl>
+        </div>
       </section>
 
       {/* ───────── 9. CTA + FOOTER ──────────────────────────────── */}

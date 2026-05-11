@@ -54,7 +54,7 @@ export default function EmailSignup() {
         <div className="flex-1">
           <label
             htmlFor="email-signup-input"
-            className="mb-1 block font-mono text-[10px] uppercase tracking-[0.3em] text-ink-400"
+            className="mb-1 block font-mono text-[10px] uppercase tracking-[0.3em] text-ink-300"
           >
             email
           </label>
@@ -64,6 +64,8 @@ export default function EmailSignup() {
             name="email"
             required
             autoComplete="email"
+            aria-describedby="email-signup-message"
+            aria-invalid={state?.ok === false}
             placeholder="you@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -80,7 +82,7 @@ export default function EmailSignup() {
         </button>
       </form>
 
-      <div className="mt-4 min-h-6 t-mono-meta" aria-live="polite">
+      <div id="email-signup-message" className="mt-4 min-h-6 t-mono-meta" aria-live="polite">
         {state?.ok === false && (
           <span className="text-red-400">{state.error}</span>
         )}
