@@ -3,6 +3,7 @@ slug: capstone
 title: "capstone — ship the system"
 blurb: "wire it all together. context, retrieval, the prompt, the call, the trace, the eval, the cost. less a tutorial demo, more the smallest end-to-end llm feature you could ship to a real user."
 lessons:
+  - 00-pick-a-project-that-ships
   - 01-build-a-cli-agent
   - 02-wire-the-real-model
   - 03-validate-tool-inputs

@@ -1,0 +1,106 @@
+xp: 5
+estSeconds: 200
+concept: score-a-capstone-pitch
+prompt: |
+  Write `score_project(spec)` that takes a project spec (dict) and
+  returns a dict with two fields:
+
+  - `score`: integer 0-100, higher is better
+  - `verdict`: string, one of:
+    - `"ship it"` if score >= 80
+    - `"narrow the scope"` if score >= 60
+    - `"pick something else"` if score >= 40
+    - `"don't build this"` if score < 40
+
+  Score the spec on the five wedge signals from step 04. Each
+  signal that PASSES adds 20 points:
+
+  - `volume_per_day >= 10`: +20  (volume signal)
+  - `output_schema_defined`: +20  (structured outcome signal)
+  - `has_rubric`: +20  (explicit rules signal)
+  - `users_count >= 1 and users_count <= 10`: +20  (single user/team signal — exactly one team, not "everyone")
+  - `eval_method_defined`: +20  (observable success signal)
+
+  Two projects run. Expected output:
+  ```
+  PR review agent: {'score': 100, 'verdict': 'ship it'}
+  AI life coach:   {'score': 0, 'verdict': "don't build this"}
+  ```
+starter: |
+  pr_agent = {
+      "name": "PR review agent",
+      "volume_per_day": 30,
+      "output_schema_defined": True,
+      "has_rubric": True,
+      "users_count": 4,
+      "eval_method_defined": True,
+  }
+
+  life_coach = {
+      "name": "AI life coach",
+      "volume_per_day": 1,
+      "output_schema_defined": False,
+      "has_rubric": False,
+      "users_count": 100000,
+      "eval_method_defined": False,
+  }
+
+  # define score_project(spec) below
+
+  print(f"PR review agent: {score_project(pr_agent)}")
+  print(f"AI life coach:   {score_project(life_coach)}")
+grader:
+  kind: stdout-equality
+  expected: |
+    PR review agent: {'score': 100, 'verdict': 'ship it'}
+    AI life coach:   {'score': 0, 'verdict': "don't build this"}
+  normalize: collapse-trailing-newline
+solution: |
+  pr_agent = {
+      "name": "PR review agent",
+      "volume_per_day": 30,
+      "output_schema_defined": True,
+      "has_rubric": True,
+      "users_count": 4,
+      "eval_method_defined": True,
+  }
+
+  life_coach = {
+      "name": "AI life coach",
+      "volume_per_day": 1,
+      "output_schema_defined": False,
+      "has_rubric": False,
+      "users_count": 100000,
+      "eval_method_defined": False,
+  }
+
+  def score_project(spec):
+      score = 0
+      if spec.get("volume_per_day", 0) >= 10:
+          score += 20
+      if spec.get("output_schema_defined", False):
+          score += 20
+      if spec.get("has_rubric", False):
+          score += 20
+      users = spec.get("users_count", 0)
+      if 1 <= users <= 10:
+          score += 20
+      if spec.get("eval_method_defined", False):
+          score += 20
+      if score >= 80:
+          verdict = "ship it"
+      elif score >= 60:
+          verdict = "narrow the scope"
+      elif score >= 40:
+          verdict = "pick something else"
+      else:
+          verdict = "don't build this"
+      return {"score": score, "verdict": verdict}
+
+  print(f"PR review agent: {score_project(pr_agent)}")
+  print(f"AI life coach:   {score_project(life_coach)}")
+hint:
+  - level: 1
+    body: "Five conditionals, each adds 20 points. Use `.get()` with defaults so missing fields don't crash. Then four-way threshold for the verdict. Watch the users_count check — it has to be in the range [1, 10], not just >= 1."
+  - level: 2
+    body: "PR review agent passes all five signals: volume_per_day=30 (>=10), schema=True, rubric=True, users_count=4 (between 1 and 10), eval=True. Total 100. Life coach fails all five: volume=1, schema=False, rubric=False, users_count=100000 (way over 10 — 'everyone' isn't a user), eval=False. Total 0."

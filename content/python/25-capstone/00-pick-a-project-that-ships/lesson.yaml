@@ -1,0 +1,12 @@
+slug: pick-a-project-that-ships
+title: "Why most beginner agents die in production — and how to pick one that ships"
+estMinutes: 18
+prerequisites: []
+order:
+  - 01-the-builders-graveyard.read.md
+  - 02-which-project-survives-contact-with-reality.mc.yaml
+  - 03-the-three-shapes-that-ship.read.md
+  - 04-the-wedge-checklist.read.md
+  - 05-spot-the-missing-wedge.mc.yaml
+  - 06-scope-down-the-capstone.write.yaml
+  - 07-checkpoint.checkpoint.yaml

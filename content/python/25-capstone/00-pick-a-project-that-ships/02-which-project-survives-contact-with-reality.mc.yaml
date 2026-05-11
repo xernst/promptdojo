@@ -1,0 +1,34 @@
+xp: 2
+estSeconds: 70
+concept: project-with-a-real-wedge
+code: |
+  # four capstone pitches. one has a real wedge. three do not.
+  pitches = {
+      "A": "An agent that summarizes my Twitter feed every morning into a 5-bullet briefing.",
+      "B": "An agent that reads every PR opened in our 4-person team's repo and posts a 1-paragraph review against a fixed style guide — runs ~30 times/day, exits with approve/comment/block.",
+      "C": "An AI life coach that helps me reflect on my day and suggests improvements.",
+      "D": "A research assistant that does deep dives on any topic I ask about and writes a report with citations.",
+  }
+  for k, v in pitches.items():
+      print(f"{k}: {v}")
+prompt: |
+  Four capstone project pitches. Only ONE has a real wedge —
+  high volume, structured outcome, explicit rules, observable
+  success. Which one ships?
+options:
+  - id: a
+    label: "A — Twitter summarizer"
+    explain: "No wedge. Volume is too low to matter (10 min/day of reading anyway), success is 'feels good' (no eval possible), rules are pure taste. Classic graveyard project — fine on day one, dead on day five."
+  - id: b
+    label: "B — PR review agent against a fixed style guide"
+  - id: c
+    label: "C — AI life coach"
+    explain: "Worst possible profile. Subjective success criterion ('helpful reflection'), no structured outcome, no rules an agent can ground in. Will stall at 'kind of works' forever."
+  - id: d
+    label: "D — deep-research assistant"
+    explain: "The trap project. Feels like it works on three test queries, falls apart on the long tail (hallucinated citations, ambiguous queries, paywalled sources). Eval question 'is this research good?' is unanswerable. Ships a demo, never a product."
+answerIds:
+  - b
+hint:
+  - level: 1
+    body: "Look for the four wedge signals from step 01: volume (>10/day), structured exit condition (approve/comment/block, not vibes), explicit rules (a style guide is rules an agent can read), single user/team (4-person repo, not 'everyone')."

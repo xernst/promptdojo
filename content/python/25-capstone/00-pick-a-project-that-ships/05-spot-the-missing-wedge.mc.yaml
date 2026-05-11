@@ -1,0 +1,33 @@
+xp: 2
+estSeconds: 60
+concept: spot-the-missing-wedge
+code: |
+  # four project briefs. three pass the wedge checklist. one does not.
+  briefs = {
+      "A": "Triage every inbound support email for a 6-person CS team. Output {category, priority} from a fixed list. Rules: priority.md. Volume: ~80/day. Eval: matches human ≥85% on a held-out 100-email set.",
+      "B": "Score every applicant resume for a 3-person recruiting team against a 10-point rubric in rubric.md. Output {score: int 0-10, top_match: str}. Volume: ~40/day. Eval: matches recruiter score within 2 on held-out set.",
+      "C": "Help me become a better writer by analyzing my drafts and giving me thoughtful feedback that makes me grow as a person. Output: a helpful response.",
+      "D": "Auto-tag every new ticket in our internal bug tracker against a fixed taxonomy of 12 tags. Volume: ~50/day. Rules: taxonomy.md with examples. Eval: human disagrees ≤10% on a held-out set.",
+  }
+  for k, v in briefs.items():
+      print(f"{k}: {v}")
+prompt: |
+  Run the wedge checklist on each brief. Three pass. One fails on
+  almost every signal. Which brief has NO wedge?
+options:
+  - id: a
+    label: "A — support email triage"
+    explain: "Passes all five. Volume (80/day), structured output ({category, priority}), explicit rules (priority.md), single team (6-person CS), observable success (≥85% match on held-out set). Textbook capstone."
+  - id: b
+    label: "B — resume scoring against rubric"
+    explain: "Passes all five. Volume (40/day), structured output ({score, top_match}), explicit rules (rubric.md), single team (3-person recruiting), observable success (within 2 on held-out set). Ships."
+  - id: c
+    label: "C — writing-feedback life coach"
+  - id: d
+    label: "D — auto-tag bug tracker tickets"
+    explain: "Passes all five. Volume (50/day), structured output (a tag from 12 options), explicit rules (taxonomy.md), single team (whoever owns the bug tracker), observable success (≤10% disagreement). Ships in a weekend."
+answerIds:
+  - c
+hint:
+  - level: 1
+    body: "C is missing every signal: volume undefined (how often do you write a draft? weekly?), output is 'a helpful response' (no schema), no rubric (what makes feedback good?), user is one person with no accountability, success is 'I grow as a person' (unevaluable). It's not a project — it's a wish."

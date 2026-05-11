@@ -6,6 +6,191 @@
   "overview": "## Wire it all together — a working CLI agent in 12 steps\n\nYou've made it through 21 chapters. You can read what AI wrote, catch what it got wrong, and direct it deliberately. You know the messages pattern, the agent loop, MCP, structured output, eval-driven development, secrets hygiene, prompting craft, and the full vocabulary of agent traces.\n\nTime to assemble it. This capstone is one chapter, twelve steps, and at the end you'll have a working command-line AI agent — runs in Pyodide in your browser, calls fake tools that mimic real ones, loops on stop reasons, logs every turn, ships a clean exit when it's done. About a hundred lines of Python, end-to-end.\n\n## Why the capstone matters more than the polish\n\nYou can read about agents for a year and still not really *get* them. The first time you build one, the patterns lock in. The first time *your* loop hits the `tool_use` branch and you watch your code dispatch to the right tool and feed the result back into the model — that's the moment the abstraction becomes intuition. From there, every framework you'll ever touch reads obvious.\n\nThat's the goal of this chapter. Not to ship something you'd put in production — production agents have observability, retries, distributed state, eval guardrails, prompt versioning. To ship something that proves you understand what's underneath.\n\n## What the capstone agent does\n\nA small CLI tool. The user types a question. The agent has access to two tools (a fake `read_file` and a fake `write_file` that operate on an in-memory dict, since we're in a browser). The agent loops:\n\n1. Send the user's question to the model with the tool definitions.\n2. If the model returns `stop_reason: \"tool_use\"`, parse the tool call, dispatch to the matching Python function, append the result to the message history, loop.\n3. If the model returns `stop_reason: \"end_turn\"`, take the final text and print it.\n4. Cap at five turns to avoid runaway loops.\n\nRead that paragraph again. That's the entire agent. The hundred lines of code in step 11 are an expansion of that paragraph plus error handling plus a max-turns guard.\n\n## What you build, broken into 12 steps\n\n- Steps 1-3: read the existing tool-loop pattern and understand the message-history append rules.\n- Step 4: predict the agent's output for a given input, before you've written any code.\n- Step 5: fill in the stop-condition check.\n- Steps 6-7: fix two AI-shipped bugs in the dispatch path.\n- Step 8: read the logging pattern that makes the agent debuggable.\n- Step 9: write the tool runner — the function that maps tool names to Python callables.\n- Step 10: fix the loop-exit condition.\n- Step 11: write the full agent.\n- Step 12: checkpoint — the agent runs end-to-end on a real test case and prints the right answer.\n\n## What AI specifically gets wrong building agents\n\nThe capstone bakes in the three top patterns from the wedge:\n\n1. **The two-message append.** Cursor reliably appends only the tool_result and forgets the assistant's tool_use block. Result: the model on the next turn has no memory of asking for the tool. It asks again. Tool loop. Step 7 of this chapter is fixing exactly this.\n\n2. **Wrong loop-exit condition.** AI writes `while True: ... break` or `while turn < 100`, missing the natural exit on `stop_reason == \"end_turn\"`. Result: the loop either never exits or exits one turn too early. Step 10 fixes it.\n\n3. **Tool dispatch by string equality with no fallback.** AI writes `if tool_name == \"read_file\": ...` and forgets the unknown-tool case. The first time the model hallucinates a tool name, the agent silently does nothing and returns no answer. Step 6 is the fix.\n\nThese are the three bugs that ship most often into AI-generated agent code. By the end of step 12 you'll have written each of them wrong, fixed each of them right, and seen the difference in output.\n\n## What you'll be able to do at the end\n\nTwelve steps. By the end you'll have:\n\n- Written a working AI agent loop in Python from memory.\n- Logged every turn (input, tool calls, outputs, stop reasons) with enough detail to debug a failure.\n- Spotted the three top \"AI ships agent code wrong\" patterns at sight.\n- Built mental scaffolding for every framework you'll touch — LangGraph, the Vercel AI SDK, Claude's Agent SDK, OpenAI's Assistants API, every house-built agent runtime. They're all dressed-up versions of what you wrote here.\n\npromptdojo ends here. You're not an AI engineer after this — that takes more chapters than fit in 22, and more production reps than a course can teach. But you're past the ceiling that was blocking you. You can read agent traces, catch agent bugs, and ship features without flinching. That's what this whole school was for.\n\nPress *Start chapter* below.\n",
   "lessons": [
     {
+      "slug": "pick-a-project-that-ships",
+      "title": "Why most beginner agents die in production — and how to pick one that ships",
+      "estMinutes": 18,
+      "prerequisites": [],
+      "steps": [
+        {
+          "type": "read",
+          "id": "capstone/pick-a-project-that-ships/s01-01-the-builders-graveyard",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 220,
+          "concept": "capstone-project-failure-modes",
+          "body": "# The builder's graveyard — what dies before it ships\n\nThis lesson is theory. Almost no code. You're about to spend the\nnext four lessons of this capstone building an actual agent — CLI,\nreal model, tools, evals, MCP. Before any of that happens, you need\nto pick a capstone project that can survive contact with reality.\nMost beginners don't. They pick a project that sounds exciting,\nspend three weekends on it, watch it stall at 60%, and never ship.\nThis lesson exists so you don't do that.\n\nThe pattern is so consistent it's almost funny. Walk through any\n\"I built an AI agent\" subreddit and count the same three or four\nproject ideas dying over and over:\n\n## The four projects that always die\n\n**The AI Twitter summarizer.** \"I'll build an agent that reads my\nTwitter feed and gives me a morning briefing of the important\nstuff.\" Sounds great. Has no wedge. Volume is too low to matter\n(you read Twitter in 10 minutes anyway), the success criterion is\n\"feels good\" (no eval possible), and the rules are pure taste\n(\"what's important?\" — nobody can say). The agent generates fine\nsummaries on day one, you stop opening them on day three, the repo\ngoes stale on day five.\n\n**The personal finance agent.** \"I'll build an agent that watches\nmy spending and gives me budget advice.\" Dies on three fronts at\nonce: the data pipeline (your bank doesn't have an API you'd\ntrust), the success metric (you can't define \"good advice\"), and\nthe trust boundary (you don't want an agent making decisions about\nyour money, you want it to confirm decisions you've already made).\nAfter two months you're maintaining a CSV importer and have\nshipped nothing of substance.\n\n**The research assistant.** \"I'll build an agent that does deep\nresearch for me — gathers sources, synthesizes, cites.\" This one\ndies the slowest, which is what makes it so dangerous. It feels\nlike it's working. It even *kind of* works on the first three test\nqueries. Then you hit the long tail: hallucinated citations,\npaywalled sources, ambiguous queries, conflicting sources. The\neval question is unanswerable (\"is this research good?\") so you\ncan't tell if you're improving. You ship a demo, never a product.\n\n**The \"do everything\" personal assistant.** \"I'll build an agent\nthat manages my calendar, my email, my tasks, and reminds me to\ndrink water.\" This is the platonic ideal of a project with no\nwedge. There's no single decision the agent makes that matters\nenough to optimize. There's no single failure that's bad enough to\nwrite an eval for. There's no user other than you, so there's no\nfeedback. After a month the agent does five things badly instead\nof one thing well.\n\n## What's missing from all four\n\nThe same three things. Every time:\n\n1. **No wedge.** No single, high-volume, structured decision the\n   agent owns. Without a wedge, every feature is bolt-on, and\n   bolt-on agents have no reason to be agents — they're chatbots\n   with extra steps.\n2. **No eval.** No way to know if today's output is better than\n   yesterday's. Without an eval, you can't iterate. Without\n   iteration, the agent stalls at \"kind of works\" and never gets\n   shipped to a second user.\n3. **No exit condition.** No clean answer to \"when is this done?\"\n   These projects sprawl forever because every new failure case\n   suggests a new feature. The graveyard is paved with\n   80%-complete personal assistants.\n\nGreg Isenberg made the broader version of this point in his\n\"How to become AI-Native\" essay (May 11, 2026): the wedge isn't\n\"use AI somewhere.\" The wedge is a specific, high-volume,\nrule-bound decision that the agent owns end to end. Chapter 26\nlesson 3 walked you through five industries where the wedge was\nvisible at the workflow level. We're going to do the same thing\nat the *project* level now.\n\n## The hard truth about capstones\n\nThe capstone you build at the end of a course is not the agent\nyou'll use forever. It's the agent that proves you understand the\nloop. If you pick a project with no wedge, you'll spend your\nenergy on the wrong battles — fighting your data pipeline,\nfighting your prompt, fighting your eval — and never actually\nexercise the pattern this course was built to teach.\n\nIf you pick a project with a wedge, even a tiny one, every part\nof the next four lessons falls into place. The tool schemas write\nthemselves. The eval is obvious. The exit condition is built into\nthe spec. You finish in a weekend.\n\nThat's the difference between projects that ship and projects\nthat don't. Not ambition. Not skill. Not even time. **Wedge or\nno wedge.**\n\n## What the rest of this lesson does\n\nThe next six steps will:\n\n1. Show you four capstone pitches and have you pick the one with\n   the real wedge.\n2. Name the three shapes of project that consistently ship,\n   illustrated with Josh's own projects — promptdojo (you're using\n   it right now), code-killa, and CrowdTest.\n3. Give you a five-question wedge checklist that any capstone has\n   to pass.\n4. Drill you on the checklist with a \"spot the missing wedge\"\n   exercise.\n5. Have you write `score_project(spec)` — a function that scores\n   any project pitch against the wedge checklist.\n6. Checkpoint with `pick_capstone(candidates)` — the function you'll\n   use on yourself before you start the build.\n\nBy the end you'll have written a tool that prevents you from\nbuilding any of the four graveyard projects above. Use it on\nyourself. Use it on your friends. Use it on every \"I'll build an\nagent that...\" idea you have for the rest of your career.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "capstone/pick-a-project-that-ships/s02-02-which-project-survives-contact-with-reality",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Look for the four wedge signals from step 01: volume (>10/day), structured exit condition (approve/comment/block, not vibes), explicit rules (a style guide is rules an agent can read), single user/team (4-person repo, not 'everyone').",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 70,
+          "concept": "project-with-a-real-wedge",
+          "prompt": "Four capstone project pitches. Only ONE has a real wedge —\nhigh volume, structured outcome, explicit rules, observable\nsuccess. Which one ships?\n",
+          "options": [
+            {
+              "id": "a",
+              "label": "A — Twitter summarizer",
+              "explain": "No wedge. Volume is too low to matter (10 min/day of reading anyway), success is 'feels good' (no eval possible), rules are pure taste. Classic graveyard project — fine on day one, dead on day five."
+            },
+            {
+              "id": "b",
+              "label": "B — PR review agent against a fixed style guide"
+            },
+            {
+              "id": "c",
+              "label": "C — AI life coach",
+              "explain": "Worst possible profile. Subjective success criterion ('helpful reflection'), no structured outcome, no rules an agent can ground in. Will stall at 'kind of works' forever."
+            },
+            {
+              "id": "d",
+              "label": "D — deep-research assistant",
+              "explain": "The trap project. Feels like it works on three test queries, falls apart on the long tail (hallucinated citations, ambiguous queries, paywalled sources). Eval question 'is this research good?' is unanswerable. Ships a demo, never a product."
+            }
+          ],
+          "answerIds": [
+            "b"
+          ],
+          "shuffle": false,
+          "code": "# four capstone pitches. one has a real wedge. three do not.\npitches = {\n    \"A\": \"An agent that summarizes my Twitter feed every morning into a 5-bullet briefing.\",\n    \"B\": \"An agent that reads every PR opened in our 4-person team's repo and posts a 1-paragraph review against a fixed style guide — runs ~30 times/day, exits with approve/comment/block.\",\n    \"C\": \"An AI life coach that helps me reflect on my day and suggests improvements.\",\n    \"D\": \"A research assistant that does deep dives on any topic I ask about and writes a report with citations.\",\n}\nfor k, v in pitches.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "capstone/pick-a-project-that-ships/s03-03-the-three-shapes-that-ship",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 220,
+          "concept": "project-shapes-that-ship",
+          "body": "# The three shapes that consistently ship\n\nBeginner agents that survive contact with reality fit into one of\nthree shapes. Not five, not ten — three. If your capstone pitch\ndoesn't map onto one of these, redesign it until it does. The\nthree shapes share a common backbone: bounded scope, observable\noutput, and a real user (even a user of one).\n\n## Shape 1: Internal tool for one team\n\nThe agent lives inside a workflow that one specific team already\nruns every day. It doesn't replace the team. It absorbs one\nspecific, repetitive decision the team currently makes by hand.\nVolume is high (the team makes the decision dozens of times a\nday), rules are explicit (the team can already explain what\nmakes a \"good\" decision), and the user is captive (they have to\nuse it or they break the workflow).\n\n**The case study: CrowdTest.** Josh's CrowdTest is exactly this\nshape. The wedge is a single agent decision inside a structured\ntesting workflow — one team uses it, the rules are written down,\nthe volume is enough to matter. It didn't try to be a general-\npurpose QA tool. It picked one decision, made it well, and the\nteam is on the hook to use it. That's the whole game.\n\nThe capstone version of this shape: \"An agent that triages every\nincoming bug report for our 5-person eng team, classifies it\n(bug / feature-request / ops issue), assigns priority against\nthe rubric in `/docs/priority.md`, and posts to the right Slack\nchannel.\" Volume: 20+/day. Rules: priority.md. User: the eng\nteam. Exit: classified + routed. Ships in a weekend.\n\n## Shape 2: Content pipeline with eval\n\nThe agent generates structured content against an explicit\nquality bar. Not \"write good content\" (which has no eval) but\n\"generate content matching this schema, passing these N checks.\"\nThe eval IS the spec. If the output passes the checks, ship it.\nIf it fails, iterate. The agent never has to be a creative\ngenius — it just has to be a reliable producer against a defined\nquality bar.\n\n**The case study: code-killa itself.** The school you're reading\nright now is generated content with an eval. Every lesson has to\nfit the structure (read / mc / write / checkpoint), every\nexercise has to be Pyodide-runnable, every stdout has to match\nexactly, every concept has to be cited back to a real essay or\nproject. Those checks aren't aesthetic — they're testable. A\nlesson either passes them or doesn't. That's why this project\nships content week after week instead of stalling.\n\nThe capstone version: \"An agent that drafts product descriptions\nfor our e-commerce store from the raw spec sheet, formatted to\nmatch the template, passing 5 explicit checks (length, banned\nwords, required fields, tone match against 3 reference samples,\nno factual claims not in the spec).\" Volume: dozens/week. Rules:\nthe 5 checks. Eval: pass/fail per check. Ships.\n\n## Shape 3: Single-decision agent\n\nThe agent's whole job is to make one decision repeatedly. Not a\nworkflow — a decision. Inbound thing comes in. Agent reads it.\nAgent outputs a structured verdict. Done. The verdict either\ngets acted on automatically (auto-routing, auto-tagging,\nauto-pricing) or it gets surfaced to a human as a recommendation\nwith confidence. Either way the agent owns *one* call.\n\n**The case study: promptdojo.** Josh's promptdojo (the engine\nbehind this very lesson) uses a single-decision agent for\ngrading: given a learner's code submission, decide whether the\noutput matches the expected stdout. That's it. One decision.\nMade many times a day. Explicit rules (stdout equality with\nnormalization). Observable exit (pass/fail). It doesn't try to\n\"help\" the learner or \"explain\" their bug — those are different\nagents, different decisions, different scopes. Each agent owns\none call.\n\nThe capstone version: \"An agent that reads every inbound support\nemail and outputs `{category, priority, suggested_template_id}`.\"\nVolume: every inbound. Rules: a category list + a priority rubric.\nOutput: 3 fields, all strings. Eval: human disagrees ≤10% of the\ntime on a held-out set.\n\n## What all three shapes share\n\nSame five properties. You'll see these formalized in the next\nstep as the wedge checklist:\n\n- **Volume**: the agent's decision happens often enough that\n  automating it actually matters (>10x/day at minimum).\n- **Structured outcome**: the agent's output fits a schema you\n  can write down (verdict + reason, or classification + label,\n  or content matching a template).\n- **Explicit rules**: the agent has a written-down rubric, style\n  guide, schema, or set of categories to ground in. Not \"use\n  your judgment\" — *rules*.\n- **Single user or team**: there's exactly one person or one\n  team that's accountable for using the output. Not \"everyone.\"\n  Not \"the internet.\"\n- **Observable success**: you can tell from the output alone\n  whether the agent did its job. No \"did it feel helpful?\" —\n  *did it match the expected shape, against the rubric, on a\n  held-out test set?*\n\n## What this excludes\n\nThis excludes most of what beginners *want* to build. It excludes\n\"AI tutor,\" \"AI life coach,\" \"AI research assistant,\" \"AI\njournalist,\" \"AI therapist,\" and every other taste-driven,\nrelationship-heavy, judgment-dense ambition. Those projects fail\nnot because they're impossible but because *they're not capstone\nprojects*. They're the projects you build later, after you've\nshipped three of these.\n\nFor now: pick a shape. Internal tool, content pipeline, or\nsingle-decision agent. Build that. Once you've shipped one, the\nrest of your career as a builder reads obvious.\n\nNext step formalizes the five wedge signals into a checklist you\ncan run on any pitch.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "capstone/pick-a-project-that-ships/s04-04-the-wedge-checklist",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "wedge-checklist",
+          "body": "# The wedge checklist — five questions every shipped capstone passes\n\nStep 03 named the three shapes that ship. Step 03 also hinted at\nthe five properties they share. This step formalizes those into\na checklist you can run against any capstone pitch in 90 seconds.\nTwo steps from now you'll write code that scores a pitch on\nexactly these five signals. Internalize them first.\n\nThe checklist generalizes the same framework chapter 26 lesson 3\nused for industry rebuilds. There it asked \"which workflow inside\nthis business can an agent absorb?\" Here it asks \"which decision\ninside my project can the agent own?\" Same five signals, scaled\ndown from industry to capstone.\n\n## 1. Volume — the agent's decision fires more than ten times a day\n\nIf the agent runs once a week, it doesn't matter how good it\ngets. You won't iterate on it because the feedback loop is too\nslow. You won't have enough training/eval samples to know if it\nregressed. Worst of all, you'll get bored.\n\n**Passes:** \"Triages every inbound bug report from a 5-person eng\nteam.\" Bug reports show up dozens of times a day. Each one is a\ndecision the agent makes. **Fails:** \"Drafts my annual review\nself-assessment.\" Annual. As in once a year. Zero iteration loop.\n\n## 2. Structured outcome — the agent's output fits a schema you can write down before you build it\n\nBefore you write a single line of code, you should be able to\nwrite down exactly what the agent's output looks like. Not \"good\nanalysis.\" Not \"helpful summary.\" A *schema*: `{verdict: str,\npriority: int, reason: str}`. Or: `category: str` from a fixed\nlist of 8 options. If you can't write the schema before you\nbuild, the agent has no exit condition — and you'll know it's\n\"done\" by vibes, which means it never is.\n\n**Passes:** \"Outputs `{label, confidence}` where label is one of\n['spam', 'support', 'sales', 'other'].\" **Fails:** \"Gives me a\nhelpful daily reflection.\"\n\n## 3. Explicit rules — there's a written-down rubric the agent grounds in\n\nThe agent doesn't get to invent the rules. Somewhere there's a\npriority rubric, a style guide, a category list, a template, or\na set of explicit checks. The agent's job is to apply those\nrules consistently. If the rules live in your head, the agent\nhas nothing to read — and worse, you'll move the rules around\nevery time the output disappoints you, which guarantees the\nagent never converges. Write them down first.\n\n**Passes:** \"Classifies PRs against the 12-point checklist in\n`/docs/pr-style.md`.\" **Fails:** \"Reviews PRs and gives good\nfeedback.\" Whose definition of good? Where is it written down?\n\n## 4. Single user or team — exactly one person or team owns the output\n\nThe agent has a customer. One. Maybe a team of five. Not \"every\nPM in the world.\" Not \"anyone who wants to learn faster.\" A\nspecific, named, accountable user who's on the hook to use the\noutput. Without this, you have no feedback channel — when the\noutput sucks, nobody complains, because nobody's depending on it.\n\n**Passes:** \"Triages bug reports for the CrowdTest team.\"\n**Fails:** \"Helps developers everywhere ship faster.\"\n\n## 5. Observable success — you can tell from output alone whether the agent did its job\n\nYou don't need the user's emotional response to know if the\nagent worked. You can look at the output, compare it against\nthe rubric or a held-out test set, and decide. This is the\neval-driven-development principle from chapter 19 applied at\nproject-design time: if you can't write an eval for it, you\ncan't ship it.\n\n**Passes:** \"Output category matches a human's category on a\nheld-out test set 90%+ of the time.\" **Fails:** \"User feels the\nrecommendation was helpful.\" Feelings aren't testable. Held-out\nsets are.\n\n## The five together\n\nEvery shipped capstone passes all five. Most beginner projects\npass two or three and stall at the others. That's not bad luck\n— it's the *cause* of the stall. The two missing checks are\nexactly the work the project can't get past.\n\nIf the pitch passes all five, you have a project worth four\nweekends of your life. If it passes three, narrow the scope\nuntil it passes five. If it passes two or fewer, pick a\ndifferent project. There's no shame in throwing out a pitch at\nthis stage. There's a lot of shame in throwing it out at week\nsix, with 800 lines of half-working code and no agent to show\nfor it.\n\n## Where this checklist comes from\n\nCompressed down from the same wedge logic in Isenberg's\n\"AI-Native\" essay (May 11, 2026) and the case-study framework in\nchapter 26 lesson 3. Same five signals as `pick_industry()` from\nthat lesson's checkpoint — volume, explicit rules, structured\noutcomes, scoped user, observable metric. The wedge for a\ntwo-person startup and the wedge for a weekend capstone are the\nsame shape, just at different scale.\n\nNext step: a quick drill where you spot the project pitch with\nthe missing wedge among four that *look* fine. Then you'll\nwrite the scorer.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "mc",
+          "id": "capstone/pick-a-project-that-ships/s05-05-spot-the-missing-wedge",
+          "xp": 2,
+          "hint": [
+            {
+              "level": 1,
+              "body": "C is missing every signal: volume undefined (how often do you write a draft? weekly?), output is 'a helpful response' (no schema), no rubric (what makes feedback good?), user is one person with no accountability, success is 'I grow as a person' (unevaluable). It's not a project — it's a wish.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 60,
+          "concept": "spot-the-missing-wedge",
+          "prompt": "Run the wedge checklist on each brief. Three pass. One fails on\nalmost every signal. Which brief has NO wedge?\n",
+          "options": [
+            {
+              "id": "a",
+              "label": "A — support email triage",
+              "explain": "Passes all five. Volume (80/day), structured output ({category, priority}), explicit rules (priority.md), single team (6-person CS), observable success (≥85% match on held-out set). Textbook capstone."
+            },
+            {
+              "id": "b",
+              "label": "B — resume scoring against rubric",
+              "explain": "Passes all five. Volume (40/day), structured output ({score, top_match}), explicit rules (rubric.md), single team (3-person recruiting), observable success (within 2 on held-out set). Ships."
+            },
+            {
+              "id": "c",
+              "label": "C — writing-feedback life coach"
+            },
+            {
+              "id": "d",
+              "label": "D — auto-tag bug tracker tickets",
+              "explain": "Passes all five. Volume (50/day), structured output (a tag from 12 options), explicit rules (taxonomy.md), single team (whoever owns the bug tracker), observable success (≤10% disagreement). Ships in a weekend."
+            }
+          ],
+          "answerIds": [
+            "c"
+          ],
+          "shuffle": false,
+          "code": "# four project briefs. three pass the wedge checklist. one does not.\nbriefs = {\n    \"A\": \"Triage every inbound support email for a 6-person CS team. Output {category, priority} from a fixed list. Rules: priority.md. Volume: ~80/day. Eval: matches human ≥85% on a held-out 100-email set.\",\n    \"B\": \"Score every applicant resume for a 3-person recruiting team against a 10-point rubric in rubric.md. Output {score: int 0-10, top_match: str}. Volume: ~40/day. Eval: matches recruiter score within 2 on held-out set.\",\n    \"C\": \"Help me become a better writer by analyzing my drafts and giving me thoughtful feedback that makes me grow as a person. Output: a helpful response.\",\n    \"D\": \"Auto-tag every new ticket in our internal bug tracker against a fixed taxonomy of 12 tags. Volume: ~50/day. Rules: taxonomy.md with examples. Eval: human disagrees ≤10% on a held-out set.\",\n}\nfor k, v in briefs.items():\n    print(f\"{k}: {v}\")\n",
+          "runnable": true
+        },
+        {
+          "type": "write",
+          "id": "capstone/pick-a-project-that-ships/s06-06-scope-down-the-capstone",
+          "xp": 5,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Five conditionals, each adds 20 points. Use `.get()` with defaults so missing fields don't crash. Then four-way threshold for the verdict. Watch the users_count check — it has to be in the range [1, 10], not just >= 1.",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "PR review agent passes all five signals: volume_per_day=30 (>=10), schema=True, rubric=True, users_count=4 (between 1 and 10), eval=True. Total 100. Life coach fails all five: volume=1, schema=False, rubric=False, users_count=100000 (way over 10 — 'everyone' isn't a user), eval=False. Total 0.",
+              "cost": 0
+            }
+          ],
+          "personalize": false,
+          "phase": "build",
+          "estSeconds": 200,
+          "concept": "score-a-capstone-pitch",
+          "prompt": "Write `score_project(spec)` that takes a project spec (dict) and\nreturns a dict with two fields:\n\n- `score`: integer 0-100, higher is better\n- `verdict`: string, one of:\n  - `\"ship it\"` if score >= 80\n  - `\"narrow the scope\"` if score >= 60\n  - `\"pick something else\"` if score >= 40\n  - `\"don't build this\"` if score < 40\n\nScore the spec on the five wedge signals from step 04. Each\nsignal that PASSES adds 20 points:\n\n- `volume_per_day >= 10`: +20  (volume signal)\n- `output_schema_defined`: +20  (structured outcome signal)\n- `has_rubric`: +20  (explicit rules signal)\n- `users_count >= 1 and users_count <= 10`: +20  (single user/team signal — exactly one team, not \"everyone\")\n- `eval_method_defined`: +20  (observable success signal)\n\nTwo projects run. Expected output:\n```\nPR review agent: {'score': 100, 'verdict': 'ship it'}\nAI life coach:   {'score': 0, 'verdict': \"don't build this\"}\n```\n",
+          "starter": "pr_agent = {\n    \"name\": \"PR review agent\",\n    \"volume_per_day\": 30,\n    \"output_schema_defined\": True,\n    \"has_rubric\": True,\n    \"users_count\": 4,\n    \"eval_method_defined\": True,\n}\n\nlife_coach = {\n    \"name\": \"AI life coach\",\n    \"volume_per_day\": 1,\n    \"output_schema_defined\": False,\n    \"has_rubric\": False,\n    \"users_count\": 100000,\n    \"eval_method_defined\": False,\n}\n\n# define score_project(spec) below\n\nprint(f\"PR review agent: {score_project(pr_agent)}\")\nprint(f\"AI life coach:   {score_project(life_coach)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "PR review agent: {'score': 100, 'verdict': 'ship it'}\nAI life coach:   {'score': 0, 'verdict': \"don't build this\"}\n",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "pr_agent = {\n    \"name\": \"PR review agent\",\n    \"volume_per_day\": 30,\n    \"output_schema_defined\": True,\n    \"has_rubric\": True,\n    \"users_count\": 4,\n    \"eval_method_defined\": True,\n}\n\nlife_coach = {\n    \"name\": \"AI life coach\",\n    \"volume_per_day\": 1,\n    \"output_schema_defined\": False,\n    \"has_rubric\": False,\n    \"users_count\": 100000,\n    \"eval_method_defined\": False,\n}\n\ndef score_project(spec):\n    score = 0\n    if spec.get(\"volume_per_day\", 0) >= 10:\n        score += 20\n    if spec.get(\"output_schema_defined\", False):\n        score += 20\n    if spec.get(\"has_rubric\", False):\n        score += 20\n    users = spec.get(\"users_count\", 0)\n    if 1 <= users <= 10:\n        score += 20\n    if spec.get(\"eval_method_defined\", False):\n        score += 20\n    if score >= 80:\n        verdict = \"ship it\"\n    elif score >= 60:\n        verdict = \"narrow the scope\"\n    elif score >= 40:\n        verdict = \"pick something else\"\n    else:\n        verdict = \"don't build this\"\n    return {\"score\": score, \"verdict\": verdict}\n\nprint(f\"PR review agent: {score_project(pr_agent)}\")\nprint(f\"AI life coach:   {score_project(life_coach)}\")\n",
+          "hiddenTests": []
+        },
+        {
+          "type": "checkpoint",
+          "id": "capstone/pick-a-project-that-ships/s07-07-checkpoint",
+          "xp": 8,
+          "hint": [],
+          "personalize": false,
+          "phase": "check",
+          "estSeconds": 240,
+          "concept": "pick-the-shipping-capstone",
+          "prompt": "Final drill. Synthesize the wedge checklist into one function:\n`pick_capstone(candidates)` that takes a list of project pitches\nand returns the NAME of the highest-scoring candidate.\n\nEach candidate is a dict with:\n- `name`: string\n- `volume_per_day`: int\n- `output_schema_defined`: bool\n- `has_rubric`: bool\n- `users_count`: int\n- `eval_method_defined`: bool\n\nScore each candidate using the same five rules from step 06\n(each passing signal adds 20):\n\n- `volume_per_day >= 10`: +20\n- `output_schema_defined`: +20\n- `has_rubric`: +20\n- `1 <= users_count <= 10`: +20\n- `eval_method_defined`: +20\n\nReturn the name of the highest-scoring candidate. On a tie,\nreturn the FIRST one in the list (Python's `max` with `key=`\npreserves stable order).\n\nFive candidates run. Expected output:\n```\nship: Support email triage\n```\n",
+          "starter": "candidates = [\n    {\"name\": \"Twitter summarizer\",       \"volume_per_day\": 1,   \"output_schema_defined\": False, \"has_rubric\": False, \"users_count\": 1,      \"eval_method_defined\": False},\n    {\"name\": \"Support email triage\",     \"volume_per_day\": 80,  \"output_schema_defined\": True,  \"has_rubric\": True,  \"users_count\": 6,      \"eval_method_defined\": True},\n    {\"name\": \"Personal finance agent\",   \"volume_per_day\": 5,   \"output_schema_defined\": True,  \"has_rubric\": False, \"users_count\": 1,      \"eval_method_defined\": False},\n    {\"name\": \"Research assistant\",       \"volume_per_day\": 3,   \"output_schema_defined\": False, \"has_rubric\": False, \"users_count\": 100000, \"eval_method_defined\": False},\n    {\"name\": \"Bug-tracker auto-tagger\",  \"volume_per_day\": 50,  \"output_schema_defined\": True,  \"has_rubric\": True,  \"users_count\": 5,      \"eval_method_defined\": False},\n]\n\n# define pick_capstone(candidates) below\n\nprint(f\"ship: {pick_capstone(candidates)}\")\n",
+          "grader": {
+            "kind": "stdout-equality",
+            "expected": "ship: Support email triage",
+            "normalize": "collapse-trailing-newline"
+          },
+          "solution": "candidates = [\n    {\"name\": \"Twitter summarizer\",       \"volume_per_day\": 1,   \"output_schema_defined\": False, \"has_rubric\": False, \"users_count\": 1,      \"eval_method_defined\": False},\n    {\"name\": \"Support email triage\",     \"volume_per_day\": 80,  \"output_schema_defined\": True,  \"has_rubric\": True,  \"users_count\": 6,      \"eval_method_defined\": True},\n    {\"name\": \"Personal finance agent\",   \"volume_per_day\": 5,   \"output_schema_defined\": True,  \"has_rubric\": False, \"users_count\": 1,      \"eval_method_defined\": False},\n    {\"name\": \"Research assistant\",       \"volume_per_day\": 3,   \"output_schema_defined\": False, \"has_rubric\": False, \"users_count\": 100000, \"eval_method_defined\": False},\n    {\"name\": \"Bug-tracker auto-tagger\",  \"volume_per_day\": 50,  \"output_schema_defined\": True,  \"has_rubric\": True,  \"users_count\": 5,      \"eval_method_defined\": False},\n]\n\ndef score_candidate(c):\n    s = 0\n    if c[\"volume_per_day\"] >= 10:\n        s += 20\n    if c[\"output_schema_defined\"]:\n        s += 20\n    if c[\"has_rubric\"]:\n        s += 20\n    if 1 <= c[\"users_count\"] <= 10:\n        s += 20\n    if c[\"eval_method_defined\"]:\n        s += 20\n    return s\n\ndef pick_capstone(candidates):\n    return max(candidates, key=score_candidate)[\"name\"]\n\nprint(f\"ship: {pick_capstone(candidates)}\")\n",
+          "passThreshold": 0.66
+        }
+      ],
+      "xpTotal": 20
+    },
+    {
       "slug": "build-a-cli-agent",
       "title": "Wire it all together — a CLI agent in 12 steps",
       "estMinutes": 14,
@@ -1373,5 +1558,5 @@
       "xpTotal": 32
     }
   ],
-  "xpTotal": 173
+  "xpTotal": 193
 }

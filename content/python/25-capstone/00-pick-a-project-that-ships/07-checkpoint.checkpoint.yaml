@@ -1,0 +1,77 @@
+xp: 8
+estSeconds: 240
+concept: pick-the-shipping-capstone
+prompt: |
+  Final drill. Synthesize the wedge checklist into one function:
+  `pick_capstone(candidates)` that takes a list of project pitches
+  and returns the NAME of the highest-scoring candidate.
+
+  Each candidate is a dict with:
+  - `name`: string
+  - `volume_per_day`: int
+  - `output_schema_defined`: bool
+  - `has_rubric`: bool
+  - `users_count`: int
+  - `eval_method_defined`: bool
+
+  Score each candidate using the same five rules from step 06
+  (each passing signal adds 20):
+
+  - `volume_per_day >= 10`: +20
+  - `output_schema_defined`: +20
+  - `has_rubric`: +20
+  - `1 <= users_count <= 10`: +20
+  - `eval_method_defined`: +20
+
+  Return the name of the highest-scoring candidate. On a tie,
+  return the FIRST one in the list (Python's `max` with `key=`
+  preserves stable order).
+
+  Five candidates run. Expected output:
+  ```
+  ship: Support email triage
+  ```
+starter: |
+  candidates = [
+      {"name": "Twitter summarizer",       "volume_per_day": 1,   "output_schema_defined": False, "has_rubric": False, "users_count": 1,      "eval_method_defined": False},
+      {"name": "Support email triage",     "volume_per_day": 80,  "output_schema_defined": True,  "has_rubric": True,  "users_count": 6,      "eval_method_defined": True},
+      {"name": "Personal finance agent",   "volume_per_day": 5,   "output_schema_defined": True,  "has_rubric": False, "users_count": 1,      "eval_method_defined": False},
+      {"name": "Research assistant",       "volume_per_day": 3,   "output_schema_defined": False, "has_rubric": False, "users_count": 100000, "eval_method_defined": False},
+      {"name": "Bug-tracker auto-tagger",  "volume_per_day": 50,  "output_schema_defined": True,  "has_rubric": True,  "users_count": 5,      "eval_method_defined": False},
+  ]
+
+  # define pick_capstone(candidates) below
+
+  print(f"ship: {pick_capstone(candidates)}")
+grader:
+  kind: stdout-equality
+  expected: "ship: Support email triage"
+  normalize: collapse-trailing-newline
+solution: |
+  candidates = [
+      {"name": "Twitter summarizer",       "volume_per_day": 1,   "output_schema_defined": False, "has_rubric": False, "users_count": 1,      "eval_method_defined": False},
+      {"name": "Support email triage",     "volume_per_day": 80,  "output_schema_defined": True,  "has_rubric": True,  "users_count": 6,      "eval_method_defined": True},
+      {"name": "Personal finance agent",   "volume_per_day": 5,   "output_schema_defined": True,  "has_rubric": False, "users_count": 1,      "eval_method_defined": False},
+      {"name": "Research assistant",       "volume_per_day": 3,   "output_schema_defined": False, "has_rubric": False, "users_count": 100000, "eval_method_defined": False},
+      {"name": "Bug-tracker auto-tagger",  "volume_per_day": 50,  "output_schema_defined": True,  "has_rubric": True,  "users_count": 5,      "eval_method_defined": False},
+  ]
+
+  def score_candidate(c):
+      s = 0
+      if c["volume_per_day"] >= 10:
+          s += 20
+      if c["output_schema_defined"]:
+          s += 20
+      if c["has_rubric"]:
+          s += 20
+      if 1 <= c["users_count"] <= 10:
+          s += 20
+      if c["eval_method_defined"]:
+          s += 20
+      return s
+
+  def pick_capstone(candidates):
+      return max(candidates, key=score_candidate)["name"]
+
+  print(f"ship: {pick_capstone(candidates)}")
+passThreshold: 0.66
