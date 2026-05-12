@@ -8,8 +8,9 @@ concept: long-context-when-fits
 
 The big shift in 2024-2026 was context windows getting genuinely
 large. Gemini 1.5 Pro shipped a 1M-token context window in February
-2024. Gemini 2.0 went to 2M in late 2024. Anthropic's Sonnet 4.6
-sits at 1M. GPT-5 ships with 2M.
+2024. Gemini 1.5 Pro went to 2M in 2024; Gemini 2.0 Pro shipped with
+2M in early 2025. Anthropic's Sonnet 4.6 sits at 1M. GPT-5.5 ships
+with 1M.
 
 This changed the calculus for a specific shape of product:
 **stable corpus, small enough to fit, queried many times per
@@ -33,11 +34,14 @@ cached, is effectively free on the second through Nth query.
 Anthropic's prompt cache is the key infra here. Two important
 numbers to know:
 
-- **Cache TTL: 5 minutes.** A cached prompt stays warm for 5 minutes
-  after its last use. The cache TTL was previously 1 hour but
-  Anthropic shortened it in early 2026 to reduce stale-cache
-  problems and tighten infra costs. This change broke a lot of
-  long-context architectures that assumed 1-hour cache lifetimes.
+- **Cache TTL: 5 minutes (default).** A cached prompt stays warm for
+  5 minutes after its last use. The default was previously 1 hour
+  but Anthropic shortened it in early 2026 to reduce stale-cache
+  problems and tighten infra costs. The 1h option is still available
+  as an explicit opt-in (`"cache_control": {"type": "ephemeral", "ttl": "1h"}`)
+  at 2× input write cost — the change was to the default, not the
+  option. The 5-minute default still broke a lot of long-context
+  architectures that silently assumed 1-hour lifetimes.
 - **Cache read cost: ~10% of base input cost.** When the cache
   hits, you pay roughly a tenth of what you'd pay to send those
   tokens fresh. This is what makes the pattern economical.

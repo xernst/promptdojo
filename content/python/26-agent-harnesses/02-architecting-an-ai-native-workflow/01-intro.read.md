@@ -31,9 +31,9 @@ runnable: true
 
 # AI-assisted is not AI-native. The difference is the question you ask.
 
-Greg Isenberg wrote a thing on X in May 2026 that landed harder than
-most "AI strategy" posts. The whole essay is at
-`x.com/gregisenberg/status/2053843542020063489`. The short version:
+Greg Isenberg has been writing on X about small AI-native services
+businesses in a way that's landed harder than most "AI strategy"
+content. The short version:
 
 > An AI-native company is not a company that uses AI. It is a company
 > that has been rebuilt so AI can actually operate inside it. The
@@ -71,7 +71,7 @@ You wrote a harness in lesson 1. The harness is the technical
 layer. This lesson is the ORGANIZATIONAL layer: the work you do
 BEFORE the harness runs to make the workflow machine-readable.
 
-We'll encode Isenberg's 5-step playbook as code:
+We'll encode a 5-step playbook (synthesizing Isenberg's writing on AI-native services businesses) as code:
 
 1. **Pick a narrow workflow** with high volume, existing rules, and
    too much human coordination.
@@ -89,4 +89,4 @@ We'll encode Isenberg's 5-step playbook as code:
 
 By the end, you'll have `is_ai_native_ready(spec)` that takes a
 workflow definition and returns the same structural critique
-Isenberg's essay applies in prose. The framework, in code.
+Isenberg's writing applies in prose. The framework, in code.

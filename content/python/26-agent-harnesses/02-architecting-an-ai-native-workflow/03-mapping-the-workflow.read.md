@@ -4,7 +4,7 @@ estSeconds: 140
 concept: workflow-spec-as-data
 code: |
   # step 2 of the playbook: map the workflow like a machine.
-  # encode answers to isenberg's 8 questions as a python dict.
+  # encode answers to eight workflow-mapping questions as a python dict.
   support_triage_spec = {
       "name": "Support ticket triage",
       "trigger": "ticket created in Zendesk",
@@ -33,7 +33,9 @@ runnable: true
 
 # Mapping the workflow like a machine
 
-Isenberg's step 2 is the most important and the one teams skip:
+Step 2 of the playbook is the most important and the one teams skip
+— the structural mapping that Isenberg's writing keeps pointing back
+to:
 
 > What triggers it? What data is needed? What decisions happen?
 > Which decisions are reversible? Which require approval? What
@@ -51,7 +53,7 @@ the count of decisions (four), and the ones that need approval
 (refund, the only irreversible action).
 
 That dict is the unit of work. Once it exists, the rest of
-Isenberg's playbook follows mechanically.
+the playbook follows mechanically.
 
 ## The four decision categories
 
@@ -71,9 +73,9 @@ to a human for review — but executed by the agent.
 
 ## Why this works
 
-Isenberg's claim: "The pattern repeats everywhere: agents do the
-structured work, humans handle taste, trust, judgment,
-relationships, and exceptions." The spec is how you draw the line.
+Isenberg's general thesis: agents do the structured work, humans
+handle taste, trust, judgment, relationships, and exceptions. The
+spec is how you draw the line.
 Anything you wrote down is structured work. Anything you couldn't
 write down (the tacit_knowledge field) is the human's job.
 
@@ -96,5 +98,5 @@ The next five steps walk through:
 - Triaging three real workflow specs against the validator (step 9)
 
 By the end, you'll be able to look at a workflow at your company
-and grade it for AI-readiness in under a minute. Isenberg's prose,
-in code, in your browser.
+and grade it for AI-readiness in under a minute. The framework, in
+code, in your browser.

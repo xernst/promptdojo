@@ -73,11 +73,11 @@ The same three things. Every time:
    suggests a new feature. The graveyard is paved with
    80%-complete personal assistants.
 
-Greg Isenberg made the broader version of this point in his
-"How to become AI-Native" essay (May 11, 2026): the wedge isn't
-"use AI somewhere." The wedge is a specific, high-volume,
-rule-bound decision that the agent owns end to end. Chapter 26
-lesson 3 walked you through five industries where the wedge was
+Greg Isenberg's writing on AI-native services makes the broader
+version of this point: the wedge isn't "use AI somewhere." The
+wedge is a specific, high-volume, rule-bound decision that the
+agent owns end to end. Chapter 26 lesson 3 walked you through
+five industries where the wedge was
 visible at the workflow level. We're going to do the same thing
 at the *project* level now.
 

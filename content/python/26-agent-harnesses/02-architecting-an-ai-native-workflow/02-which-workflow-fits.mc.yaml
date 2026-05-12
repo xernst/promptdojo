@@ -11,7 +11,7 @@ code: |
   for k, v in workflows.items():
       print(f"{k}: {v['name']:30} vol={v['volume_per_week']:4} rules={v['rules_exist']} coord_h={v['human_coord_hours']}")
 prompt: |
-  Step 1 of Isenberg's playbook: pick a narrow workflow with
+  Step 1 of the playbook: pick a narrow workflow with
   obvious economic value. The criteria: **volume is high, rules
   exist, humans are doing too much coordination.**
 
@@ -19,7 +19,7 @@ prompt: |
 options:
   - id: a
     label: "A — founder vision setting (vol=1, no rules, 5h coord)"
-    explain: "Low volume + no rules + tacit knowledge. This is exactly the work Isenberg says you DON'T automate. Strategy is judgment, not workflow."
+    explain: "Low volume + no rules + tacit knowledge. This is exactly the work the playbook says you DON'T automate. Strategy is judgment, not workflow."
   - id: b
     label: "B — support ticket triage (vol=4200, rules exist, 80h coord)"
   - id: c

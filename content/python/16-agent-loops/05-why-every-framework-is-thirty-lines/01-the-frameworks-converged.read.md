@@ -17,11 +17,10 @@ Swarm (and its successor, the Agents SDK). DSPy's agent module.
 LlamaIndex agent runners. Pull up GitHub. Search for `while`. You'll
 find your loop. Different class names wrapped around it, different
 opinions about retries, memory, and observability, but the loop is
-the same loop. Karpathy put it in one sentence on X:
+the same loop. Karpathy has framed it the same way: an agent is
+a `while` loop with a model call inside.
 
-> Every agent is a while loop with a model call inside.
-
-He didn't mean it as a slogan. He meant it as a technical observation
+It's not a slogan. It's a technical observation
 about what the model API will let you build. The Anthropic and OpenAI
 chat-completions APIs return a response with a stop signal and an
 optional tool-use request. Anything that wants to chain tool calls

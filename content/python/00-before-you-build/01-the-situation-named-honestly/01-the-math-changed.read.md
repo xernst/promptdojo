@@ -33,17 +33,19 @@ exact ones where AI was best:
 
 - **Software engineers.** Big-tech headcount peaked in mid-2022 and
   has fallen every quarter since. The juniors went first — entry-level
-  SWE hiring at FAANG companies dropped 67% from 2022 to 2026. Copilot
-  and Claude Code didn't replace senior engineers. They replaced the
-  pipeline that became senior engineers.
+  SWE hiring at FAANG companies roughly halved (50%+) from 2022 to 2026.
+  Copilot and Claude Code didn't replace senior engineers. They replaced
+  the pipeline that became senior engineers.
 - **Copywriters and content marketers.** Agencies that ran 40-person
   copy floors in 2022 now run 6-person ones. The work didn't shrink —
   the agencies still ship the same volume — but four people with
   Claude produce what forty people used to.
 - **Customer service reps.** Tier-1 support — the people who read
-  scripts and routed tickets — got hit first and hardest. Klarna cut
-  700 CS roles to one AI agent in 2024 and posted the cost savings in
-  their earnings call. Every CS-heavy SaaS company followed.
+  scripts and routed tickets — got hit first and hardest. Klarna let
+  attrition shrink headcount ~40% while saying an AI assistant did the
+  workload-equivalent of 700 human agents — then began rehiring
+  contractors in 2025 after quality complaints. Every CS-heavy SaaS
+  company followed.
 - **Graphic designers and junior creatives.** Stock-asset designers,
   social-media designers, junior product designers. Midjourney and
   Figma's AI tools made the "I need 200 banner variants by Friday"

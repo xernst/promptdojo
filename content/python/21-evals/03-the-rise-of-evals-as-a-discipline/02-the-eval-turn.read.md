@@ -7,7 +7,7 @@ concept: the-eval-turn
 # The eval turn: 2024 onward
 
 If the prompt-engineering era had a single obituary, it was a blog
-post Hamel Husain published in June 2024 titled **"Your AI Product
+post Hamel Husain published in March 2024 titled **"Your AI Product
 Needs Evals"** (hamel.dev/blog/posts/evals/). Hamel had spent the
 prior eighteen months consulting for companies that had shipped LLM
 features and were now drowning in production failures. The post was
@@ -42,7 +42,7 @@ contribution was the *taxonomy* — reference-free vs reference-based,
 direct grading vs pairwise, code-graded vs model-graded — that gave
 the discipline a shared vocabulary.
 
-**Shreya Shankar** (Berkeley, now CMU) published the paper that gave
+**Shreya Shankar** (Berkeley PhD; CMU faculty candidate 2026) published the paper that gave
 the field its academic spine: **"Who Validates the Validators?
 Aligning LLM-Assisted Evaluation of LLM Outputs with Human Preferences"**
 (Shankar et al., UIST 2024, arxiv.org/abs/2404.12272). The paper

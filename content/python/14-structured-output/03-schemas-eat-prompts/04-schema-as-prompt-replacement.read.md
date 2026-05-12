@@ -58,7 +58,7 @@ Three pieces of infrastructure landed within 12 months of each other:
    object. Took the schema-first pattern from "advanced" to
    "default" inside 18 months.
 
-Simon Willison's "JSON mode vs structured outputs" post made the
+Simon Willison's coverage of OpenAI's structured outputs launch made the
 distinction explicit: **JSON mode** guarantees the output parses as
 JSON. **Structured Outputs** guarantees the output matches *your
 shape*. Those are different things. JSON mode lets the model return

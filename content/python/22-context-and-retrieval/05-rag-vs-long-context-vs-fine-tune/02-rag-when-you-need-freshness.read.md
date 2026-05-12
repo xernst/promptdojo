@@ -12,7 +12,7 @@ Tickets get resolved. The truth lives somewhere that is NOT the
 model's training data, and it's moving.
 
 Glean is the canonical example. A 2026 enterprise search company at
-$300M+ ARR whose entire moat is "we index your messy enterprise
+$200M+ ARR (as of late 2025, growing fast) whose entire moat is "we index your messy enterprise
 graph (Slack, Drive, Notion, Linear, Jira, Confluence) and the
 model answers from THAT, not from what it learned at training
 time." Glean cannot fine-tune. The customer's corpus changes every
@@ -106,8 +106,9 @@ Anthropic's contextual retrieval paper (September 2024) is the
 production-grade RAG playbook. Anthropic added a step before
 chunking where each chunk is prefixed with a contextual summary
 ("this chunk is from section 4.7 of the SSO configuration docs and
-discusses the Okta SAML setup"). Retrieval accuracy jumped 35-50%
-on their benchmarks. If you're building serious RAG, you read that
+discusses the Okta SAML setup"). The technique reduced retrieval
+failures by 35% (embeddings alone), 49% (with BM25), or 67% (with
+reranking) on their benchmarks. If you're building serious RAG, you read that
 paper and copy the contextual-retrieval step before you touch
 anything else.
 

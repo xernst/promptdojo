@@ -38,7 +38,7 @@ not have an eval suite. You have a smoke test.
 
 ## Klarna: the walk-back
 
-In May 2024, Klarna announced — proudly — that its OpenAI-powered
+In February 2024, Klarna announced — proudly — that its OpenAI-powered
 customer service bot had replaced the work of 700 full-time agents.
 The press loved it. By mid-2025, Klarna was quietly hiring human
 agents back. Sebastian Siemiatkowski (CEO) acknowledged in a

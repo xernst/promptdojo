@@ -6,11 +6,13 @@ concept: case-retrieval-staleness
 
 # Case 5: Enterprise RAG returned the wrong policy with full confidence
 
-Composite case from the enterprise-RAG space — the category that
-includes Glean, Hebbia, Notion AI, and the long tail of internal
-Confluence-on-top-of-RAG deployments. We have seen this exact
-failure mode at multiple Fortune-500 deployments in 2024-2025. The
-shape is durable enough to teach from.
+Unlike the prior four cases, this one is a composite — synthesized
+from patterns seen in multiple enterprise-RAG deployments rather
+than a single named incident. It draws from the enterprise-RAG
+space — the category that includes Glean, Hebbia, Notion AI, and
+the long tail of internal Confluence-on-top-of-RAG deployments. We
+have seen this exact failure mode at multiple Fortune-500
+deployments in 2024-2025. The shape is durable enough to teach from.
 
 A 4,000-person company rolls out an internal knowledge-search agent.
 Employees ask questions in natural language; the agent retrieves from

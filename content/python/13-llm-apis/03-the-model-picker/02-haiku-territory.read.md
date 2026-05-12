@@ -9,7 +9,7 @@ code: |
 
   daily_messages = 50_000
   tokens_per_call = 600       # ~400 input, ~200 output, mostly small
-  haiku_blended  = 0.30 / 1_000_000    # rough avg per token
+  haiku_blended  = 3.00 / 1_000_000    # rough avg per token
   sonnet_blended = 9.00 / 1_000_000    # rough avg per token
 
   haiku_daily  = daily_messages * tokens_per_call * haiku_blended
@@ -37,7 +37,7 @@ Haiku 4.5 is the model you reach for when:
 
 The rule of thumb worth memorizing: **Haiku 4.5 hits roughly 90%
 of Sonnet's capability at about 3× cheaper on a blended basis**
-(more on input, less on output, depends on the mix). For tasks
+(same ratio on input and output: $1/$5 vs $3/$15). For tasks
 where the last 10% of quality isn't worth 3× the bill, Haiku is
 the right call. For tasks where it is, Sonnet is.
 
@@ -46,7 +46,7 @@ the right call. For tasks where it is, Sonnet is.
 1. **Classification.** "Is this support ticket about billing,
    technical, or sales?" Three-way pick, schema-constrained
    output, runs on every inbound message. Sonnet wins by 1%; you
-   spend 12× to capture it.
+   spend 3× to capture it.
 2. **Extraction.** "Pull the order number, customer name, and
    amount from this email." Structured output, the model just
    needs to see the fields. Haiku does this all day.
@@ -61,9 +61,9 @@ the right call. For tasks where it is, Sonnet is.
 
 The code at the top of this page is the per-message moderator
 example. 50,000 messages a day at ~600 tokens each. On Haiku
-that's about $9/day. On Sonnet that's about $270/day, or $8,100
-a month. Same product, 30× the bill. **A feature that ships on
-Haiku is a feature that bankrupts you on Sonnet.**
+that's about $90/day. On Sonnet that's about $270/day, or $8,100
+a month. Same product, 3× the bill. **A feature that's a rounding
+error on Haiku eats your margin on Sonnet.**
 
 ## The Haiku failure mode worth knowing
 
@@ -87,9 +87,9 @@ calls (~500 input + ~200 output tokens):
 
 | Task scale | Haiku 4.5 cost | Sonnet 4.6 cost |
 |---|---|---|
-| 100 calls/day (internal tool) | ~$0.02/day | ~$0.54/day |
-| 10k calls/day (small product) | ~$2/day | ~$54/day |
-| 1M calls/day (real scale) | ~$210/day | ~$5,400/day |
+| 100 calls/day (internal tool) | ~$0.15/day | ~$0.45/day |
+| 10k calls/day (small product) | ~$15/day | ~$45/day |
+| 1M calls/day (real scale) | ~$1,500/day | ~$4,500/day |
 
 The right way to read this table: at internal-tool scale, model
 choice is rounding error. At product scale, model choice is the

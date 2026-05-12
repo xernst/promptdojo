@@ -10,11 +10,11 @@ From late 2023 through most of 2025, the developer-tools discourse on Twitter wa
 
 Almost nobody talked about the rest of the system.
 
-In May 2026, Vaibhav Trivedy (@Vtrivedy10 on X) posted the line that named the missing half:
+In May 2026, Viv Trivedy (@Vtrivedy10 on X) posted the line that named the missing half:
 
 > **"Agent = Model + Harness. If you're not the model, you're the harness."**
 
-Addy Osmani's *Agent Harness Engineering* essay (also May 2026) used the line as a load-bearing citation and built the whole framing around it. Birgitta Böckeler at Thoughtworks had been mapping the same territory under the same word since April. HumanLayer's *Skill Issue: Harness Engineering for Coding Agents* dropped within the same window. All three pieces converged on the same thesis: **the model is one input into the system. The harness is everything else, and the harness is what you actually engineer.**
+Addy Osmani's *Agent Harness Engineering* essay (May 2026) used the line as a load-bearing citation and built the whole framing around it. Birgitta Böckeler at Thoughtworks had been mapping the same territory under the same word since April. HumanLayer's *Skill Issue: Harness Engineering for Coding Agents* posted earlier in spring 2026 (March 12, 2026). All three pieces converged on the same thesis within weeks of each other: **the model is one input into the system. The harness is everything else, and the harness is what you actually engineer.**
 
 ## What "harness" actually means
 
@@ -44,6 +44,6 @@ The remaining four lessons of this chapter are about that engineering. This firs
 - The harness gap — empirical evidence that the same model in two harnesses scores wildly differently.
 - A scoring function that audits a harness inventory and tells you what's missing.
 
-By the end you should be able to look at any agent setup — your own, your team's, a screenshot of someone else's CLAUDE.md — and instantly answer the question Osmani's essay opens with: *"Of the six pieces, how many are actually present?"*
+By the end you should be able to look at any agent setup — your own, your team's, a screenshot of someone else's CLAUDE.md — and instantly answer the audit question this raises: *of the six pieces, how many are actually present in YOUR setup?*
 
 That question is harness engineering's version of "have you tried turning it off and on again." It is the first question to ask before any other.

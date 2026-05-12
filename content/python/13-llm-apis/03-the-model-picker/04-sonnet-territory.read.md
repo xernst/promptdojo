@@ -75,11 +75,11 @@ markedly higher reliability. Chapter 16 builds exactly this loop.
 
 ## The "would I let a junior do this" test
 
-A useful heuristic from Karpathy's worker-class framing: if you'd
-let a junior engineer handle the task with light supervision,
-Haiku can probably do it. If you'd only let a senior touch it,
-go to Sonnet. If you'd want a staff engineer or higher reviewing
-the output, go to Opus.
+A useful heuristic, extending Karpathy's "eager intern" framing
+into a worker-class hierarchy: if you'd let a junior engineer
+handle the task with light supervision, Haiku can probably do it.
+If you'd only let a senior touch it, go to Sonnet. If you'd want
+a staff engineer or higher reviewing the output, go to Opus.
 
 Junior-level tasks: classify, extract, format, summarize, follow
 explicit instructions, fill in known templates.

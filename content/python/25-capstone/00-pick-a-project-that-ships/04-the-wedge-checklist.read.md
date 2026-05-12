@@ -100,9 +100,9 @@ for it.
 
 ## Where this checklist comes from
 
-Compressed down from the same wedge logic in Isenberg's
-"AI-Native" essay (May 11, 2026) and the case-study framework in
-chapter 26 lesson 3. Same five signals as `pick_industry()` from
+Compressed down from the same wedge logic in Isenberg's writing
+on AI-native services and the case-study framework in chapter 26
+lesson 3. Same five signals as `pick_industry()` from
 that lesson's checkpoint — volume, explicit rules, structured
 outcomes, scoped user, observable metric. The wedge for a
 two-person startup and the wedge for a weekend capstone are the

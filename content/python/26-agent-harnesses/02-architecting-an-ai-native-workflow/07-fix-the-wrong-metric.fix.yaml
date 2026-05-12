@@ -2,15 +2,14 @@ xp: 4
 estSeconds: 95
 concept: business-metric-not-hours-saved
 prompt: |
-  Isenberg's step 5 is the one most teams botch: measure business
-  impact, NOT "hours saved." Hours saved is a vanity metric a PM
-  invents to justify a project; it doesn't show up on the income
-  statement.
+  Step 5 of the playbook is the one most teams botch: measure
+  business impact, NOT "hours saved." Hours saved is a vanity metric
+  a PM invents to justify a project; it doesn't show up on the
+  income statement.
 
   The spec below tracks `hours_saved_per_week`. Replace it with two
-  business metrics from Isenberg's list: `resolution_time_minutes`
-  (median time to resolve a ticket) and `csat` (customer
-  satisfaction, 1-5).
+  real business metrics: `resolution_time_minutes` (median time to
+  resolve a ticket) and `csat` (customer satisfaction, 1-5).
 
   Expected output (the two business metrics):
   ```

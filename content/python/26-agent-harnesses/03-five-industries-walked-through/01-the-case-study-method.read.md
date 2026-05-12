@@ -28,14 +28,13 @@ when you're sketching a real project.
 
 ## The five industries
 
-Greg Isenberg's "How to become AI-Native" essay (May 11, 2026) named
-seven categories where AI-native companies will out-execute
-incumbents: agencies, brokerages, law-adjacent services, accounting
-firms, compliance shops, healthcare admin, real estate operations,
-education services, logistics coordinators, BPOs. We're going to walk
-through three of them in detail, then add two from elsewhere in the
-discourse (Yunhao Jiao's "process debt in software dev" reply, and a
-support-ops example).
+Greg Isenberg's writing on AI-native services has named categories
+where AI-native companies will out-execute incumbents: agencies,
+brokerages, law-adjacent services, accounting firms, compliance
+shops, healthcare admin, real estate operations, education services,
+logistics coordinators, BPOs. We're going to walk through three of
+them in detail, then add two from elsewhere in the discourse (a
+process-debt-in-software-dev example, and a support-ops example).
 
 The five we'll cover:
 
@@ -57,7 +56,7 @@ For each, we'll show:
 The same three signals across every example:
 
 1. **High volume + existing rules + over-coordinated humans.** This is
-   Isenberg's step 1 criterion. Every case study below hits all
+   the step 1 criterion. Every case study below hits all
    three.
 2. **Implicit knowledge made explicit.** Watch for the moment in each
    case study where some piece of tribal knowledge ("Sarah handles
@@ -75,7 +74,8 @@ see them in your own industry. That's the whole point.
 
 This is not a "here's how to use ChatGPT for your business" lesson.
 This is a lesson on what it takes to **restructure** a business so
-agents can run inside it. Per Isenberg's central thesis:
+agents can run inside it. The central thesis (echoing Isenberg's
+writing on AI-native services):
 
 > An AI-native company is not a company that uses AI. It is a company
 > that has been rebuilt so AI can actually operate inside it.

@@ -30,7 +30,7 @@ This is *not* a hypothetical. OX Security and Practical DevSecOps published writ
 
 1. **The Mother of All AI Supply Chains** — OX Security disclosed an architectural RCE vulnerability in MCP's design that affected an estimated 150M+ downloads (per their disclosure). The flaw was in how STDIO transport spawns subprocesses; in practice it let any malicious server run arbitrary OS commands.
 2. **The "Malicious Trial Balloon" incident** — Security researchers created a clone of `mcp-server-postgres` named `mcp-server-postgress` (one extra letter). 9 out of 11 major MCP directories accepted the squatted package without security review. Anyone who installed the typo could have shipped arbitrary code.
-3. **Zero-click prompt injection in Windsurf and Cursor** — A specific MCP server, when connected, could exfiltrate environment variables and shell history without any user action. Both IDEs were patched; the underlying class of attack persists.
+3. **Zero-click prompt injection in Windsurf (CVE-2026-30615)** — Per OX Security's April 2026 disclosure, Windsurf shipped the only true zero-click variant: a specific MCP server, when connected, could exfiltrate environment variables and shell history with no user action. Cursor, Claude Code, and Gemini-CLI required at least one user interaction step, and those vendors declined to issue CVEs. Only Windsurf shipped a patch (past 1.9544.26). The underlying class of attack persists.
 
 ## The threat model in one paragraph
 

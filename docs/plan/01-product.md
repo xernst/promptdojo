@@ -130,7 +130,7 @@ This wedge is also what justifies its existence as an OSS / free product. The fo
 
 ### V1 — "Ship to friends" (target: 4 weeks of evening time)
 - The 8-lesson MVP above
-- Hosted on Vercel free tier at codekilla.dev (or similar)
+- Hosted on Vercel free tier at promptdojo.dev (or similar)
 - Shared via DM to ~10 friends Josh trusts to give honest feedback
 - Goal: validate that the wedge resonates with non-Josh humans
 - Success: 5 of 10 friends finish all 8 lessons within 2 weeks of receiving the link

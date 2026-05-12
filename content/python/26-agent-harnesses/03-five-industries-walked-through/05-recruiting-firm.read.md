@@ -14,7 +14,8 @@ startups. Average placement fee: $40K. Average placement cycle:
 20% client management (interfacing with the hiring company), and
 10% closing (the actual offer and negotiation).
 
-Isenberg's specific call-out for this industry from his essay:
+The recruiting-industry version of the AI-native thesis (echoing
+Isenberg's writing on AI-native services):
 
 > Agents source candidates, enrich profiles, compare against role
 > requirements, draft outreach, summarize interviews, check
@@ -56,9 +57,8 @@ The agent owns the entire top-of-funnel:
   burnout, last LinkedIn update, prior moves at similar tenure).
 - **Outreach**: agent drafts a personalized message per candidate.
   The recruiter reviews and either approves or tweaks before
-  send. (This is one of Isenberg's "approval where judgment
-  matters" cases — the outreach has the recruiter's name on it,
-  so she gets to gate it.)
+  send. (This is an "approval where judgment matters" case — the
+  outreach has the recruiter's name on it, so she gets to gate it.)
 - **Screening prep**: agent prepares a one-page brief for every
   inbound reply: candidate's history, talking points, likely
   objections, comp anchor, expected questions.

@@ -15,7 +15,7 @@ prompt: |
   Score the company on these signals (each adds points to the debt
   total):
 
-  - `age_years > 10`: add 25 (Isenberg: 22-year-old businesses)
+  - `age_years > 10`: add 25 (incumbent business — typical 20+ year history)
   - `data_scattered_across_tools >= 5`: add 20 (CRM + Slack + email + spreadsheets...)
   - `tacit_knowledge_pct > 50`: add 20 (more than half of company knowledge "in someone's head")
   - `paper_processes > 0`: add 15 (any paper at all)

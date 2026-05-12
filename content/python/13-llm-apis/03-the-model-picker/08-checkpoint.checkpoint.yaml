@@ -22,9 +22,9 @@ prompt: |
 
   Cost math: assume each call averages **1000 tokens**. Blended
   prices per million tokens:
-  - haiku: $0.30
+  - haiku: $3.00
   - sonnet: $9.00
-  - opus: $45.00
+  - opus: $15.00
 
   Daily cost for one task = `volume_per_day * 1000 * (rate / 1_000_000)`,
   which simplifies to `volume_per_day * rate / 1000`.
@@ -36,7 +36,7 @@ prompt: |
   contract_review   -> opus
   fraud_alert       -> sonnet
   architect_review  -> opus
-  total daily cost: $240.27
+  total daily cost: $375.09
   ```
 starter: |
   tasks = [
@@ -61,7 +61,7 @@ grader:
     contract_review   -> opus
     fraud_alert       -> sonnet
     architect_review  -> opus
-    total daily cost: $240.27
+    total daily cost: $375.09
   normalize: collapse-trailing-newline
 solution: |
   tasks = [
@@ -72,7 +72,7 @@ solution: |
       {"kind": "architect_review", "volume_per_day": 2,     "latency_ms_max": 60000, "criticality": "high"},
   ]
 
-  RATES = {"haiku": 0.30, "sonnet": 9.00, "opus": 45.00}
+  RATES = {"haiku": 3.00, "sonnet": 9.00, "opus": 15.00}
 
   def pick_model(task):
       v, c = task["volume_per_day"], task["criticality"]

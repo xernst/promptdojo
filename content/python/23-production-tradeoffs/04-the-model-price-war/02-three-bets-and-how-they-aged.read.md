@@ -14,7 +14,7 @@ by 2026.
 
 Jasper was the marketing-copy company. By 2022 they were doing
 ~$80M ARR generating ad copy and blog posts on top of OpenAI. In
-early 2023 they raised $125M at a $1.5B valuation, the textbook
+October 2022 they raised $125M at a $1.5B valuation, the textbook
 "AI-native" win.
 
 Their cost model assumed GPT-3.5 and GPT-4 prices were
@@ -35,8 +35,8 @@ happened in parallel:
    inside the tools the customer already paid for (Notion, HubSpot,
    Mailchimp).
 
-Jasper laid off ~30% of staff in 2023, restructured, and **the IPO
-that had been telegraphed for 2024 quietly unwound**. The cost model
+Jasper laid off ~30% of staff in 2023, restructured, and **the path
+to IPO that the $1.5B valuation implied has not materialized**. The cost model
 they priced against didn't exist twelve months later. They survived as
 a smaller company, but they did not capture the upside their cap table
 assumed.

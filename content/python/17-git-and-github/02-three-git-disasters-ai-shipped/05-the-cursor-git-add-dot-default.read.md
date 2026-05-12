@@ -9,10 +9,9 @@ concept: agent-commits-without-review
 From mid-2024 onward, AI coding assistants started doing
 something genuinely new in the git workflow: they began
 **committing on your behalf**. Cursor's Composer would make a
-multi-file edit and offer to commit. Claude Code would finish a
-task and run `git add .` followed by `git commit -m "Done."`
-without pausing. Codex CLI scripts ran end-to-end pipelines that
-included pushes.
+multi-file edit and run `git add .` followed by `git commit -m
+"Done."` without pausing. Codex CLI scripts ran end-to-end
+pipelines that included pushes.
 
 The training data for these agents is full of `git add .`. It's
 the most common pattern in tutorials, in StackOverflow answers,

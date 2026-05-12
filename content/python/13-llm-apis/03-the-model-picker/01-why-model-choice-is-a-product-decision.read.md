@@ -31,14 +31,16 @@ agent loop), and the rare deep-reasoning tasks go to the biggest
 model available. The user doesn't pick. The product picks for
 them based on the shape of the request.
 
-## Karpathy's framing: model as worker class
+## Karpathy's framing: the "eager intern"
 
-Andrej Karpathy's go-to mental model is the **"model as a worker
-class."** Sonnet is your full-time senior engineer — expensive,
-sharp, you give them the hard problems. Haiku is your high-volume
-contractor — fast, cheap, perfect for repetitive structured work
-you can clearly spec. Opus is the consultant you fly in for the
-quarterly architecture review.
+Andrej Karpathy publicly frames LLMs as an **"eager intern"** —
+capable, fast, willing to do anything you spec clearly, but needs
+the right scope of task. Extend that mental model into a worker-class
+hierarchy and the model picker writes itself. Sonnet is your full-time
+senior engineer — expensive, sharp, you give them the hard problems.
+Haiku is your high-volume contractor — fast, cheap, perfect for
+repetitive structured work you can clearly spec. Opus is the
+consultant you fly in for the quarterly architecture review.
 
 You don't pay your senior engineer to format CSV files. You also
 don't ask your contractor to redesign your auth system. Match
@@ -52,17 +54,17 @@ Three model tiers from Anthropic in 2026, ordered by capability
 
 | Model | In $/Mtok | Out $/Mtok | When |
 |---|---|---|---|
-| Claude Haiku 4.5 | $0.25 | $1.25 | high-volume, structured, fast |
+| Claude Haiku 4.5 | $1 | $5 | high-volume, structured, fast |
 | Claude Sonnet 4.6 | $3 | $15 | general-purpose, agents, code |
-| Claude Opus 4.7 | $15 | $75 | rare, hard, high-stakes |
+| Claude Opus 4.7 | $5 | $25 | rare, hard, high-stakes |
 
 (Cite once: Anthropic public pricing, M-tok = million tokens.)
 
-Read those numbers carefully. **Haiku is roughly 12× cheaper on
-input and output than Sonnet. Opus is 5× more expensive than
-Sonnet.** A feature that calls the model a million times a day
-will swing between $250 and $15,000 depending on which row you
-pick. The choice is not academic.
+Read those numbers carefully. **Haiku is roughly 3× cheaper on
+input and output than Sonnet. Opus is about 1.7× more expensive
+than Sonnet.** A feature that calls the model a million times a
+day will swing between $1,000 and $25,000 depending on which row
+you pick. The choice is not academic.
 
 ## The volume × difficulty grid
 

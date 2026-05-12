@@ -24,7 +24,7 @@ prompt: |
   - 20 messages/day
   - 500 avg input tokens, 200 avg output tokens
   - 30 days/month
-  - prices: haiku $0.25/$1.25, sonnet $3/$15, opus $15/$75 per 1M tokens
+  - prices: haiku $1/$5, sonnet $3/$15, opus $5/$25 per 1M tokens
 
   Five constraints run for you. Expected output:
   ```
@@ -36,9 +36,9 @@ prompt: |
   ```
 starter: |
   PRICES = {
-      "haiku":  (0.25, 1.25),
+      "haiku":  (1.00, 5.00),
       "sonnet": (3.00, 15.00),
-      "opus":   (15.00, 75.00),
+      "opus":   (5.00, 25.00),
   }
   QUALITY_RANK = {"haiku": 0, "sonnet": 1, "opus": 2}
 
@@ -79,9 +79,9 @@ grader:
   normalize: collapse-trailing-newline
 solution: |
   PRICES = {
-      "haiku":  (0.25, 1.25),
+      "haiku":  (1.00, 5.00),
       "sonnet": (3.00, 15.00),
-      "opus":   (15.00, 75.00),
+      "opus":   (5.00, 25.00),
   }
   QUALITY_RANK = {"haiku": 0, "sonnet": 1, "opus": 2}
 

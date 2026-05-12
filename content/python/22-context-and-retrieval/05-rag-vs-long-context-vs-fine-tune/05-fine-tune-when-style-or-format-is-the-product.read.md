@@ -19,9 +19,10 @@ structure, tone. The capability gap, not the knowledge gap.
 ## Harvey AI is the canonical example
 
 Harvey AI, the legal-tech unicorn at $5B+ valuation, made fine-
-tuning legible to the AI industry. Their pitch wasn't "we know more
-case law than GPT-4." Their pitch was: **we know how lawyers
-write**.
+tuning legible to the AI industry. Harvey's earlier strategy
+(2023-early 2024) was to fine-tune on legal style. Their pitch
+wasn't "we know more case law than GPT-4." Their pitch was:
+**we know how lawyers write**.
 
 Specifically:
 
@@ -36,9 +37,15 @@ Specifically:
 
 None of that is a knowledge gap. GPT-4 had read case law. What
 GPT-4 didn't have was the rhythm of how lawyers want their outputs
-to read. Harvey fine-tuned on millions of vetted legal documents
-and produced a model whose outputs FEEL like a lawyer wrote them —
-even when the facts are wrong.
+to read.
+
+By May 2025, Harvey publicly pivoted to using multiple foundation
+models (Anthropic, Google, OpenAI) with task-specific routing and
+workflow orchestration, after frontier reasoning models beat their
+custom model on their own BigLaw Bench eval. The lesson is the
+same: fine-tune for style and format, not facts — but the receipts
+say even style-fine-tuning lost ground when frontier reasoning
+improved.
 
 This is the right shape for fine-tune. The product wedge is the
 style and format. The facts are still going to be wrong sometimes
@@ -79,7 +86,7 @@ associate wrote them.
 
 Two problems hit them in 2026:
 
-1. **GPT-5 shipped with 2M-token context and the legal-eval gap
+1. **GPT-5.5 ships with 1M-token context and the legal-eval gap
    closed.** Long-context with proper case-law retrieval matched
    their fine-tuned model on style and BEAT it on facts (because
    the long-context system could pull in cases that hadn't

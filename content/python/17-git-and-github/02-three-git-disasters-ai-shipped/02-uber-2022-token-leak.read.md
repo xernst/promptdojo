@@ -90,8 +90,8 @@ in the org for additional embedded secrets.
 That audit found more. It always does. Companies that run a
 real secret-scan against their full git history for the first
 time always find embedded credentials they didn't know about.
-GitGuardian's annual reports put the rate at roughly one in
-ten developers committing at least one secret per year.
+GitGuardian's 2025 State of Secrets Sprawl report found that
+35% of private repos contain plaintext secrets.
 
 ## What you should take from this
 

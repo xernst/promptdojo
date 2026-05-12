@@ -63,7 +63,7 @@ Approximate may 2026 pricing (check current rates — these move):
 | Model | Input ($/1M) | Output ($/1M) | Ratio |
 |---|---|---|---|
 | Claude Sonnet 4.6 | $3 | $15 | 5× |
-| Claude Opus 4.7 | $15 | $75 | 5× |
+| Claude Opus 4.7 | $5 | $25 | 5× |
 | GPT-4 Turbo | $10 | $30 | 3× |
 | GPT-4o mini | $0.15 | $0.60 | 4× |
 

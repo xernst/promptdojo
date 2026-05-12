@@ -2,10 +2,10 @@ xp: 4
 estSeconds: 100
 concept: implicit-to-explicit-rule
 prompt: |
-  Isenberg's line: "the sales process is 'talk to Sarah, she knows
-  how we do enterprise.'" That's an implicit policy. An agent can't
-  ask Sarah. The fix is to make Sarah's knowledge explicit as a
-  data rule.
+  A canonical implicit-policy failure: "the sales process is 'talk
+  to Sarah, she knows how we do enterprise.'" That's tribal
+  knowledge. An agent can't ask Sarah. The fix is to make Sarah's
+  knowledge explicit as a data rule.
 
   The spec below has `refund_policy = "ask the support lead"`. An
   agent reading this has nothing to ground in. Replace it with an

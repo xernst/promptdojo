@@ -23,7 +23,7 @@ options:
     label: "2 (fire a tech) and 4 (negotiate with a lawyer)"
   - id: 1_and_5
     label: "1 (classify call) and 5 (generate invoice)"
-    explain: "Both are structured tasks with explicit rules. Classification is one of Isenberg's named agent jobs; invoice drafting is mechanical given a job-done signal. Humans don't need to do either."
+    explain: "Both are structured tasks with explicit rules. Classification is a canonical agent job; invoice drafting is mechanical given a job-done signal. Humans don't need to do either."
   - id: 3_and_4
     label: "3 (look up history) and 4 (negotiate with a lawyer)"
     explain: "Customer-history lookup is exactly what agents are best at — read structured records and synthesize. Don't waste a human on it."
@@ -34,4 +34,4 @@ answerIds:
   - 2_and_4
 hint:
   - level: 1
-    body: "Isenberg's rule: agents handle structured work, humans handle taste, trust, judgment, relationships, exceptions. Firing someone and lawyer-negotiation are both 100% judgment + relationships."
+    body: "The general rule (echoing Isenberg's writing on AI-native services): agents handle structured work, humans handle taste, trust, judgment, relationships, exceptions. Firing someone and lawyer-negotiation are both 100% judgment + relationships."

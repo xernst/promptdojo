@@ -10,13 +10,13 @@ prompt: |
 
   Expected output:
   ```
-  cost: $0.068
+  cost: $0.022
   ```
 code: |
   in_tokens  = 2000
   out_tokens = 500
-  in_rate    = 15.0   # $15 per 1M input tokens (opus 4.7)
-  out_rate   = 75.0   # $75 per 1M output tokens (opus 4.7)
+  in_rate    = 5.0    # $5 per 1M input tokens (opus 4.7)
+  out_rate   = 25.0   # $25 per 1M output tokens (opus 4.7)
 
   cost = (in_tokens / ___) * in_rate + (out_tokens / ___) * out_rate
 

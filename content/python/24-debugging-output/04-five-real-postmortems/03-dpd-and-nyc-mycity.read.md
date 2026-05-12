@@ -29,8 +29,9 @@ nothing in the prompt told it not to.
 
 ## NYC MyCity — March 2024
 
-The Markup and the Associated Press jointly reported in March 2024
-that New York City's MyCity small-business chatbot — built on
+The Markup (with THE CITY) led the reporting in March 2024, with
+follow-up coverage by the Associated Press, that New York City's
+MyCity small-business chatbot — built on
 Microsoft's Azure AI services and launched October 2023 — was
 confidently telling business owners they could do things that were
 illegal under city law. Examples from the published reporting:
@@ -41,8 +42,8 @@ illegal under city law. Examples from the published reporting:
 - Asked whether a restaurant can take a cut of an employee's tips,
   the chatbot said yes. Under NYC and federal law, employers cannot.
 - Asked about firing employees who report sexual harassment, the
-  chatbot's answers were inconsistent and in some sessions implied it
-  was permissible.
+  chatbot said the employer could fire workers who complained about
+  sexual harassment (illegal under federal and NYC law).
 
 Each answer was generated, plausible-sounding, and wrong. Reporters
 verified the failures with the city's own legal staff. The city kept

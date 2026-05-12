@@ -108,10 +108,10 @@ on each model":
 | Sora 2 (720p) | $0.10 | 4.0 | $24.00 |
 | Vidu Q3 | $0.07 | 4.0 | $16.80 |
 | Sora 2 Pro (1024p) | $0.50 | 4.0 | $120.00 |
-| Veo 3 with audio | $0.75 | 4.0 | $180.00 |
+| Veo 3 with audio | $0.40 | 4.0 | $96.00 |
 
 A 60-second hero piece on Veo 3 with audio at I2V retake rate
-costs **$180 in raw API spend**. The Sora 2 Pro path is $120. The
+costs **$96 in raw API spend**. The Sora 2 Pro path is $120. The
 Hailuo path is $10.80 — but the frame quality won't survive a
 Super Bowl spot.
 

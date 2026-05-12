@@ -11,13 +11,14 @@ code: |
       "Runway Gen-4 Turbo":    0.05,
       "Vidu Q3":               0.07,
       "Veo 3.1 Lite (1080p)":  0.08,
+      "Hailuo 02 (1080p)":     0.08,
       "Kling 3.0 standard":    0.084,
       "Sora 2 (720p)":         0.10,
+      "Veo 3 Fast":            0.15,
       "Kling 3.0 Pro":         0.168,
       "Sora 2 Pro (720p)":     0.30,
+      "Veo 3 (with audio)":    0.40,
       "Sora 2 Pro (1024p)":    0.50,
-      "Veo 3 (no audio)":      0.50,
-      "Veo 3 (with audio)":    0.75,
   }
   duration_min = 1.0
   retake = 2.5
@@ -52,20 +53,21 @@ Retake rate of 2.5x is realistic for I2V at this quality bar.
 | Runway Gen-4 Turbo | $0.05 | $7.50 | $0.60 | **$8.10** |
 | Vidu Q3 | $0.07 | $10.50 | $0.60 | **$11.10** |
 | Veo 3.1 Lite (1080p) | $0.08 | $12.00 | $0.60 | **$12.60** |
+| Hailuo 02 (1080p) | $0.08 | $12.00 | $0.60 | **$12.60** |
 | Kling 3.0 standard | $0.084 | $12.60 | $0.60 | **$13.20** |
 | Sora 2 (720p) | $0.10 | $15.00 | $0.60 | **$15.60** |
+| Veo 3 Fast | $0.15 | $22.50 | $0.60 | **$23.10** |
 | Kling 3.0 Pro | $0.168 | $25.20 | $0.60 | **$25.80** |
 | Sora 2 Pro (720p) | $0.30 | $45.00 | $0.60 | **$45.60** |
+| Veo 3 (with audio) | $0.40 | $60.00 | $0.60 | **$60.60** |
 | Sora 2 Pro (1024p) | $0.50 | $75.00 | $0.60 | **$75.60** |
-| Veo 3 (no audio) | $0.50 | $75.00 | $0.60 | **$75.60** |
-| Veo 3 (with audio) | $0.75 | $112.50 | $0.60 | **$113.10** |
 
 ## What this table tells you
 
 Three observations.
 
-**The cheap-to-premium spread is 15x.** $7-12 for the cheap tier
-all the way up to $113 for premium with audio. Same brief.
+**The cheap-to-premium spread is ~10x.** $7-12 for the cheap tier
+all the way up to $75 for premium 1024p. Same brief.
 
 **There is no single "right" model.** The answer depends on:
 
@@ -74,7 +76,7 @@ all the way up to $113 for premium with audio. Same brief.
 - What the audience expects (TikTok audiences accept Hailuo
   output; brand marketers do not).
 - Whether the piece needs audio (if yes, you're paying at least
-  $7.50 for Veo 3.1 Lite or $113 for Veo 3 full).
+  $7.50 for Veo 3.1 Lite or $60 for Veo 3 full).
 
 **The retake rate dominates the choice.** If you're disciplined
 about prompts (lesson 02) and have a real shot list, you might
@@ -87,7 +89,7 @@ every number doubles.
 Three rules from working agencies as of 2026:
 
 1. **Hero shot? Sora 2 Pro at 1024p or Veo 3.** The output quality
-   is non-negotiable for client work. ~$75-115/finished-minute.
+   is non-negotiable for client work. ~$60-75/finished-minute.
    Used for the one or two shots that are the deliverable.
 2. **B-roll / supporting shots? Kling 3.0 standard or Veo 3.1
    Lite 1080p.** Quality is good enough to cut next to a hero

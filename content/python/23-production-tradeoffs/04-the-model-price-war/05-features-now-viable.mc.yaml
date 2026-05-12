@@ -4,12 +4,12 @@ concept: features-unlocked-by-price-collapse
 code: |
   # four features. each runs at a different call volume per user per day.
   # GPT-4 (2023): $30/$60 per 1M tokens.
-  # Haiku 4.5 (2026): $0.25/$1.25 per 1M tokens. (~100x cheaper.)
+  # Haiku 4.5 (2026): $1/$5 per 1M tokens. (~18x cheaper.)
   # assume 500 input tokens + 200 output tokens per call.
 
   IN, OUT = 500, 200
   GPT4_IN, GPT4_OUT       = 30.0,  60.0
-  HAIKU_IN, HAIKU_OUT     = 0.25,  1.25
+  HAIKU_IN, HAIKU_OUT     = 1.0,   5.0
 
   def cost_per_call(in_rate, out_rate):
       return (IN / 1_000_000) * in_rate + (OUT / 1_000_000) * out_rate
@@ -29,9 +29,9 @@ code: |
       print(f"{name}: GPT-4 ${gpt4_monthly:.2f}/user/mo  vs  Haiku ${haiku_monthly:.4f}/user/mo")
 prompt: |
   Four features. Two of them were too expensive to run on GPT-4 in
-  2023 (would have eaten 100% of revenue per user) but become
-  obviously viable on Haiku 4.5 in 2026 (under a dollar per user per
-  month).
+  2023 (would have eaten 100%+ of revenue per user — hundreds of
+  dollars/user/month) but become viable on Haiku 4.5 in 2026 (now
+  in the $10-25/user/month range, fine for a $30 subscription).
 
   The other two were ALREADY cheap enough in 2023 that the price
   collapse didn't change anything — they were viable on either

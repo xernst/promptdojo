@@ -13,8 +13,8 @@ ring all day. Most calls are 90 seconds of small talk followed by
 "can you come fix my AC tomorrow." The owner has been doing this
 for 22 years and his head is the operating system.
 
-This is the kind of company Isenberg means when he says "boring,
-profitable, fragmented industries." Margins are 12-18%. The owner
+This is the kind of company Isenberg's writing points at: boring,
+profitable, fragmented industries. Margins are 12-18%. The owner
 wants to retire. Nobody at the company has touched a Python
 interpreter in their lives.
 
@@ -113,9 +113,10 @@ Three numbers, none of them "hours saved":
 
 The AI-native version of this company runs with 12 people instead
 of 30 and clears the same revenue. That's not a productivity bump.
-That's a different company. Per Isenberg: "small teams. Narrow
-markets. Proprietary workflows. High automation. High trust. Clear
-customer pain. Boring category. Beautiful margins."
+That's a different company. The shape Isenberg's writing keeps
+pointing at: small teams. Narrow markets. Proprietary workflows.
+High automation. High trust. Clear customer pain. Boring category.
+Beautiful margins.
 
 ## What this case study teaches
 

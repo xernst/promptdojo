@@ -50,7 +50,7 @@ all three.
 This course will spend an entire lesson (ch24, lesson 04) walking
 through real incidents. As a preview:
 
-- **Air Canada** shipped a customer-service chatbot in 2022 that
+- **Air Canada** had a customer-service chatbot in operation by 2022 that
   invented a bereavement-refund policy that didn't exist. A
   bereaved customer relied on it, was denied the refund, and sued.
   Canada's civil-resolution tribunal ruled in 2024 that Air Canada

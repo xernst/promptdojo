@@ -30,8 +30,8 @@ code: |
       print(f"{k}: {v['name']} — {v['pitch']}")
 prompt: |
   Four startups, all shipped in 2023, all with real customers. By
-  2026 the model price curve has collapsed two orders of magnitude
-  (GPT-4 was $30/$60 per 1M; Haiku 4.5 is $0.25/$1.25).
+  2026 the model price curve has collapsed more than an order of
+  magnitude (GPT-4 was $30/$60 per 1M; Haiku 4.5 is $1/$5).
 
   Which startup's unit economics STILL work in 2026 — i.e. they
   benefitted from the price collapse instead of getting crushed by
@@ -39,7 +39,7 @@ prompt: |
 options:
   - id: a_writefast
     label: "A: WriteFast — $99/mo unlimited GPT-4 generator"
-    explain: "Classic Jasper trap. Priced premium against a model whose capability now lives at 1/100 the cost. Free tools inside Notion, HubSpot, ChatGPT shipped the same feature for $0. The $99 price became indefensible."
+    explain: "Classic Jasper trap. Priced premium against a model whose capability now lives at ~1/30 the cost. Free tools inside Notion, HubSpot, ChatGPT shipped the same feature for $0. The $99 price became indefensible."
   - id: b_searchpilot
     label: "B: SearchPilot — $20/mo answer engine with quarterly model re-routing"
   - id: c_codebuddy

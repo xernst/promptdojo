@@ -21,8 +21,8 @@ prompt: |
   | Kling 3.0 standard | `client_grade` | 0.084 |
   | Sora 2 (720p) | `client_grade` | 0.10 |
   | Sora 2 Pro (720p) | `premium` | 0.30 |
+  | Veo 3 (with audio) | `premium` | 0.40 |
   | Sora 2 Pro (1024p) | `premium` | 0.50 |
-  | Veo 3 (with audio) | `premium` | 0.75 |
 
   Quality ordering (each tier accepts higher tiers as substitutes):
   `ai_flavored` < `client_grade` < `premium`. So if
@@ -56,8 +56,8 @@ starter: |
       "Kling 3.0 standard":    ("client_grade", 0.084),
       "Sora 2 (720p)":         ("client_grade", 0.10),
       "Sora 2 Pro (720p)":     ("premium", 0.30),
+      "Veo 3 (with audio)":    ("premium", 0.40),
       "Sora 2 Pro (1024p)":    ("premium", 0.50),
-      "Veo 3 (with audio)":    ("premium", 0.75),
   }
 
   TIER_RANK = {"ai_flavored": 0, "client_grade": 1, "premium": 2}
@@ -92,8 +92,8 @@ solution: |
       "Kling 3.0 standard":    ("client_grade", 0.084),
       "Sora 2 (720p)":         ("client_grade", 0.10),
       "Sora 2 Pro (720p)":     ("premium", 0.30),
+      "Veo 3 (with audio)":    ("premium", 0.40),
       "Sora 2 Pro (1024p)":    ("premium", 0.50),
-      "Veo 3 (with audio)":    ("premium", 0.75),
   }
 
   TIER_RANK = {"ai_flavored": 0, "client_grade": 1, "premium": 2}

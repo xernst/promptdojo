@@ -13,7 +13,7 @@ The cleanest receipt published in 2026 came from HumanLayer, citing the Terminal
 - **Claude Opus 4.6 inside Claude Code**: ranked #33.
 - **Claude Opus 4.6 inside a different harness**: ranked #5.
 
-Same model. The harness changed. The model rocketed 28 places.
+Same model. The harness changed. The model rocketed 28 places (±4 positions per HumanLayer's stated margin).
 
 This is *the harness gap*. It is the gap between what a model can theoretically do and what you see it do. The size of that gap is mostly a function of how well the harness is built around it. Trivedy's framing again: **"If you're not the model, you're the harness."** The harness is the lever you actually pull.
 

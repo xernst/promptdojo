@@ -9,15 +9,15 @@ code: |
       "Sora 2 (720p)":         0.10,
       "Sora 2 Pro (720p)":     0.30,
       "Sora 2 Pro (1024p)":    0.50,
-      "Veo 3 (no audio)":      0.50,
-      "Veo 3 (with audio)":    0.75,
+      "Veo 3 (with audio)":    0.40,   # Sept 2025 price cut from $0.50/$0.75
+      "Veo 3 Fast":            0.15,   # Same Sept 2025 cut
       "Veo 3.1 Lite (720p)":   0.05,
       "Veo 3.1 Lite (1080p)":  0.08,
       "Kling 3.0 (standard)":  0.084,
       "Kling 3.0 (Pro)":       0.168,
       "Runway Gen-4 Turbo":    0.05,   # 5 credits/sec × $0.01/credit
       "Hailuo 02 (768p)":      0.045,
-      "Hailuo 02 (1080p)":     0.047,  # ~$0.28 per 6s clip
+      "Hailuo 02 (1080p)":     0.08,   # ~$0.48 per 6s clip
       "Vidu Q3":               0.07,
   }
   print(f"{'model':<28}{'$/sec':>8}{'$/60s':>10}")
@@ -37,15 +37,15 @@ second of *generated* video, before retakes are factored in.
 | Sora 2 (720p) | $0.10 | $6 |
 | Sora 2 Pro (720p) | $0.30 | $18 |
 | Sora 2 Pro (1024p) | $0.50 | $30 |
-| Veo 3 (no audio) | $0.50 | $30 |
-| Veo 3 (with audio) | $0.75 | $45 |
+| Veo 3 (with audio) | $0.40 | $24 |
+| Veo 3 Fast | $0.15 | $9 |
 | Veo 3.1 Lite (720p) | $0.05 | $3 |
 | Veo 3.1 Lite (1080p) | $0.08 | $4.80 |
 | Kling 3.0 (standard) | $0.084 | $5.04 |
 | Kling 3.0 (Pro, video input) | $0.168 | $10.08 |
 | Runway Gen-4 Turbo | $0.05 | $3 |
 | Hailuo 02 (768p) | $0.045 | $2.70 |
-| Hailuo 02 (1080p) | ~$0.047 | $2.80 |
+| Hailuo 02 (1080p) | $0.08 | $4.80 |
 | Vidu Q3 | $0.07 | $4.20 |
 
 ## The four tiers
@@ -64,18 +64,18 @@ The lineup separates cleanly into four price tiers:
    not Sora 2 Pro / Veo 3 premium pricing.
 
 3. **$0.30-0.50/sec — the premium tier.** Sora 2 Pro (both
-   resolutions), Veo 3 without audio. Roughly $18-30 per
-   60-second piece. Used for hero shots, client work where the
-   output is the deliverable.
+   resolutions). Roughly $18-30 per 60-second piece. Used for
+   hero shots, client work where the output is the deliverable.
 
-4. **$0.75/sec — the premium-with-audio tier.** Veo 3 with native
-   audio. $45 per 60-second piece. Used for talking-head /
-   narrated content where the lip-sync and ambient audio matter.
+4. **$0.40/sec — premium with native audio.** Veo 3 with audio.
+   $24 per 60-second piece. Used for talking-head / narrated
+   content where the lip-sync and ambient audio matter. (Was
+   $0.75/sec at launch; Google cut prices in September 2025.)
 
 ## The 10x spread is the strategic question
 
-The cheapest tier is **17x cheaper than the most expensive tier**
-(Hailuo at $0.045 vs Veo 3 with audio at $0.75). That spread is
+The cheapest tier is **~11x cheaper than the most expensive tier**
+(Hailuo at $0.045 vs Sora 2 Pro at $0.50). That spread is
 not "the same product at different prices." It's *different
 products entirely*. They serve different jobs.
 
@@ -84,7 +84,7 @@ Fortune 500 client," Hailuo is wrong. The frames will not hold up
 in a Super Bowl spot.
 
 If your project is "60 short variations for a Facebook ad
-performance test," Veo 3 is wrong. You'll burn $2,700 on the
+performance test," Veo 3 is wrong. You'll burn $1,440 on the
 test set and learn the same thing $300 of Hailuo output would
 have told you.
 

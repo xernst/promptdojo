@@ -74,7 +74,7 @@ The graveyard is full of teams that picked the wrong fork. A few
 shapes of failure that keep repeating:
 
 - **Fine-tuned on facts.** The legal-tech that fine-tuned GPT-4 on
-  case law in 2024 got crushed when GPT-5 with a 2M context window
+  case law in 2024 got crushed when GPT-5.5 with a 1M context window
   shipped in 2026. The fine-tune was a freshness liability — every
   new case meant retraining. Long-context (or RAG) would have aged
   better.

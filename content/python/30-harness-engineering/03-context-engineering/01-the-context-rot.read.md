@@ -10,7 +10,7 @@ For three years the model labs have been racing to ship larger context windows. 
 
 It cannot.
 
-Chroma published a paper in late 2025 (referenced by both Osmani and HumanLayer in their May 2026 essays) that measured what happens to model performance as context length grows. The chart is the same shape every time, across every model tested: **performance degrades non-linearly with context length, and the degradation accelerates the further you get from the relevant signal.** The longer the context, the worse the model gets at finding what matters in it. This is now called *context rot*.
+Chroma published a paper in July 2025 (referenced by both Osmani and HumanLayer in their spring 2026 essays) that measured what happens to model performance as context length grows. The chart is the same shape every time, across every model tested: **performance degrades non-linearly with context length, and the degradation accelerates the further you get from the relevant signal.** The longer the context, the worse the model gets at finding what matters in it. This is now called *context rot*.
 
 Two practical consequences:
 

@@ -25,7 +25,7 @@ prompt: |
   Hailuo 02 (768p) @ 2.5x       = $  6.75/min
   Sora 2 (720p) @ 4.0x          = $ 24.00/min
   Sora 2 Pro (1024p) @ 4.0x     = $120.00/min
-  Veo 3 (with audio) @ 1.5x     = $ 67.50/min
+  Veo 3 (with audio) @ 1.5x     = $ 36.00/min
   Kling 3.0 standard @ 3.0x     = $ 15.12/min
   ```
 starter: |
@@ -35,13 +35,14 @@ starter: |
       "Runway Gen-4 Turbo":    0.05,
       "Vidu Q3":               0.07,
       "Veo 3.1 Lite (1080p)":  0.08,
+      "Hailuo 02 (1080p)":     0.08,
       "Kling 3.0 standard":    0.084,
       "Sora 2 (720p)":         0.10,
+      "Veo 3 Fast":            0.15,
       "Kling 3.0 Pro":         0.168,
       "Sora 2 Pro (720p)":     0.30,
+      "Veo 3 (with audio)":    0.40,
       "Sora 2 Pro (1024p)":    0.50,
-      "Veo 3 (no audio)":      0.50,
-      "Veo 3 (with audio)":    0.75,
   }
 
   scenarios = [
@@ -63,7 +64,7 @@ grader:
     Hailuo 02 (768p) @ 2.5x       = $  6.75/min
     Sora 2 (720p) @ 4.0x          = $ 24.00/min
     Sora 2 Pro (1024p) @ 4.0x     = $120.00/min
-    Veo 3 (with audio) @ 1.5x     = $ 67.50/min
+    Veo 3 (with audio) @ 1.5x     = $ 36.00/min
     Kling 3.0 standard @ 3.0x     = $ 15.12/min
   normalize: collapse-trailing-newline
 solution: |
@@ -73,13 +74,14 @@ solution: |
       "Runway Gen-4 Turbo":    0.05,
       "Vidu Q3":               0.07,
       "Veo 3.1 Lite (1080p)":  0.08,
+      "Hailuo 02 (1080p)":     0.08,
       "Kling 3.0 standard":    0.084,
       "Sora 2 (720p)":         0.10,
+      "Veo 3 Fast":            0.15,
       "Kling 3.0 Pro":         0.168,
       "Sora 2 Pro (720p)":     0.30,
+      "Veo 3 (with audio)":    0.40,
       "Sora 2 Pro (1024p)":    0.50,
-      "Veo 3 (no audio)":      0.50,
-      "Veo 3 (with audio)":    0.75,
   }
 
   scenarios = [

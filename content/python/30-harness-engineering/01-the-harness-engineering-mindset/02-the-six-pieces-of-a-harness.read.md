@@ -38,7 +38,7 @@ What the model can DO besides talk. Three sub-categories:
 - **MCP servers**: out-of-process tool registries that bolt on (Linear, GitHub, Postgres, Slack). The Model Context Protocol spec.
 - **Custom CLIs**: a tiny shell command (e.g., `linear-cli list-issues`) that wraps an external API in fewer tokens than an MCP server would. HumanLayer explicitly recommends these over MCP for high-volume integrations.
 
-Osmani's rule: **"Ten focused tools will always outperform fifty overlapping ones, because the model can hold the menu in its head."** Tool bloat is the most common harness sin.
+Osmani's rule: **"Ten focused tools outperform fifty overlapping ones, because the model can hold the menu in its head."** Tool bloat is the most common harness sin.
 
 ## Piece 3 — Bundled infrastructure
 

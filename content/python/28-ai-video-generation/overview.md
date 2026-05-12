@@ -1,14 +1,14 @@
 ## Video is no longer a research demo
 
-Image generation went from "uncanny" to "production-grade" in about two years. Video has taken roughly the same trajectory, but compressed into eighteen months: when Sora 1 leaked in early 2024 it was a spectacle. Sora 2 (September 2025), Veo 3 (mid-2025, native audio), Veo 3.1 Lite (March 2026, $0.05/sec) and the Kling 3.0 release (February 2026, native 4K with audio) collectively crossed the line from "trick" to "infrastructure." There are now at least eight distinct video models with real production users, each occupying a different lane.
+Image generation went from "uncanny" to "production-grade" in about two years. Video has taken roughly the same trajectory, but compressed into eighteen months: when Sora 1 leaked in early 2024 it was a spectacle. Sora 2 (October 2025), Veo 3 (mid-2025, native audio), Veo 3.1 Lite (March 2026, $0.05/sec) and the Kling 3.0 release (February 2026, native 4K with audio) collectively crossed the line from "trick" to "infrastructure." There are now at least eight distinct video models with real production users, each occupying a different lane.
 
-The catch: video is also the most *expensive* generative modality by an order of magnitude. A 60-second promo on Sora 2 Pro at 1024p costs $30 in raw API spend. The same minute on Veo 3 with audio runs $45. Higgsfield's flagship Cinema Studio sits on top of those APIs and charges in credits that work out to single-digit dollars per usable clip. None of this includes the "generate ten, pick one" reality.
+The catch: video is also the most *expensive* generative modality by an order of magnitude. A 60-second promo on Sora 2 Pro at 1024p costs $30 in raw API spend. The same minute on Veo 3 with audio runs $24. Higgsfield's flagship Cinema Studio sits on top of those APIs and charges in credits that work out to single-digit dollars per usable clip. None of this includes the "generate ten, pick one" reality.
 
 ## The four questions that decide which model
 
 1. **Do you need native audio?** Veo 3 generates speech, ambience, and music inline. Sora 2 generates audio too. Kling 3.0 added it in February 2026. Everyone else makes you composite audio in post.
 2. **Do you need camera control?** Higgsfield's specialty — virtual lenses, focal lengths, stacked moves, character lock-in. Most base models can't do a coherent dolly-in or rack focus. Higgsfield wraps the base models with that vocabulary.
-3. **Is the budget per-minute viable?** Cheap tier (Hailuo, Pika base, Veo 3.1 Lite): $3-5/finished-minute including retakes. Premium tier (Sora 2 Pro, Veo 3 with audio): $30-60/finished-minute. Different products entirely.
+3. **Is the budget per-minute viable?** Cheap tier (Hailuo, Pika base, Veo 3.1 Lite): $3-5/finished-minute including retakes. Premium tier (Sora 2 Pro, Veo 3 with audio): $24-75/finished-minute. Different products entirely.
 4. **Text-to-video, image-to-video, or video-to-video?** Image-to-video is the sweet spot for product work — you control the first frame in something cheap (Nano Banana, Imagen 4) and only spend the video budget on motion.
 
 ## What AI specifically gets wrong

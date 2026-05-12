@@ -12,7 +12,7 @@ prompt: |
 
   1. `needs_camera_control` True → `"Higgsfield"`
   2. `budget_max_per_sec < 0.06` → `"Hailuo 02"`
-  3. `needs_audio` True AND `budget_max_per_sec >= 0.50` → `"Veo 3"`
+  3. `needs_audio` True AND `budget_max_per_sec >= 0.40` → `"Veo 3"`
   4. `needs_audio` True → `"Veo 3.1 Lite"`
   5. `needs_image_input` True AND `budget_max_per_sec < 0.20` →
      `"Kling 3.0"`
@@ -50,7 +50,7 @@ starter: |
           "needs_camera_control": False,
           "needs_audio": True,
           "needs_image_input": False,
-          "budget_max_per_sec": 0.75,
+          "budget_max_per_sec": 0.50,
           "duration_sec": 8,
       },
       {
@@ -107,7 +107,7 @@ solution: |
           "needs_camera_control": False,
           "needs_audio": True,
           "needs_image_input": False,
-          "budget_max_per_sec": 0.75,
+          "budget_max_per_sec": 0.50,
           "duration_sec": 8,
       },
       {
@@ -133,7 +133,7 @@ solution: |
           return "Higgsfield"
       if task.get("budget_max_per_sec", 0) < 0.06:
           return "Hailuo 02"
-      if task.get("needs_audio") and task.get("budget_max_per_sec", 0) >= 0.50:
+      if task.get("needs_audio") and task.get("budget_max_per_sec", 0) >= 0.40:
           return "Veo 3"
       if task.get("needs_audio"):
           return "Veo 3.1 Lite"

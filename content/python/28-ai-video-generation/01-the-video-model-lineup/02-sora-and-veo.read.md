@@ -6,7 +6,7 @@ code: |
   # the two heavyweight base models, side by side (mid-2026 pricing).
   sora_2 = {
       "vendor": "OpenAI",
-      "released_api": "2025-09-30",
+      "released_api": "2025-10-06",
       "resolutions": ["720p"],
       "durations_sec": [4, 8, 12],
       "price_per_sec_720p": 0.10,
@@ -17,7 +17,7 @@ code: |
   sora_2_pro = {
       "vendor": "OpenAI",
       "resolutions": ["720p", "1024p"],
-      "durations_sec": [4, 8, 12, 25],
+      "durations_sec": [10, 15, 25],
       "price_per_sec_720p": 0.30,
       "price_per_sec_1024p": 0.50,
       "native_audio": True,
@@ -26,10 +26,15 @@ code: |
   veo_3 = {
       "vendor": "Google (Vertex AI)",
       "resolutions": ["720p", "1080p"],
-      "price_per_sec_no_audio": 0.50,
-      "price_per_sec_with_audio": 0.75,
+      "price_per_sec_with_audio": 0.40,
       "native_audio": True,
       "strength": "cinematic + NATIVE audio in one pass",
+  }
+  veo_3_fast = {
+      "vendor": "Google (Vertex AI)",
+      "price_per_sec_with_audio": 0.15,
+      "native_audio": True,
+      "strength": "Veo 3 quality at sub-Lite pricing",
   }
   veo_3_1_lite = {
       "vendor": "Google",
@@ -39,7 +44,7 @@ code: |
       "native_audio": True,
       "strength": "cheap Veo — production-grade B-roll",
   }
-  for m in (sora_2, sora_2_pro, veo_3, veo_3_1_lite):
+  for m in (sora_2, sora_2_pro, veo_3, veo_3_fast, veo_3_1_lite):
       print(m["vendor"], "—", m["strength"])
 ---
 
@@ -51,13 +56,13 @@ coverage talks about them like they are.
 
 ## Sora 2 — physics-first
 
-OpenAI released the Sora 2 API on September 30, 2025. By mid-2026
-it has two tiers:
+OpenAI shipped the Sora 2 API at DevDay on October 6, 2025. By
+mid-2026 it has two tiers:
 
 - **Sora 2** (base): 720p, durations 4 / 8 / 12 seconds, **$0.10
   per second of generated video**. Native synchronized audio.
 - **Sora 2 Pro**: 720p or 1024p (1024x1792 or 1792x1024),
-  durations 4 / 8 / 12 / 25 seconds. **$0.30/sec at 720p, $0.50/sec
+  durations 10 / 15 / 25 seconds. **$0.30/sec at 720p, $0.50/sec
   at 1024p**. Same audio.
 
 What Sora 2 does better than anything else: **character and
@@ -76,7 +81,7 @@ What it does NOT do better:
   good at this.
 - Long durations. The 25-second cap on Sora 2 Pro is the longest
   in the lineup, but the price ($12.50 per 25-sec clip at 1024p,
-  before retakes) means you'll generate twelves and stitch.
+  before retakes) means you'll generate 10s or 15s and stitch.
 - Multilingual lip-sync. Veo 3 has the edge here.
 
 ## Veo 3 — cinematic + audio-native
@@ -84,10 +89,14 @@ What it does NOT do better:
 Google released Veo 3 on Vertex AI in mid-2025 and shipped Veo 3.1
 Lite on March 31, 2026 to compete on price.
 
-- **Veo 3** (Vertex AI): 720p / 1080p. **$0.50/sec without audio,
-  $0.75/sec with audio.** The audio is *the* feature. Speech with
+- **Veo 3** (Vertex AI): 720p / 1080p. **$0.40/sec with audio**
+  (Google dropped the price in September 2025 from the original
+  $0.50/$0.75 launch tier). The audio is *the* feature. Speech with
   lip-sync. Ambient sound. Music. All generated in the same pass
   as the picture. No compositing step.
+- **Veo 3 Fast**: **$0.15/sec with audio.** Lower-quality sibling
+  shipped at the same price-cut, slots between full Veo 3 and the
+  Lite tier.
 - **Veo 3.1 Lite**: **$0.05/sec at 720p, $0.08/sec at 1080p.** This
   is the model that made Veo competitive on price. Quality is
   slightly below full Veo 3 but better than most cheap-tier
@@ -117,7 +126,7 @@ Three-way split that works in practice:
 | Job | Use |
 |---|---|
 | Hero product shot, 8 sec, no audio | Sora 2 ($0.80) |
-| Talking-head ad with VO, 30 sec | Veo 3 with audio ($22.50) |
+| Talking-head ad with VO, 30 sec | Veo 3 with audio ($12.00) |
 | Mass B-roll, 60 clips × 6 sec | Veo 3.1 Lite ($0.30/clip × 60 = $18) |
 | Character-driven narrative | Sora 2 Pro (consistency) |
 | Anything with sound design | Veo 3 (audio native) |

@@ -24,11 +24,13 @@ let's talk about the dial that controls how the sample gets drawn.
 ## Temperature is the dial
 
 Every modern LLM exposes a parameter called **temperature**, usually
-a number between 0 and 2. Temperature controls how sharp or flat the
-sampling is.
+a number between 0 and 1 on Anthropic, 0 and 2 on OpenAI. Temperature
+controls how sharp or flat the sampling is. (Heads up: some newer
+Anthropic models like Opus 4.7 sample adaptively and reject the
+temperature field entirely.)
 
-> The thermostat metaphor — temperature 0 = repetitive, 1 = varied,
-> 2 = chaos.
+> The thermostat metaphor — temperature 0 = repetitive, mid = varied,
+> near max = chaos.
 
 Walk it through:
 
@@ -44,11 +46,11 @@ Walk it through:
   five over enough runs. The model behaves the way the underlying
   probabilities say it should.
 
-- **Temperature 2.** The sampler flattens the distribution before
-  drawing. Low-probability tokens get picked more often. Output
-  gets weirder, more surprising, sometimes more creative,
-  occasionally word salad. Useful for brainstorm-style work, bad
-  for anything that has to be correct.
+- **Temperature near max — 1 on Anthropic, 2 on OpenAI.** The sampler
+  flattens the distribution before drawing. Low-probability tokens get
+  picked more often. Output gets weirder, more surprising, sometimes
+  more creative, occasionally word salad. Useful for brainstorm-style
+  work, bad for anything that has to be correct.
 
 Most chat products — ChatGPT, Claude, Gemini — ship with a default
 temperature around 0.7 to 1.0. That's why the same question gives

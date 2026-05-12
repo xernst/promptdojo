@@ -37,8 +37,8 @@ around them.
 
 ## Case 5: Software development (the process-debt case)
 
-Yunhao Jiao made an under-credited point in the replies to
-Isenberg's essay:
+An under-credited point that's been circulating in the AI-native
+discourse:
 
 > Process debt hits hard in software dev. Using AI to code faster
 > just makes you hit the QA bottleneck faster. Until humans stop
@@ -80,7 +80,8 @@ Every case study above describes a 5-15-person AI-native team
 outperforming a 40-100-person incumbent. The obvious question is:
 **why don't the incumbents just do the same thing?**
 
-Isenberg's answer: **process debt**.
+The answer (and the reason Isenberg's writing keeps returning to
+this point): **process debt**.
 
 > The hard part is that incumbents are full of old process debt.
 > Their data is messy. Their policies conflict. Their teams

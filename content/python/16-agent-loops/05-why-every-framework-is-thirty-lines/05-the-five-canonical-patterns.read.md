@@ -14,6 +14,12 @@ paths) from *agents* (LLMs that direct their own paths). Second, it
 names the five canonical patterns that show up across every
 production agent system.
 
+Anthropic's post also distinguishes these five WORKFLOW patterns
+from a sixth, distinct ARCHITECTURE: **"agents"** — autonomous loops
+where the model directs its own tool use rather than following a
+pre-set graph. The five below are the workflow shapes. The agent
+loop (chapter 16) is the sixth.
+
 If you read the docs of LangGraph, CrewAI, AutoGen, Vercel AI SDK,
 DSPy, or any other framework, you'll find each of these patterns
 implemented under a different name. They are the universal

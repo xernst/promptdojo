@@ -27,13 +27,13 @@ code: |
       {
           "name": "Pika 2.2",
           "lane": "Pikaffects + Pikaformance lip-sync",
-          "price": "$8 Standard / $28 Pro / $76 Fancy per month",
+          "price": "$8 Standard / $28 Pro / $76 Fancy per month (annual billing; monthly $28/$76/$95)",
           "note": "Lip-sync is ElevenLabs-powered, strong for talking-head edits",
       },
       {
           "name": "Hailuo 02 (MiniMax)",
           "lane": "cheapest publishable 1080p",
-          "price": "$0.045/sec at 768p, $0.28 per 6s clip at 1080p",
+          "price": "$0.045/sec at 768p, $0.08/sec at 1080p ($0.48 per 6s 1080p clip)",
           "note": "MiniMax IPO'd in Hong Kong Jan 2026 at $4B",
       },
       {
@@ -130,17 +130,18 @@ matter:
   Take a single still image, give it a voice clip, get a talking
   head. Comparable to HeyGen for localized character content.
 
-Pricing: $8 Standard / $28 Pro / $76 Fancy monthly. Pika 2.2 cut
-credit costs significantly vs 2.1; a 5-second 1080p clip burns
-about 18 credits.
+Pricing: $8 Standard / $28 Pro / $76 Fancy on annual billing
+(monthly plans run $28/$76/$95). Pika 2.2 cut credit costs
+significantly vs 2.1; a 5-second 1080p clip burns about 18
+credits.
 
 ## Hailuo 02 (MiniMax) — the cheap-tier benchmark
 
 The cheapest publishable model in the working set. **$0.045/sec at
-768p, $0.017/sec at 512p.** A 6-second 768p clip costs $0.27;
-a 1080p clip costs $0.28. MiniMax is a Beijing-based company that
-IPO'd on the Hong Kong exchange in January 2026 at a $4B
-valuation.
+768p, $0.017/sec at 512p, $0.08/sec at 1080p.** A 6-second 768p clip
+costs $0.27; a 6-second 1080p clip costs $0.48. MiniMax is a
+Beijing-based company that IPO'd on the Hong Kong exchange in
+January 2026 at a $4B valuation.
 
 Use Hailuo when the brief is "we need 50 short clips for a
 performance-marketing test." Avoid when the brief includes the

@@ -8,7 +8,7 @@ code: |
   # contract-review workflow.
   calls_per_year = 12          # one a month
   tokens_per_call = 80_000     # long doc + thinking + reasoned output
-  opus_blended  = 45.0 / 1_000_000   # rough blended avg per token
+  opus_blended  = 15.0 / 1_000_000   # rough blended avg per token
   sonnet_blended = 9.0 / 1_000_000
 
   opus_yearly   = calls_per_year * tokens_per_call * opus_blended
@@ -93,13 +93,13 @@ When it doesn't:
 ## The cost calculation that flips at scale
 
 The code at the top of this page makes the point concrete. A
-contract review run 12× a year on Opus costs roughly $43 a year.
-On Sonnet it'd cost $8.60. The delta is $34. If Opus catches
+contract review run 12× a year on Opus costs roughly $14 a year.
+On Sonnet it'd cost $8.60. The delta is $5.76. If Opus catches
 even *one* missed clause across those 12 deals, you've paid
-back the delta 100× or more.
+back the delta 1000× or more.
 
 Now flip the volume. The same prompt, run 50,000 times a day, is
-the difference between $13,500/month on Sonnet and $67,500/month
+the difference between $13,500/month on Sonnet and $22,500/month
 on Opus. Same model, same task — at high volume, the Opus
 premium becomes the entire P&L. **The cost premium of a better
 model only matters when call volume is high.**

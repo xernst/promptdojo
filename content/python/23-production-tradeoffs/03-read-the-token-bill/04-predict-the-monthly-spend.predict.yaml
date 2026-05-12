@@ -5,7 +5,7 @@ code: |
   # you've measured cost-per-call in dev. now project the month.
   # scenario: a slack-summarizer feature shipping next week.
 
-  COST_PER_CALL = 0.0675   # measured: 2000 in + 500 out on opus 4.7
+  COST_PER_CALL = 0.0225   # measured: 2000 in + 500 out on opus 4.7
   DAU           = 1000     # daily active users
   CALLS_PER_DAU = 5        # avg calls per user per day
   DAYS          = 30
@@ -16,7 +16,7 @@ code: |
   print(f"daily spend:   ${daily_spend:.2f}")
   print(f"monthly spend: ${monthly_spend:.2f}")
 prompt: |
-  You've measured the cost-per-call in dev: $0.0675 (a typical
+  You've measured the cost-per-call in dev: $0.0225 (a typical
   Claude Opus 4.7 call — 2000 input tokens + 500 output tokens).
 
   The feature ships to 1000 DAU, each making 5 calls/day, for 30
@@ -27,11 +27,11 @@ prompt: |
 grader:
   kind: stdout-equality
   expected: |
-    daily spend:   $337.50
-    monthly spend: $10125.00
+    daily spend:   $112.50
+    monthly spend: $3375.00
   normalize: collapse-trailing-newline
 hint:
   - level: 1
-    body: 'daily = 0.0675 × 1000 × 5 = $337.50. monthly = $337.50 × 30 = $10,125.'
+    body: 'daily = 0.0225 × 1000 × 5 = $112.50. monthly = $112.50 × 30 = $3,375.'
   - level: 2
-    body: 'That is the slack-summarizer at the scale of a single mid-size SaaS. $10k/month for a feature is real money — and it scales linearly with DAU. 10k DAU = $100k/month.'
+    body: 'That is the slack-summarizer at the scale of a single mid-size SaaS. $3k/month for a feature is real money — and it scales linearly with DAU. 10k DAU = $33k/month.'

@@ -17,7 +17,7 @@ The cleanest empirical receipt comes from Terminal Bench 2.0 results published i
 - **Claude Opus 4.6 in Claude Code**: rank #33 on the leaderboard.
 - **Claude Opus 4.6 in a different harness**: rank #5.
 
-Same model. Different harness. 28 places on the leaderboard.
+Same model. Different harness. 28 places on the leaderboard (±4 positions per HumanLayer's stated margin).
 
 Note something subtle here: Claude Code, which is *the* harness Anthropic post-trains on, did *not* produce the highest Terminal Bench score. A different harness — one apparently better tuned to Terminal Bench's specific task shape — performed better. The lab's post-training is biased toward general-purpose coding tasks, not benchmark-specific ones.
 
