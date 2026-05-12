@@ -85,3 +85,6 @@ assets/launch/
 
 # Allow committing the example env file
 !.env.example
+
+# Local worktrees should never be tracked
+.claude/worktrees/
