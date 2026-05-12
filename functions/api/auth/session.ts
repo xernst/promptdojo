@@ -1,6 +1,9 @@
-// GET /api/auth/session — returns { email } if logged in, else 401.
-// Lets the client UI render "saved as X" without exposing the cookie
-// to JS.
+// GET /api/auth/session — returns { ok, email? } describing the current
+// session. Anonymous visitors get a 200 with { ok: false, anonymous: true }
+// rather than a 401 because the browser flags every 401 in the DevTools
+// console even when it's the expected "no session yet" path. The 401
+// noised up the console on every page load for every anonymous user
+// (QA report 2026-05-12). Real failures (missing secret) still 503.
 
 import { readSessionCookie, verifySession } from "../_lib/session";
 
@@ -19,6 +22,6 @@ export const onRequestGet = async (ctx: Ctx): Promise<Response> => {
   }
   const cookie = readSessionCookie(ctx.request);
   const session = await verifySession(cookie, ctx.env.SESSION_SECRET);
-  if (!session) return json({ ok: false }, 401);
+  if (!session) return json({ ok: false, anonymous: true }, 200);
   return json({ ok: true, email: session.email });
 };

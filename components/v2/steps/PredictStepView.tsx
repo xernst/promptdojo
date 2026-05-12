@@ -86,10 +86,13 @@ export default function PredictStepView({
         >
           Submit prediction
         </button>
+        {/* Mobile gate hides the IDE column on predict steps (passive-pass-through),
+            so this convenience button is desktop-only — calling ide.run() on a
+            phone executes against an IDE the user can't see (QA 2026-05-12). */}
         <button
           type="button"
           onClick={handleRunCode}
-          className="text-xs text-ink-400 underline-offset-2 hover:text-ink-100 hover:underline"
+          className="hidden text-xs text-ink-400 underline-offset-2 hover:text-ink-100 hover:underline md:inline-flex"
         >
           Or run the code →
         </button>
