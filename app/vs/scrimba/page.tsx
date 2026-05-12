@@ -46,7 +46,7 @@ const config: ComparisonConfig = {
     { feature: "teaches reading ai-generated python", promptdojo: true, competitor: false },
     { feature: "catalogs ai-introduced bugs", promptdojo: true, competitor: false },
     { feature: "screencast-style lessons", promptdojo: false, competitor: true },
-    { feature: "pace: 26 chapters / 500+ runnable steps", promptdojo: true, competitor: "varies" },
+    { feature: "pace: 31 chapters / 800+ runnable steps", promptdojo: true, competitor: "varies" },
     { feature: "cursor / claude code workflow examples", promptdojo: true, competitor: false },
     { feature: "native mobile app", promptdojo: "coming · $9.99/mo", competitor: false },
     { feature: "lifetime founders price", promptdojo: "$129 (first 100)", competitor: false },

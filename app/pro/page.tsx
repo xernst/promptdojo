@@ -18,7 +18,7 @@ import JsonLd, { SITE_URL } from "@/components/JsonLd";
 export const metadata: Metadata = {
   title: "early access · the python school for the ai era — promptdojo",
   description:
-    "the web is launching now. the app comes after. join early access for the app drop, or lock in the $129 founders lifetime rate before iOS ships. 26 chapters, pyodide ide, ai tutor, cloud sync.",
+    "the web is launching now. the app comes after. join early access for the app drop, or lock in the $129 founders lifetime rate before iOS ships. 31 chapters, pyodide ide, ai tutor, cloud sync.",
   alternates: { canonical: "/pro" },
   openGraph: {
     type: "article",
@@ -159,7 +159,7 @@ const PRODUCT_SCHEMA = {
   "@id": `${SITE_URL}/pro/#product`,
   name: "promptdojo — the python school for the ai era",
   description:
-    "26 chapters, 500+ runnable steps. read what ai wrote, catch what it got wrong, direct it deliberately. pyodide ide, ai tutor, cloud sync. free web preview, paid native app.",
+    "31 chapters, 800+ runnable steps. read what ai wrote, catch what it got wrong, direct it deliberately. pyodide ide, ai tutor, cloud sync. free web preview, paid native app.",
   url: `${SITE_URL}/pro/`,
   brand: { "@id": `${SITE_URL}/#org` },
   offers: [
@@ -228,7 +228,7 @@ export default function ProPage() {
         </h1>
         <p className="t-body mt-8 max-w-2xl">
           the web launches now — three chapters, free, no signup. the native
-          app — 26 chapters, pyodide on your phone, ai tutor —{" "}
+          app — 31 chapters, pyodide on your phone, ai tutor —{" "}
           <em className="italic text-ink-100">ships when there are enough of you to ship for.</em>
         </p>
         <p className="t-body-sm mt-4 max-w-2xl">

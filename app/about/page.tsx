@@ -325,7 +325,7 @@ export default async function AboutPage() {
         </div>
 
         <p className="t-body mt-10 max-w-2xl">
-          the app: 26 chapters, the full python ide, ai tutor on every
+          the app: 31 chapters, the full python ide, ai tutor on every
           failed attempt, cloud sync, offline mode.{" "}
           <span className="text-green-400">
             $9.99/mo · $59/yr · $129 lifetime (first 100 buyers).
