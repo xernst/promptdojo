@@ -3,10 +3,10 @@
 //
 // chapterSlugs MUST exist in lib/generated/v2/manifest.toc.json. The
 // PhaseBandedRail filters out unknown slugs at render-time, but a missing
-// or extra slug means the home rail won't sum to 25 tiles.
+// or extra slug means the home rail won't sum to the chapter total.
 
 export type Phase = {
-  number: number;       // 1..5
+  number: number;       // 0..6
   name: string;         // lowercase
   blurb: string;        // lowercase, comma-separated topics
   range: string;        // e.g. "ch 01–07"
@@ -14,6 +14,16 @@ export type Phase = {
 };
 
 export const PHASES: Phase[] = [
+  {
+    number: 0,
+    name: "before you build",
+    blurb:
+      "for anyone whose job got eaten by ai. what an llm is, how to talk to one, and what this course is going to ask of you.",
+    range: "ch 00",
+    chapterSlugs: [
+      "before-you-build",
+    ],
+  },
   {
     number: 1,
     name: "foundations",
@@ -77,6 +87,20 @@ export const PHASES: Phase[] = [
     blurb: "ship a working cli agent in 12 steps. ~100 lines of python.",
     range: "ch 25",
     chapterSlugs: ["capstone"],
+  },
+  {
+    number: 6,
+    name: "applied builds",
+    blurb:
+      "agent harnesses, ai image gen, ai video gen, programmatic design, harness engineering",
+    range: "ch 26–30",
+    chapterSlugs: [
+      "agent-harnesses",
+      "ai-image-generation",
+      "ai-video-generation",
+      "programmatic-design",
+      "harness-engineering",
+    ],
   },
 ];
 
