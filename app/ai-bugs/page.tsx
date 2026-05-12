@@ -53,7 +53,7 @@ const BUGS: Bug[] = [
     surface: "claude code, cursor, copilot",
     why: "asked to filter `None` from `[0, 1, None, 2]`, the ai writes `[x for x in xs if x]` and silently drops `0`. shipped a `user_id` outage at one company.",
     fix: "use `if x is not None` for nullable checks. never use truthiness for nullable id checks.",
-    lessonUrl: "/learn/v2/conditionals/truthiness-traps/0",
+    lessonUrl: "/learn/v2/conditionals/truthiness-bugs/0",
     addedISO: "2026-05-11",
   },
   {
@@ -62,7 +62,7 @@ const BUGS: Bug[] = [
     surface: "all ai coders",
     why: "writes `def add(item, items=[]):` and the same list gets reused across every call. classic python footgun, ai writes it weekly.",
     fix: "use `items: list | None = None` and create the list inside the function.",
-    lessonUrl: "/learn/v2/mutation-and-state/shared-state/0",
+    lessonUrl: "/learn/v2/mutation-and-state/why-it-breaks/0",
     addedISO: "2026-05-11",
   },
   {
@@ -71,7 +71,7 @@ const BUGS: Bug[] = [
     surface: "claude code, cursor",
     why: "writes `if items == None:` six times in one file. `__eq__` can lie. `is` cannot.",
     fix: "use `is None` always. it's not a style choice.",
-    lessonUrl: "/learn/v2/conditionals/identity-vs-equality/0",
+    lessonUrl: "/learn/v2/conditionals/truthiness-bugs/0",
     addedISO: "2026-05-11",
   },
   {
@@ -80,7 +80,7 @@ const BUGS: Bug[] = [
     surface: "claude code, cursor",
     why: "ask for the top 3 best sellers, get the 3 worst. `sorted()` is ascending by default and the ai never asks.",
     fix: "always pass `reverse=True` when you want largest-first, or use `heapq.nlargest`.",
-    lessonUrl: "/learn/v2/lists/sorting/0",
+    lessonUrl: "/learn/v2/lists-and-dicts/list-comprehensions/0",
     addedISO: "2026-05-11",
   },
   {
@@ -98,7 +98,7 @@ const BUGS: Bug[] = [
     surface: "cursor, copilot",
     why: "`for k in d:` then `del d[k]` raises `RuntimeError: dictionary changed size during iteration`. ai writes it confidently anyway.",
     fix: "iterate over `list(d.keys())` if you need to mutate while looping. or build a new dict.",
-    lessonUrl: "/learn/v2/dicts/iteration-traps/0",
+    lessonUrl: "/learn/v2/lists-and-dicts/nested-data-shapes/0",
     addedISO: "2026-05-11",
   },
   {
@@ -107,7 +107,7 @@ const BUGS: Bug[] = [
     surface: "all ai coders",
     why: "writes `try: ... except Exception: pass` and hides real bugs forever. the call site reports success.",
     fix: "catch the specific exception. if you need a wide net, log + reraise. never silent.",
-    lessonUrl: "/learn/v2/error-handling/specific-vs-broad/0",
+    lessonUrl: "/learn/v2/error-handling/catching-specific-errors/0",
     addedISO: "2026-05-11",
   },
 ];
