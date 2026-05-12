@@ -10,7 +10,7 @@ This chapter is the introduction. By step 8 you'll have a pytest-style eval suit
 
 Most "evals" content on the internet is positioned for ML engineers at large companies — Braintrust, LangSmith, Anthropic's evals cookbook, expensive SaaS dashboards. That's appropriate for production AI infrastructure teams. It's *not* the right starting point for a PM or ops person trying to ship an AI feature without their first deploy lighting up the on-call rotation.
 
-The right starting point is much smaller: a Python file with a list of inputs, a list of expected outputs, and some `assert` statements. Pytest. Maybe a regex check. Maybe a Pydantic schema. That's it. You don't need infrastructure to have a real eval suite. You need fifty lines of Python and the discipline to add one case every time a real customer hits a new failure mode.
+The right starting point is much smaller: a Python file with a list of inputs, a list of expected outputs, and some `assert` statements. Pytest. Maybe a regex check. Maybe a Pydantic schema. That's it. You don't need infrastructure to have a real eval suite. You need fifty lines of Python and the habit of adding one case every time a real customer hits a new failure mode.
 
 ## The four eval patterns ranked from strict to loose
 

@@ -15,7 +15,7 @@ exactly these five signals. Internalize them first.
 The checklist generalizes the same framework chapter 26 lesson 3
 used for industry rebuilds. There it asked "which workflow inside
 this business can an agent absorb?" Here it asks "which decision
-inside my project can the agent own?" Same five signals, scaled
+inside your project can the agent own?" Same five signals, scaled
 down from industry to capstone.
 
 ## 1. Volume — the agent's decision fires more than ten times a day

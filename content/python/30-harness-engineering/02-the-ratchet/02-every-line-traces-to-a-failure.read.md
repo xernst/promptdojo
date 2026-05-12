@@ -55,7 +55,7 @@ The ratchet metaphor implies one-way motion. In practice, the discipline has two
 - **Forward (add):** observed failure → new rule → date-stamped → committed.
 - **Backward (retire):** stale rule → model now handles it natively (you can demonstrate this with an eval) → removed, with the removal also logged.
 
-Forward is the easier direction; almost everyone gets there eventually. Backward is the discipline most teams skip. They end up with a CLAUDE.md that grew from 30 lines to 300 over a year, half of those rules now redundant, the model's attention diluted.
+Forward is the easier direction; almost everyone gets there eventually. Backward is the habit most teams skip. They end up with a CLAUDE.md that grew from 30 lines to 300 over a year, half of those rules now redundant, the model's attention diluted.
 
 Osmani is explicit about this in the post: **"Harnesses don't shrink, they move."** Lines get retired *as new failure modes open up*. The total volume of harness work doesn't shrink. But the *specific* lines should move — yesterday's pre-tool hook is today's model-native behavior is tomorrow's removed line.
 

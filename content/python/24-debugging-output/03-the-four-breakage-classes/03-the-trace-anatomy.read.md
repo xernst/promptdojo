@@ -95,7 +95,7 @@ class 1, 2, or 4 in disguise.
 
 It does NOT teach you to *fix* any of these classes. Fixing
 retrieval is chapter 22. Fixing prompts is chapter 19. Fixing parse
-bugs is chapter 23. This lesson teaches the discipline of
+bugs is chapter 23. This lesson teaches the practice of
 **putting the failure in the right bucket** so you fix it at the
 right layer. The wrong fix at the wrong layer is how teams burn
 weeks on a bug.

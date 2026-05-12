@@ -16,7 +16,7 @@ This is the *justification audit*. Every piece of harness has to answer the ques
 
 ## The working-backwards pattern, applied
 
-Three examples of the discipline running forwards (good) vs the reverse (bad).
+Three examples of the practice running forwards (good) vs the reverse (bad).
 
 **Bad direction — start from the tool**:
 - "I added a Postgres MCP server because Postgres is important."

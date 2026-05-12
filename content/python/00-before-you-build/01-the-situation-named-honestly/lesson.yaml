@@ -1,8 +1,9 @@
 slug: the-situation-named-honestly
 title: "The situation, named honestly"
-estMinutes: 16
+estMinutes: 19
 prerequisites: []
 order:
+  - 00-about-this-course.read.md
   - 01-the-math-changed.read.md
   - 02-what-got-cut-vs-what-survived.read.md
   - 03-which-skill-transfers.mc.yaml

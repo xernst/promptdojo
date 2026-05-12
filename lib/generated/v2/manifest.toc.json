@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "generatedAt": "2026-05-12T07:43:24.711Z",
+  "generatedAt": "2026-05-12T20:12:19.135Z",
   "chapters": [
     {
       "number": 0,
@@ -8,9 +8,9 @@
       "title": "before you build — what an llm is and where you fit",
       "blurb": "if you're here because ai took your job, this chapter is the one. names the situation honestly, installs the mental model the rest of the course assumes, and gets you typing your first line of code without pretending the last six months didn't happen.",
       "lessonCount": 4,
-      "stepCount": 33,
-      "estMinutes": 74,
-      "xpTotal": 78
+      "stepCount": 34,
+      "estMinutes": 77,
+      "xpTotal": 79
     },
     {
       "number": 1,
@@ -306,7 +306,7 @@
       "number": 30,
       "slug": "harness-engineering",
       "title": "harness engineering — the discipline behind the model",
-      "blurb": "every coding agent is a model plus a harness. the model is bought; the harness is engineered. learn the discipline: how to ratchet rules from failures, fight context rot, design long-horizon loops, wire hooks as enforcement, and read the haas shift that's reshaping what you build vs buy.",
+      "blurb": "every coding agent is a model plus a harness. the model is bought; the harness is engineered. learn the craft: how to ratchet rules from failures, fight context rot, design long-horizon loops, wire hooks as enforcement, and read the haas shift that's reshaping what you build vs buy.",
       "lessonCount": 5,
       "stepCount": 45,
       "estMinutes": 112,

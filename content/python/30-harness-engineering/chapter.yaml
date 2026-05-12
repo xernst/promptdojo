@@ -1,7 +1,7 @@
 number: 30
 slug: harness-engineering
 title: "harness engineering — the discipline behind the model"
-blurb: "every coding agent is a model plus a harness. the model is bought; the harness is engineered. learn the discipline: how to ratchet rules from failures, fight context rot, design long-horizon loops, wire hooks as enforcement, and read the haas shift that's reshaping what you build vs buy."
+blurb: "every coding agent is a model plus a harness. the model is bought; the harness is engineered. learn the craft: how to ratchet rules from failures, fight context rot, design long-horizon loops, wire hooks as enforcement, and read the haas shift that's reshaping what you build vs buy."
 lessons:
   - 01-the-harness-engineering-mindset
   - 02-the-ratchet

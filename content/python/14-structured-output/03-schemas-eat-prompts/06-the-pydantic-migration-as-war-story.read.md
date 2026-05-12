@@ -129,6 +129,6 @@ typed object.
 
 That's the discipline the Pydantic migration taught the community.
 The breakages from lesson step 02 of this lesson are what happens
-when the discipline isn't there.
+when the habit isn't there.
 
 Time to encode the rule. Next step: you write the boundary auditor.

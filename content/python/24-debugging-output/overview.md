@@ -33,7 +33,7 @@ You'll learn to recognize all three reflexes in your own code and in the AI's su
 
 ## The principle the chapter pivots on
 
-Don't blame the model. Blame the system. The model is one component of a feature that includes context, prompt, post-processing, UI, and the user's intent. Failures are almost always in the seams between those, not in the model itself. The discipline of finding the seam is what separates the teams who debug AI features fast from the teams who don't.
+Don't blame the model. Blame the system. The model is one component of a feature that includes context, prompt, post-processing, UI, and the user's intent. Failures are almost always in the seams between those, not in the model itself. The craft of finding the seam is what separates the teams who debug AI features fast from the teams who don't.
 
 A second principle: every customer-visible AI failure is also an eval gap. If your evals had caught it, the user wouldn't have. The exit move from this chapter is folding what you learned into the eval suite from chapter 21, so the next time the same class of failure happens, your CI catches it before any user does.
 

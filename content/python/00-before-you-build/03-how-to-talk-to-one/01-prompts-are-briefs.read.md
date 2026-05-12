@@ -16,7 +16,7 @@ distribution over tokens.
 
 This lesson exists because most "intro to prompting" content treats
 the skill as new. It isn't new. The deliverable changed; the
-discipline didn't. The discipline is the same one that produced every
+craft didn't. The craft is the same one that produced every
 good ad campaign, every clear SOP, every cleanly-drafted contract,
 every well-run support team. You name a role. You name a task. You
 give the context. You specify the shape of the output. You provide
@@ -81,7 +81,7 @@ because it will come back in every later chapter:
   infrastructure. It has tests, version control, and a change log.
   This is what the rest of this course is about.
 
-The 5 knobs you'll learn next apply to both modes. The discipline is
+The 5 knobs you'll learn next apply to both modes. The practice is
 identical. What changes is the cost of getting the prompt wrong.
 A bad user-mode prompt wastes thirty seconds of your time. A bad
 builder-mode prompt that ships into production wastes an Air Canada

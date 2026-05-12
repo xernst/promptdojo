@@ -8,12 +8,25 @@
     {
       "slug": "the-situation-named-honestly",
       "title": "The situation, named honestly",
-      "estMinutes": 16,
+      "estMinutes": 19,
       "prerequisites": [],
       "steps": [
         {
           "type": "read",
-          "id": "before-you-build/the-situation-named-honestly/s01-01-the-math-changed",
+          "id": "before-you-build/the-situation-named-honestly/s01-00-about-this-course",
+          "xp": 1,
+          "hint": [],
+          "personalize": false,
+          "phase": "warmup",
+          "estSeconds": 180,
+          "concept": "about-this-course",
+          "body": "# About this course (and the voice you're about to read)\n\nI'm Josh Ernst. I'm an AI consultant. I've spent the last few years\nbuilding products with LLMs and watching displaced workers try to learn\nthis stuff from courses that pretend AI didn't write half the content.\n\nThis course is different in one specific way: I'm telling you up front.\n\nPromptdojo was written by me with heavy AI assistance. The structure is\nmine. The voice is mine. The cadence is mine. The specific words were\ndrafted, critiqued, fact-checked, and re-drafted with an agent team\nthat costs me a few dollars a chapter. The voice you're about to read\nfor 31 chapters is consistent — em-dashes, three-bullet enumerations,\n\"read it twice\" rhetorical beats — because it's one writer (me) running\none process. That's not a tell. That's the brand.\n\nTwo reasons this matters before you start.\n\n**First**: if you're going to learn to build with AI, you should learn\nto read AI-assisted writing without flinching. The voice is going to\nkeep showing up — in product docs, in coworkers' Slack messages, in\nthe next four years of your career. Recognize it as a tool the writer\nis using, not a thing the writer is hiding.\n\n**Second**: I've made specific choices about what to fact-check, what\nto attribute, and what to label as composite. Every dollar amount in\nthis course has been verified against vendor pricing. Every named\nperson is real. Every \"Klarna did X\" or \"Air Canada was sued\" has\nreceipts. The places where I'm extrapolating are labeled *illustrative\nscenario* in the text. You don't have to trust the voice. You can\ncheck the facts.\n\nThe course is built for people the math changed on. If that's you,\nthe voice should fade into the background by chapter 3. If it doesn't,\nthe table of contents is on the left and there are 11 other Python\ncourses you can take.\n\nLet's start.",
+          "cta": "Got it",
+          "runnable": true
+        },
+        {
+          "type": "read",
+          "id": "before-you-build/the-situation-named-honestly/s02-01-the-math-changed",
           "xp": 1,
           "hint": [],
           "personalize": false,
@@ -26,7 +39,7 @@
         },
         {
           "type": "read",
-          "id": "before-you-build/the-situation-named-honestly/s02-02-what-got-cut-vs-what-survived",
+          "id": "before-you-build/the-situation-named-honestly/s03-02-what-got-cut-vs-what-survived",
           "xp": 1,
           "hint": [],
           "personalize": false,
@@ -39,7 +52,7 @@
         },
         {
           "type": "mc",
-          "id": "before-you-build/the-situation-named-honestly/s03-03-which-skill-transfers",
+          "id": "before-you-build/the-situation-named-honestly/s04-03-which-skill-transfers",
           "xp": 2,
           "hint": [
             {
@@ -82,7 +95,7 @@
         },
         {
           "type": "read",
-          "id": "before-you-build/the-situation-named-honestly/s04-04-the-bridge",
+          "id": "before-you-build/the-situation-named-honestly/s05-04-the-bridge",
           "xp": 1,
           "hint": [],
           "personalize": false,
@@ -95,7 +108,7 @@
         },
         {
           "type": "mc",
-          "id": "before-you-build/the-situation-named-honestly/s05-05-which-of-these-is-the-real-bridge",
+          "id": "before-you-build/the-situation-named-honestly/s06-05-which-of-these-is-the-real-bridge",
           "xp": 2,
           "hint": [
             {
@@ -138,7 +151,7 @@
         },
         {
           "type": "write",
-          "id": "before-you-build/the-situation-named-honestly/s06-06-name-your-transferable-strength",
+          "id": "before-you-build/the-situation-named-honestly/s07-06-name-your-transferable-strength",
           "xp": 5,
           "hint": [
             {
@@ -168,7 +181,7 @@
         },
         {
           "type": "checkpoint",
-          "id": "before-you-build/the-situation-named-honestly/s07-07-checkpoint",
+          "id": "before-you-build/the-situation-named-honestly/s08-07-checkpoint",
           "xp": 6,
           "hint": [
             {
@@ -197,7 +210,7 @@
           "passThreshold": 0.66
         }
       ],
-      "xpTotal": 18
+      "xpTotal": 19
     },
     {
       "slug": "what-an-llm-actually-is",
@@ -425,7 +438,7 @@
           "phase": "warmup",
           "estSeconds": 240,
           "concept": "prompts-as-briefs",
-          "body": "# A prompt is a brief\n\nIf you've ever written a creative brief, a customer-service call\nscript, a contract clause, an SOP, or a casting note — you've already\nwritten prompts. You just didn't know they were called that, and you\ndidn't know the audience would turn out to be a probability\ndistribution over tokens.\n\n> You already know how to write a brief. That's 80% of prompting.\n\nThis lesson exists because most \"intro to prompting\" content treats\nthe skill as new. It isn't new. The deliverable changed; the\ndiscipline didn't. The discipline is the same one that produced every\ngood ad campaign, every clear SOP, every cleanly-drafted contract,\nevery well-run support team. You name a role. You name a task. You\ngive the context. You specify the shape of the output. You provide\nexamples. Then you ship the brief and the work comes back.\n\nWhat changed is who's reading the brief and how literally they\ninterpret it. The model reads it like a junior contractor on their\nfirst day: literal, fast, eager, with no shared history and no\nability to ask clarifying questions. That's it. That's the whole\nadjustment.\n\n## Side by side: a 1995 creative brief and a 2026 LLM prompt\n\nHere is a real-shape creative brief from a 1995 agency. Read it.\n\n> **Client:** Midwest Furniture Co-op\n> **Project:** Spring catalog cover\n> **Audience:** 35-55, suburban, household income $60-120k, owns home\n> **Mood:** Warm, traditional, \"weekend morning\"\n> **Constraints:** Must show three pieces from the new oak line. No\n> children in shot. No fluorescent light. Logo bottom-right.\n> **Reference:** Pottery Barn 1994 fall catalog, pages 12-15\n> **Deliverable:** One 8x10 transparency, suitable for offset print\n> **Deadline:** Tuesday\n\nNow here is a 2026 LLM prompt for the equivalent digital task. Read\nit next to the brief above.\n\n> You are a senior catalog art director. Generate a description of a\n> spring catalog cover photograph for a Midwest furniture co-op.\n> Audience: 35-55 suburban homeowners, household income $60-120k.\n> Mood: warm, traditional, \"weekend morning.\" Must feature three\n> pieces from the new oak line. No children in shot. No fluorescent\n> light. Logo bottom-right. Reference: Pottery Barn 1994 fall\n> catalog, pages 12-15. Output: a single paragraph, 80-100 words,\n> suitable for handoff to a photographer.\n\nThey are the same brief. The 2026 version has the role written\nexplicitly (\"you are a senior catalog art director\") and the output\nshape stated in tokens (\"a single paragraph, 80-100 words\"), but\nevery other field maps one-to-one. Audience, mood, constraints,\nreferences, deliverable. Same.\n\nIf you wrote the first one in 1995, you can write the second one in\n2026. The skill is intact. The skill is portable.\n\n## Two modes of prompting: user vs. builder\n\nThere is a distinction in this course you need to get straight early,\nbecause it will come back in every later chapter:\n\n- **Prompts as artifacts** (user mode). You sit at the ChatGPT or\n  Claude window, you type a request, the model responds, you read\n  the response, you adjust the request, you go again. The prompt is\n  a thing you write once and throw away. This is what most people\n  mean when they say \"prompting.\"\n\n- **Prompts as system components** (builder mode). The prompt lives\n  inside a program. The program runs it a thousand times a day,\n  against a thousand different inputs, and ships the output to a\n  customer who never sees the prompt. The prompt is a piece of\n  infrastructure. It has tests, version control, and a change log.\n  This is what the rest of this course is about.\n\nThe 5 knobs you'll learn next apply to both modes. The discipline is\nidentical. What changes is the cost of getting the prompt wrong.\nA bad user-mode prompt wastes thirty seconds of your time. A bad\nbuilder-mode prompt that ships into production wastes an Air Canada\nrefund lawsuit, a NYC government scandal, a swearing-bot PR cycle.\n(We'll cover all three in ch24. They each started with a prompt\nnobody treated as infrastructure.)\n\nFor ch00, you're going to learn the discipline in user mode, because\nthat's the mode you can practice today without writing any code. By\nch19, you'll be writing builder-mode prompts. By ch24, you'll be\ntesting them. By ch26, you'll be deploying them into agent\nharnesses that run them at scale.\n\nBut it all starts here: a prompt is a brief. You already know how to\nwrite a brief. Let's name the parts.",
+          "body": "# A prompt is a brief\n\nIf you've ever written a creative brief, a customer-service call\nscript, a contract clause, an SOP, or a casting note — you've already\nwritten prompts. You just didn't know they were called that, and you\ndidn't know the audience would turn out to be a probability\ndistribution over tokens.\n\n> You already know how to write a brief. That's 80% of prompting.\n\nThis lesson exists because most \"intro to prompting\" content treats\nthe skill as new. It isn't new. The deliverable changed; the\ncraft didn't. The craft is the same one that produced every\ngood ad campaign, every clear SOP, every cleanly-drafted contract,\nevery well-run support team. You name a role. You name a task. You\ngive the context. You specify the shape of the output. You provide\nexamples. Then you ship the brief and the work comes back.\n\nWhat changed is who's reading the brief and how literally they\ninterpret it. The model reads it like a junior contractor on their\nfirst day: literal, fast, eager, with no shared history and no\nability to ask clarifying questions. That's it. That's the whole\nadjustment.\n\n## Side by side: a 1995 creative brief and a 2026 LLM prompt\n\nHere is a real-shape creative brief from a 1995 agency. Read it.\n\n> **Client:** Midwest Furniture Co-op\n> **Project:** Spring catalog cover\n> **Audience:** 35-55, suburban, household income $60-120k, owns home\n> **Mood:** Warm, traditional, \"weekend morning\"\n> **Constraints:** Must show three pieces from the new oak line. No\n> children in shot. No fluorescent light. Logo bottom-right.\n> **Reference:** Pottery Barn 1994 fall catalog, pages 12-15\n> **Deliverable:** One 8x10 transparency, suitable for offset print\n> **Deadline:** Tuesday\n\nNow here is a 2026 LLM prompt for the equivalent digital task. Read\nit next to the brief above.\n\n> You are a senior catalog art director. Generate a description of a\n> spring catalog cover photograph for a Midwest furniture co-op.\n> Audience: 35-55 suburban homeowners, household income $60-120k.\n> Mood: warm, traditional, \"weekend morning.\" Must feature three\n> pieces from the new oak line. No children in shot. No fluorescent\n> light. Logo bottom-right. Reference: Pottery Barn 1994 fall\n> catalog, pages 12-15. Output: a single paragraph, 80-100 words,\n> suitable for handoff to a photographer.\n\nThey are the same brief. The 2026 version has the role written\nexplicitly (\"you are a senior catalog art director\") and the output\nshape stated in tokens (\"a single paragraph, 80-100 words\"), but\nevery other field maps one-to-one. Audience, mood, constraints,\nreferences, deliverable. Same.\n\nIf you wrote the first one in 1995, you can write the second one in\n2026. The skill is intact. The skill is portable.\n\n## Two modes of prompting: user vs. builder\n\nThere is a distinction in this course you need to get straight early,\nbecause it will come back in every later chapter:\n\n- **Prompts as artifacts** (user mode). You sit at the ChatGPT or\n  Claude window, you type a request, the model responds, you read\n  the response, you adjust the request, you go again. The prompt is\n  a thing you write once and throw away. This is what most people\n  mean when they say \"prompting.\"\n\n- **Prompts as system components** (builder mode). The prompt lives\n  inside a program. The program runs it a thousand times a day,\n  against a thousand different inputs, and ships the output to a\n  customer who never sees the prompt. The prompt is a piece of\n  infrastructure. It has tests, version control, and a change log.\n  This is what the rest of this course is about.\n\nThe 5 knobs you'll learn next apply to both modes. The practice is\nidentical. What changes is the cost of getting the prompt wrong.\nA bad user-mode prompt wastes thirty seconds of your time. A bad\nbuilder-mode prompt that ships into production wastes an Air Canada\nrefund lawsuit, a NYC government scandal, a swearing-bot PR cycle.\n(We'll cover all three in ch24. They each started with a prompt\nnobody treated as infrastructure.)\n\nFor ch00, you're going to learn the discipline in user mode, because\nthat's the mode you can practice today without writing any code. By\nch19, you'll be writing builder-mode prompts. By ch24, you'll be\ntesting them. By ch26, you'll be deploying them into agent\nharnesses that run them at scale.\n\nBut it all starts here: a prompt is a brief. You already know how to\nwrite a brief. Let's name the parts.",
           "cta": "Got it",
           "runnable": true
         },
@@ -886,5 +899,5 @@
       "xpTotal": 20
     }
   ],
-  "xpTotal": 78
+  "xpTotal": 79
 }
