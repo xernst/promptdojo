@@ -7,10 +7,15 @@ concept: postmortem-template
 # Blame the system, not the model
 
 The previous lesson gave you a four-class taxonomy. This lesson is
-five real cases, each a customer-visible AI failure that made it to
-the press, the courts, or both. You will walk through them with the
-taxonomy in hand and notice the same shape every time: the model did
-what it was told, and the system around it failed.
+five cases — three of them public (Air Canada, DPD, NYC MyCity, which
+made the news, the courts, or both) and two of them composites
+synthesized from patterns we have seen across multiple enterprise
+deployments (the recruiter JSON mangle in lesson 5 and the Glean-style
+retrieval miss in lesson 6). The composite cases are flagged at the
+top of each composite lesson so you know exactly which is which. You
+will walk through them with the taxonomy in hand and notice the same
+shape every time: the model did what it was told, and the system
+around it failed.
 
 This is the discipline that keeps you out of the news. Teams that
 debug AI features well do not say "the model hallucinated" and ship a
@@ -74,16 +79,20 @@ three different users.
 
 ## The five cases that follow
 
-All five are real. Four are public — they made the news, the
-courts, or both. The fifth is a composite of several internal
-enterprise failures the industry has seen variants of repeatedly in
-2024-2025. Names are changed on that one; the failure mode is
-verbatim.
+**Three are public**: Air Canada (case 1), DPD (case 2), NYC MyCity
+(case 3). These made the news, the courts, or both.
 
-The point of walking through them is not to feel superior to the
-engineers who shipped them. Those engineers were senior. The systems
-were not naive. The failures shipped because the post-mortem template
-above either did not exist at those companies, or it was treated as
-optional. By the end of this lesson you will be able to look at any
-of them and name the class, the fix, and the eval — fast, and without
-defending the model.
+**Two are composites**: the recruiter JSON mangle (case 4, lesson 5)
+and the Glean-style enterprise-RAG retrieval miss (case 5, lesson 6).
+These are synthesized from patterns seen across multiple enterprise
+deployments rather than tied to a single named incident. Each
+composite lesson opens with that disclosure — read it before you
+treat the case as reportage.
+
+The point of walking through them — real or composite — is not to
+feel superior to the engineers who shipped them. Those engineers were
+senior. The systems were not naive. The failures shipped because the
+post-mortem template above either did not exist at those companies,
+or it was treated as optional. By the end of this lesson you will be
+able to look at any of them and name the class, the fix, and the
+eval — fast, and without defending the model.

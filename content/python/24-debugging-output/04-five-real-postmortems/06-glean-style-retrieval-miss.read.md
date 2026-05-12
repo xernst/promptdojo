@@ -6,13 +6,15 @@ concept: case-retrieval-staleness
 
 # Case 5: Enterprise RAG returned the wrong policy with full confidence
 
-Unlike the prior four cases, this one is a composite — synthesized
-from patterns seen in multiple enterprise-RAG deployments rather
-than a single named incident. It draws from the enterprise-RAG
-space — the category that includes Glean, Hebbia, Notion AI, and
-the long tail of internal Confluence-on-top-of-RAG deployments. We
-have seen this exact failure mode at multiple Fortune-500
-deployments in 2024-2025. The shape is durable enough to teach from.
+> **This case is a composite, not reportage.** It is synthesized from
+> patterns observed across the enterprise-RAG space — the category
+> that includes Glean, Hebbia, Notion AI, and the long tail of
+> internal Confluence-on-top-of-RAG deployments — rather than tied to
+> a single named incident. The *failure mode* — stale data passing as
+> current because of poor archival hygiene — is the durable thing to
+> learn from. The shape is well-attested across multiple
+> publicly-discussed enterprise RAG postmortems; the specific
+> compliance-officer scenario below is illustrative.
 
 A 4,000-person company rolls out an internal knowledge-search agent.
 Employees ask questions in natural language; the agent retrieves from
@@ -113,7 +115,11 @@ Step 6 of the post-mortem template — "the eval that catches it now"
 — is the through-line across all five cases. Air Canada needed an
 eval for unauthorized commitments. DPD and NYC needed evals for
 out-of-domain responses. The recruiter needed a schema-validation
-eval. This case needs a stale-citation eval. **Different surface,
-same medicine.**
+eval. This case needs a stale-citation eval. The interfaces
+differ — sometimes a chatbot saying the wrong thing, sometimes a
+search result returning a stale document with full confidence —
+but the underlying failure shape (ungrounded confidence flowing
+through a harness that has no eval guarding the relevant
+invariant) is the same.
 
 You can probably guess where the next step is going.

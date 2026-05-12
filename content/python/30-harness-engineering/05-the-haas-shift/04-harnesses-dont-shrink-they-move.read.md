@@ -8,9 +8,9 @@ concept: harnesses-move
 
 The seductive belief is that better models will eventually eat the harness. "Why bother engineering all this scaffolding? Claude 5 will just do it natively." This belief has been wrong every time it's been tested.
 
-Osmani's line, near-quoted: **"Harnesses don't shrink, they move."**
+Osmani's framing of the dynamic, near-quoted: the harness doesn't get simpler as models get better — the surface area it covers shifts. New capabilities open new failure modes; the harness moves to cover them.
 
-What he means: when a model gets better at one capability, the corresponding harness component becomes obsolete. *But the harness as a whole doesn't shrink.* New failure modes open up at the new performance ceiling, and new harness components grow to address them.
+Concretely: when a model gets better at one capability, the corresponding harness component becomes obsolete. *But the harness as a whole doesn't shrink.* New failure modes open up at the new performance ceiling, and new harness components grow to address them.
 
 This is the *moving harness* dynamic. Three concrete examples.
 
@@ -28,7 +28,7 @@ This is the *moving harness* dynamic. Three concrete examples.
 
 **Now**: Modern models reason by default. The line is obsolete. Most modern AGENTS.md examples don't include it.
 
-**Did the harness shrink?** A line was removed — but the team's attention on reasoning didn't shrink. It moved to *plan files* (lesson 04). The model thinks fine; the harness now makes the thinking *durable* by writing it to disk so it survives context rot.
+**Did the harness shrink?** A line was removed — but the team's attention on reasoning didn't shrink. It moved to *plan files* (lesson 04). The model's raw outputs are fine — when sampled with no harness around them, the next-token distributions on reasoning-heavy tasks are accurate by default. The harness now makes that reasoning *durable* by writing it to disk so it survives context rot.
 
 ## Example 3 — Tool-call retry loops
 
@@ -61,7 +61,7 @@ Two reflexes that the *moving harness* framing should kill:
 
 ## The framing one more time
 
-Trivedy's definition: **Agent = Model + Harness.** As the model gets stronger, you'd think the harness gets smaller. The empirical reality: the harness moves, the *expectations* expand, the engineering investment stays roughly constant — just redistributed across different components.
+Trivedy's framing — Agent = Model + Harness — is shorthand for a real observation: the model is one input among many, and the engineering work that distinguishes good agents from bad ones is the work AROUND the model, not the choice OF the model. As the model gets stronger, you'd think the harness gets smaller. The empirical reality: the harness moves, the *expectations* expand, the engineering investment stays roughly constant — just redistributed across different components.
 
 This is why harness engineering is a *durable* discipline. Even if model progress accelerates, the engineering work doesn't disappear. It rotates.
 

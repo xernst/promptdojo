@@ -107,7 +107,7 @@ The next six steps will:
    the real wedge.
 2. Name the three shapes of project that consistently ship,
    illustrated with Josh's own projects — promptdojo (you're using
-   it right now), code-killa, and CrowdTest.
+   it right now) and CrowdTest.
 3. Give you a five-question wedge checklist that any capstone has
    to pass.
 4. Drill you on the checklist with a "spot the missing wedge"

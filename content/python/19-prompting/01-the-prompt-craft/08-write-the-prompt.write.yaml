@@ -9,10 +9,11 @@ prompt: |
   > apply, don't write the migration."
 
   The vague version blows your context window and ships the wrong code.
-  Rewrite it as the four-part scaffold the curriculum just taught you.
+  Rewrite it using the four core knobs (context, goal/task, constraints,
+  format) from the six-knob scaffold the curriculum just taught you.
 
   `build_prompt` is already defined for you. **Don't change it.** Your
-  job is to extract the four parts from the message above and call it
+  job is to extract the four pieces from the message above and call it
   with the right arguments.
 
   The expected output:
@@ -23,7 +24,7 @@ prompt: |
   format: diff only
   ```
 starter: |
-  # build_prompt is given. don't edit it. extract the four parts from
+  # build_prompt is given. don't edit it. extract the four pieces from
   # the vague message in the lesson and call it with the right args.
 
   def build_prompt(context, goal, constraints, format):
@@ -66,6 +67,6 @@ solution: |
   ))
 hint:
   - level: 1
-    body: "Read the message line by line. The four parts are scattered through it. `context` is what file we're touching. `goal` is the one verb. `constraints` are the 'use ... no ...' lines. `format` is what they want back ('diff only')."
+    body: "Read the message line by line. The four pieces are scattered through it. `context` is what file we're touching. `goal` is the one verb. `constraints` are the 'use ... no ...' lines. `format` is what they want back ('diff only')."
   - level: 2
     body: "Replace the four `...` placeholders with the strings: `\"fastapi route file\"`, `\"add delete handler\"`, `\"use existing pool, no migration\"`, `\"diff only\"`. The `build_prompt` function is already correct — leave it alone."

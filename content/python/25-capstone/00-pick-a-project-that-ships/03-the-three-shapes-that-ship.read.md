@@ -46,7 +46,7 @@ If it fails, iterate. The agent never has to be a creative
 genius — it just has to be a reliable producer against a defined
 quality bar.
 
-**The case study: code-killa itself.** The school you're reading
+**The case study: promptdojo itself.** The school you're reading
 right now is generated content with an eval. Every lesson has to
 fit the structure (read / mc / write / checkpoint), every
 exercise has to be Pyodide-runnable, every stdout has to match

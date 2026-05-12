@@ -27,7 +27,7 @@ This cuts two ways. It validates that harnesses matter (the gap is 28 places). I
 
 Mechanically: when Anthropic does RL training rounds on Claude, the training tasks involve calling Claude Code's actual tools. The model gets reward signal for using the `Bash` tool with the conventions Claude Code uses, the `Edit` tool with the patches Claude Code expects, the `Task` tool with the dispatch shape Claude Code dispatches.
 
-A different harness might have a tool called `RunShell` instead of `Bash`. Same job, different name and signature. The model has never seen `RunShell`. It will still figure it out; LLMs are flexible. But the *fluency* — the ability to know precisely what shape of input the tool expects, the typical use patterns, the edge cases — is reduced.
+A different harness might have a tool called `RunShell` instead of `Bash`. Same job, different name and signature. The model has never seen `RunShell` in training. It will still produce reasonable tool-call shapes because BPE tokenizers plus the model's training on JSON-like structures generalize across never-seen tool names — the same generalization that lets it produce Python it has never literally seen. But the *fluency* — precise knowledge of input shape, typical use patterns, edge cases — is reduced.
 
 The fluency gap shows up as:
 

@@ -14,7 +14,7 @@ code: |
 prompt: |
   Cursor will accept both prompts. One has a high chance of landing a
   usable diff in one shot; the other will need three or four follow-ups.
-  Which prompt has the **four-part structure** (context, goal, constraint,
+  Which prompt has explicit **knob structure** (task, context, constraint,
   format)?
 options:
   - id: a
@@ -24,7 +24,7 @@ options:
     label: "`prompt_b`"
   - id: c
     label: "Both equally — they say the same thing in different lengths."
-    explain: "They don't say the same thing. `prompt_b` carries four pieces of structure that `prompt_a` is missing."
+    explain: "They don't say the same thing. `prompt_b` carries four knobs of structure that `prompt_a` is missing."
   - id: d
     label: "Neither — both are too short to work."
     explain: "Length is not the metric. Structure is. `prompt_b` is well-scoped despite being a single paragraph."
@@ -32,6 +32,6 @@ answerIds:
   - b
 hint:
   - level: 1
-    body: "Look for the four parts: file/stack mention, single concrete goal, named constraints, format spec."
+    body: "Look for the four knobs: file/stack mention, single concrete task, named constraints, format spec."
   - level: 2
     body: "`prompt_b` names the file, the goal, two constraints (use existing schemas, return 422), and the format (diff only)."

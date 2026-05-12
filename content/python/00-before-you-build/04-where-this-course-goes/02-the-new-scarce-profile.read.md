@@ -27,9 +27,14 @@ chapters of this course serve different end-states on it.
 - **Prompt engineer.** The most accessible role. You write, version,
   and grade prompts. Less code, more language. The chapters that
   matter most: ch01-04 (basic Python so you can read code), ch13
-  (LLM APIs), ch19 (prompting), ch21 (evals). Salary range in mid-2026:
-  $90k-$140k for in-house, $150k-$250k for senior agency or product
-  roles.
+  (LLM APIs), ch19 (prompting), ch21 (evals). AI-engineering roles
+  span a wide range: junior in-house roles cluster lower, senior or
+  agency roles cluster higher. We won't quote a specific salary band —
+  the market has been moving every quarter — but most of the public
+  hiring data (LinkedIn Workforce Reports, Levels.fyi) shows the
+  AI-skilled premium is real for senior engineers and unclear at the
+  junior level. Treat any specific dollar number you read from a
+  course or a recruiter as an aspirational data point, not a guarantee.
 - **Eval engineer.** The role that grew out of "the prompts are good
   but how do we know?" You write graders, build test sets, run
   regression tests against new model versions. The chapters that

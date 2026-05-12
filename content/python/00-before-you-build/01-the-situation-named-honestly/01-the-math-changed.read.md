@@ -11,11 +11,13 @@ You got replaced because the math changed.
 A junior copywriter cost $58,000 a year plus benefits, took two weeks to
 onboard, and produced a draft in three hours. A model that costs a
 fraction of a cent per call now produces that same draft in eleven
-seconds, doesn't need PTO, and ships at 3am. The math changed. Not your
-talent. The math.
+seconds, doesn't need PTO, and ships at 3am. What changed was the
+unit economics of the task, not your talent at performing it.
 
-> You didn't get replaced because you weren't good. You got replaced
-> because the math changed.
+You didn't get replaced because you weren't good. You got replaced
+because the math changed. Specifically: a class of cognitive tasks
+that used to require a salaried human can now be done in seconds
+for fractions of a cent, with no onboarding and no PTO.
 
 This is lesson one of chapter zero of a thirty-chapter course on
 building with AI. It's an identity-repair lesson before it's anything

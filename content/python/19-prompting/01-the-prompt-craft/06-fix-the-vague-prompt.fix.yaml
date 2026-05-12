@@ -3,8 +3,8 @@ estSeconds: 90
 concept: prompt-rewrite
 prompt: |
   The toy `validate` function checks that a prompt has at least three
-  of the four parts before it gets sent to the model. The current
-  `prompt` only has two parts and `validate` rejects it. Add the two
+  of the four core knobs before it gets sent to the model. The current
+  `prompt` only has two knobs and `validate` rejects it. Add the two
   missing keys (`constraints` and `format`) so the script prints exactly
   `ok`.
 

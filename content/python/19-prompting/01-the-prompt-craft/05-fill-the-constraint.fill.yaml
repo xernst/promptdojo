@@ -23,6 +23,6 @@ blanks:
     caseSensitive: true
 hint:
   - level: 1
-    body: "The four-part prompt names what you must use, what you must not do, and what edge cases matter. That part has a name."
+    body: "The six-knob prompt has one knob for what you must use, what you must not do, and what edge cases matter. That knob has a name."
   - level: 2
     body: "It's `constraints` (or `constraint`). The full set is context / goal / constraints / format."

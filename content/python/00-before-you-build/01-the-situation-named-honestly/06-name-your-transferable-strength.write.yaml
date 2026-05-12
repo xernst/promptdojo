@@ -5,41 +5,43 @@ prompt: |
   Your first line of Python. Literally one line.
 
   The point of this step is NOT learning Python. The point is that the
-  first code you write in this course is a sentence about your own
-  value — not a "hello world," not a math exercise.
+  first code you write in this course is a factual sentence about your
+  own experience — not a "hello world," not a math exercise.
 
-  The starter sets three variables (`role`, `years`, `top_skill`).
+  The starter sets three variables (`role`, `years`, `domain_artifact`).
   Your job is to write ONE line below them: a `print()` call using an
   f-string that produces the exact sentence below.
 
   Expected output (with the starter values):
   ```
-  After 11 years as a paralegal, my edge is verification -- that's now the bottleneck of every AI feature shipping.
+  After 11 years as a paralegal, I've read more contracts than most ML engineers will in their career.
   ```
 
   Then — and this is the part that matters — change the three values
   in the starter to match YOUR old job. The grader runs against the
   template values, so the one line you write has to work with those.
   But before you hit run, change the inputs to yours and read what
-  comes back. That sentence is the first thing you'll have produced
-  in this course. Make it true.
+  comes back. Pick an artifact you actually read or wrote thousands of
+  — contracts, support tickets, ad copy, design files, lab reports —
+  not a feeling about your work. That sentence is the first thing
+  you'll have produced in this course. Make it true.
 starter: |
   role = "paralegal"
   years = 11
-  top_skill = "verification"
+  domain_artifact = "contracts"
 
   # write one line below using print() and an f-string to produce the expected output
 
 grader:
   kind: stdout-equality
-  expected: "After 11 years as a paralegal, my edge is verification -- that's now the bottleneck of every AI feature shipping."
+  expected: "After 11 years as a paralegal, I've read more contracts than most ML engineers will in their career."
   normalize: collapse-trailing-newline
 solution: |
   role = "paralegal"
   years = 11
-  top_skill = "verification"
+  domain_artifact = "contracts"
 
-  print(f"After {years} years as a {role}, my edge is {top_skill} -- that's now the bottleneck of every AI feature shipping.")
+  print(f"After {years} years as a {role}, I've read more {domain_artifact} than most ML engineers will in their career.")
 hint:
   - level: 1
     body: |
@@ -49,13 +51,13 @@ hint:
 
       The `f` in front of the quote turns it into a format-string. Anything in `{curly_braces}` gets replaced with the value of that variable when the string is built.
 
-      Wrap that f-string in `print(...)` and you have your one line. You need `{years}`, `{role}`, and `{top_skill}` in the right spots, with the rest of the sentence as plain text. The dash is two hyphens (`--`), not an em-dash.
+      Wrap that f-string in `print(...)` and you have your one line. You need `{years}`, `{role}`, and `{domain_artifact}` in the right spots, with the rest of the sentence as plain text.
   - level: 2
     body: |
       Here is the one line:
 
       ```python
-      print(f"After {years} years as a {role}, my edge is {top_skill} -- that's now the bottleneck of every AI feature shipping.")
+      print(f"After {years} years as a {role}, I've read more {domain_artifact} than most ML engineers will in their career.")
       ```
 
-      Two things to notice. One: the f-string puts `{years}` first, then `{role}`, then `{top_skill}` — the order of the variables in the sentence is independent of how they were defined above. Two: the dash is `--` (two hyphens), not `—` (em-dash) — hyphens are universal across keyboards, em-dashes are not.
+      Notice: the f-string puts `{years}` first, then `{role}`, then `{domain_artifact}` — the order of the variables in the sentence is independent of how they were defined above. The apostrophe in `I've` is inside the double-quoted f-string, so it just works.

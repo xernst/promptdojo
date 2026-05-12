@@ -4,7 +4,7 @@ estSeconds: 200
 concept: the-fork-rubric
 ---
 
-# The rubric — score any product on five axes and the fork falls out
+# The rubric — score any product on five axes and the fork usually narrows fast
 
 The case studies above are the intuition. Now the synthesis: a
 five-axis rubric you can run on any AI product spec and get a
@@ -80,7 +80,33 @@ The three failure modes from step 01, mapped to the rubric:
 
 The pattern: teams pick the fork they're familiar with, then bend
 the product to fit the fork. The rubric inverts that. Score the
-product first; the fork falls out.
+product first; the fork tends to fall out.
+
+## What this rubric doesn't capture
+
+The five axes are useful but not exhaustive. The rubric is a
+heuristic, not a decision procedure. It deliberately ignores:
+
+- **Organizational capacity.** Does your team have the ML
+  engineering bench to operate a fine-tune pipeline (data
+  curation, training infra, eval harness, drift monitoring)? If
+  not, fine-tune is more expensive than the axes alone suggest.
+- **Regulatory constraints.** Can you legally ship customer data
+  through a third-party fine-tune API? Some industries (health,
+  finance, EU consumer data) make fine-tune practically
+  unavailable regardless of what the rubric says.
+- **Product-lifecycle stage.** A pre-PMF startup and a Fortune
+  500 mid-rollout get different defaults from the same scores.
+  The startup wants the cheapest fastest path to validate the
+  idea. The Fortune 500 wants the path that survives audit.
+- **The fourth option of "hybrid with a roadmap."** Sometimes the
+  right answer is "RAG today, plan to migrate to long-context
+  once the corpus stabilizes in six months" — a sequence the
+  rubric won't suggest because it scores a single moment in time.
+
+Run the five axes first to narrow the field. Then check these four
+considerations before committing. When two of them push hard
+against the rubric's recommendation, the recommendation loses.
 
 ## When hybrid is the right answer
 
@@ -108,8 +134,9 @@ expert, what's the cost budget, what's the latency budget. If the
 corpus changes weekly or is over 2M tokens, RAG. If it's stable
 and under 2M and queries are bursty, long-context with cache. If
 style is the product, fine-tune. If freshness AND style both
-matter, hybrid. The decision is mechanical once you write the
-five numbers down.
+matter, hybrid. The five numbers narrow the field fast — then
+check the org-capacity, regulatory, lifecycle, and roadmap
+considerations before committing.
 
 ## What the next two steps do
 

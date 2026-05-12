@@ -27,11 +27,11 @@ runnable: true
 
 # Two techniques. One has aged well. The other has aged badly.
 
-Lesson 01 set up the four-part prompt scaffold (context, goal,
-constraints, format). This lesson is about two of the most-cited
-prompting techniques: **few-shot examples** and **chain-of-thought
-(CoT)**. They were both gospel in 2023. By 2026, one is still
-gospel; the other has become a trap.
+Lesson 01 set up the six-knob prompt scaffold (role, task, context,
+format, examples, constraints). This lesson is about two of the
+most-cited prompting techniques: **few-shot examples** and
+**chain-of-thought (CoT)**. They were both gospel in 2023. By 2026,
+one is still gospel; the other has become a trap.
 
 ## Few-shot — still works, when used right
 

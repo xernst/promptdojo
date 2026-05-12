@@ -20,9 +20,18 @@ demo. It shows up at scale.
 
 ## The three forks
 
-There are three ways to get knowledge into a language model at
-inference time. Exactly three. Every product is some combination of
-these, but the architecture pivots on one:
+There are three big buckets for getting knowledge into a model at
+inference time: RAG (retrieve at query), long-context (stuff the
+prompt), and fine-tune (bake into weights). Practitioners argue
+about whether this is the full taxonomy or whether you should also
+count tool-calling-into-live-systems, agentic multi-hop retrieval,
+and knowledge-graph traversal as separate categories. They have a
+point. For most product decisions, though, the three big buckets
+are the useful unit of analysis. We'll teach to those, with a note
+in the rubric on when the cleaner trichotomy falls apart.
+
+Every product is some combination of these, but the architecture
+pivots on one:
 
 1. **Pull-from-source (RAG)**. Keep the knowledge in a vector store
    (or a SQL table, or a search index). At query time, retrieve the

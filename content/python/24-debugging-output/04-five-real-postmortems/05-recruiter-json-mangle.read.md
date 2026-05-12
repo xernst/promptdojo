@@ -6,9 +6,11 @@ concept: case-recruiter-json
 
 # Case 4: The recruiter agent that texted email addresses
 
-Composite case, drawn from a class of failures we have seen variants
-of repeatedly in 2024 and 2025 across internal agent rollouts.
-Names are changed; the failure mode is verbatim.
+> **This case is a composite, not reportage.** It is synthesized from
+> a class of failures observed across multiple internal agent rollouts
+> in 2024 and 2025. There is no single named company behind it. The
+> *failure mode* is the durable thing to learn from — the JSON
+> parsed-but-mis-slotted shape — not the specific details.
 
 A mid-sized recruiting firm rolled out an internal candidate-outreach
 agent. The agent reads a candidate dossier (resume, prior contact

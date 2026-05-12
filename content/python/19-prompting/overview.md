@@ -10,19 +10,23 @@ Generic prompting advice ("be specific!" "give examples!") doesn't survive conta
 
 So this chapter is calibrated specifically to AI-builder tools — Cursor, Claude Code, the agent runtimes you actually use — not to chatbots.
 
-## The four-part scaffold
+## The six-knob scaffold (ch00's five plus one)
 
-The shape that fixes the most one-shot prompts in practice:
+Chapter 0 introduced a five-knob prompt scaffold — **Role, Task, Context, Format, Examples**. That scaffold is the shape that works across domains. This chapter drills on each knob in the specific context of prompting a coding agent, and adds a sixth knob that real codebases need:
 
-1. **Context** — *what file am I in, what stack, what constraints exist already.* The part most people skip. Without it, the model is guessing what kind of project you're in, and a guess wrong-foots the rest of the session.
+1. **Role** — *who is the model in this task.* "Senior backend engineer working in this fastapi codebase" produces different output than the default "helpful assistant." Set it explicitly.
 
-2. **Goal** — *the single concrete thing I want.* One sentence. One outcome. If you're saying "and also" or "while we're at it," send those as separate prompts.
+2. **Task** — *the single concrete thing you want.* One sentence. One outcome. If you're saying "and also" or "while we're at it," send those as separate prompts.
 
-3. **Constraints** — *what you must use, what you must not do, what edge cases matter.* Every constraint stated up front is a wrong path the model never goes down. "Don't add new dependencies." "Match the style of the existing endpoints." "No try/except for happy-path errors."
+3. **Context** — *what file am I in, what stack, what does the model need to know.* The knob most people skip. Without it, the model is guessing what kind of project you're in, and a guess wrong-foots the rest of the session.
 
 4. **Format** — *how you want the answer back.* "Diff only." "Code only." "List of file paths." "Two sentences max." Free token savings on every turn.
 
-This isn't a canonical framework from Anthropic or Cursor. It's a scaffold that works in practice, and once you've internalized it you'll spot which part is missing in any prompt you read.
+5. **Examples** — *what good output looks like in this codebase.* Usually a pointer to existing code: "match the style of `get_user()`." One pointer to working code beats three paragraphs of style guidance.
+
+6. **Constraints** — *what you must use, what you must not do, what edge cases matter.* This is the production-only knob. Every constraint stated up front is a wrong path the model never goes down. "Don't add new dependencies." "No try/except for happy-path errors."
+
+Once you've internalized the six knobs you'll spot which one is missing in any prompt you read.
 
 ## Why context rot is real and how to handle it
 
@@ -50,7 +54,7 @@ Three patterns Cursor users reliably ship:
 
 Nine steps. By the end you'll be able to:
 
-- Look at a vague prompt and rewrite it on the spot using the four-part scaffold.
+- Look at a vague prompt and rewrite it on the spot using the six-knob scaffold.
 - Recognize the three signals that a session has hit context rot and clear it without hesitation.
 - Use `/clear` versus `/compact` correctly in Claude Code.
 - Spot the three top "AI wrote this prompt poorly" patterns in your own work.

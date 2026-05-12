@@ -21,7 +21,7 @@ runnable: true
 
 # The most-leveraged prompting work you'll do is in a markdown file
 
-Lesson 01 set up the four-part prompt scaffold for a single
+Lesson 01 set up the six-knob prompt scaffold for a single
 prompt. Lesson 02 distinguished few-shot from CoT for different
 model classes. This lesson is the meta-version: **how to write the
 config file your AI coding agent reads at the start of EVERY

@@ -96,10 +96,20 @@ re-sent on every call can cache at 90% of the input price. On a
 high-volume feature, that's another 4-5× cost reduction *on top of*
 whatever model swap you do.
 
+A caveat the rest of this lesson assumes you'll remember: prompt
+caching's parameters move under you. Anthropic changed the default
+cache TTL from 1 hour to 5 minutes in early 2026 — see the ch22
+lesson on long-context — which broke a lot of long-context
+architectures overnight. Caching is a cost lever, not a permanent
+moat. Design as if the discount could halve in 12 months, and keep
+your cost model parameterized so you can re-run unit economics in an
+afternoon when the provider changes the rules.
+
 If you stack the levers — model choice (10×), caching (4×), output
 budget (2×) — the same feature can be **80× cheaper** in 2026 than
 it was for a 2023 implementation. That's not optimization; that's a
-different product. Whoever does the stacking owns the category.
+different product. Whoever does the stacking owns the category — for
+as long as the multipliers hold.
 
 ## What's next
 

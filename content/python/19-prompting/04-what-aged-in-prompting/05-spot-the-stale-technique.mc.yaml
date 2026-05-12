@@ -45,7 +45,7 @@ options:
     label: "A"
   - id: b
     label: "B"
-    explain: "This is exactly the four-part scaffold from lesson 01 (context, goal, constraints, format). Every line transfers information the model can't infer. This is the durable shape."
+    explain: "This is exactly the six-knob scaffold from lesson 01 (role, task, context, format, examples, constraints). Every line transfers information the model can't infer. This is the durable shape."
   - id: c
     label: "C"
     explain: "Few-shot examples for classification. This is the shape that aged WELL — examples ground the model in your labels and format. Still load-bearing in 2026."

@@ -94,8 +94,9 @@ pick. One write step where you build a `pick_model(task)` router.
 One checkpoint where you cost-out a daily workload and pick the
 cheapest model that doesn't break quality.
 
-For code-killa specifically — the open-source Python school I'm
-building on a $0 budget — every dollar matters. Picking Sonnet
-when Haiku would do is the difference between "this project
-exists" and "this project ran out of API credits in week three."
-You'll feel that same constraint in every indie product you ship.
+When you're operating on a $0-budget indie project, every dollar
+of inference cost matters. Picking Sonnet when Haiku would do is
+the difference between "this project exists" and "this project ran
+out of API credits in week three." When you're at a VC-funded
+startup spending $50k/month on inference, your model-picking
+calculus is different. Both are real.

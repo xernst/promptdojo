@@ -53,17 +53,24 @@ Most "AI-native" companies are, per Isenberg, "someone on the team
 has a ChatGPT tab open and the head of marketing made a custom GPT
 called Brand Voice Assistant." Cute. Useful even. Not AI-native.
 
-The real bottleneck is not the model. The model is great. The
-bottleneck is that most companies are **illegible to machines** —
-the CRM says one thing, the Slack thread says another, the real
-customer history lives in someone's inbox, the pricing logic is in
-a spreadsheet called `Final_v7_NEW.xlsx`, the refund policy is in a
-Notion doc nobody trusts, the sales process is "talk to Sarah, she
-knows how we do enterprise."
+The real bottleneck is not the model. The model's raw outputs are
+strong on most well-scoped tasks. The bottleneck is that most
+companies are **illegible to machines** — the CRM says one thing,
+the Slack thread says another, the real customer history lives in
+someone's inbox, the pricing logic is in a spreadsheet called
+`Final_v7_NEW.xlsx`, the refund policy is in a Notion doc nobody
+trusts, the sales process is "talk to Sarah, she knows how we do
+enterprise."
 
-An agent walking into that company doesn't fail because the model
-is dumb. It fails because there is no source of truth to ground in,
-no rule to follow, no boundary to respect. Garbage-in, vibes-out.
+An agent walking into that company doesn't fail because of the
+model's outputs themselves — it fails because the surrounding
+scaffolding (tools, retrieval, validation, policy) has nothing to
+ground in: no source of truth, no rule to follow, no boundary to
+respect. Garbage-in, vibes-out. (We'll keep saying things like
+"the model decides" or "the agent figures it out" as shorthand.
+Recall from ch00 that this is convenience phrasing — the model is
+sampling the next token from a probability distribution, not
+deciding.)
 
 ## What this lesson is about
 

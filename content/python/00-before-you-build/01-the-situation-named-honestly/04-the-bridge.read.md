@@ -75,13 +75,14 @@ designer, paralegal, or junior engineer doesn't unwind that. The math
 hasn't reversed and it isn't going to. The economic incentive to
 replace pipelines of human labor with model calls is permanent.
 
-What this course will do is get you the next job. The one that didn't
-exist three years ago. The one that pays more than the one you lost,
-because there are 4 million displaced workers and 200,000 people who
-can actually build with these tools. That ratio is the opportunity.
-It will not stay 20-to-1 forever, but right now it is, and the people
-who learn this in 2026 are the ones who will be hired by the people
-who learn it in 2027.
+What this course will do is help you reach for the next job. The one
+that didn't exist three years ago. The supply of people displaced by
+AI is large and growing. The supply of people who can actually wire
+AI features into a product end-to-end is small relative to demand.
+The exact ratio is debated — we won't pretend to a precise number —
+but the gap is real, and it's the gap this course is designed to help
+you close. The people who learn this in 2026 will be ahead of the
+people who learn it in 2027.
 
 You don't need to forgive AI. You don't need to be excited about it.
 You don't need to write a Medium post about your "AI journey." None

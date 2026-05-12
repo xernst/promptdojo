@@ -1,5 +1,5 @@
 slug: five-real-postmortems
-title: "Five customer-visible AI failures, walked through — and the one fix that would have caught all of them"
+title: "Five postmortems — three public, two composite — and the one fix that would have caught all of them"
 estMinutes: 22
 prerequisites:
   - the-four-breakage-classes
