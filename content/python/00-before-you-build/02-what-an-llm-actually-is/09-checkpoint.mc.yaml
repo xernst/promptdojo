@@ -1,0 +1,50 @@
+xp: 6
+estSeconds: 150
+concept: integrate-llm-mental-model
+prompt: |
+  Final drill. A scenario that pulls together everything this lesson
+  taught: probability over tokens, training vs inference, statelessness,
+  the context window, and same-model-different-personality.
+
+  **Scenario.** A small team ships a customer-support chatbot built
+  on top of an LLM API. Two days after launch they get this bug
+  report from a user:
+
+  > "Yesterday I told the bot my company has 30 employees. Today I
+  > asked it to recommend a plan and it asked me how many employees
+  > we have. It forgot."
+
+  The team's first engineer says: *"We need to fine-tune the model on
+  longer conversations so it remembers across sessions."*
+
+  Pick the most accurate diagnosis of what actually went wrong.
+options:
+  - id: weights_drift
+    label: "The model's weights drifted between yesterday and today. Re-pin the model version and the recall problem goes away."
+    explain: "Model weights are static at inference time. They were the same yesterday and today. Weight drift isn't a real explanation here — it's a misapplication of the training/inference distinction the lesson covered."
+  - id: temperature
+    label: "Temperature was too high on the recall call, so the model 'sampled' a different answer. Drop temperature to 0."
+    explain: "Temperature governs sampling within a single call. It cannot pull information from a prior session into the current one. With temperature 0 and no prior context in the payload, recall is still impossible."
+  - id: harness_didnt_resend
+    label: "The model is stateless between API calls. Yesterday's '30 employees' line was never re-sent in today's request. The bug is in the harness — not in the model, and not fixable by fine-tuning."
+  - id: bigger_model
+    label: "The free-tier model the team used is too small. Swap to a flagship-tier model and recall across sessions will improve."
+    explain: "Parameter count does not grant memory. Every commercial LLM is stateless between API calls regardless of size. A 1-trillion-parameter model called with no prior conversation in its context recalls exactly as much as a 1-billion-parameter one — nothing."
+answerIds:
+  - harness_didnt_resend
+hint:
+  - level: 1
+    body: |
+      Three of the four wrong answers blame *the model*. The lesson made
+      one point very forcefully: the model is stateless between calls.
+      Whatever feels like "memory" in a chatbot is the harness layer
+      re-sending prior turns. So the bug class is harness-level, and
+      fine-tuning the model is fixing the wrong layer.
+  - level: 2
+    body: |
+      The fix is in the code around the model, not the model itself.
+      Specifically: when the user sends a new message, the harness has
+      to look up that user's prior conversation history (from a DB or
+      cache) and concatenate it into the prompt the model sees. That's
+      the goldfish-with-a-notebook pattern from earlier — the model
+      can't remember, but the notebook (your harness) can.

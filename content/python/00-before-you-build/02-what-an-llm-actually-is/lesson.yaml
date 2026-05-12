@@ -12,4 +12,4 @@ order:
   - 06-same-model-different-personality.read.md
   - 07-spot-the-mental-model-error.mc.yaml
   - 08-predict-the-next-token.predict.yaml
-  - 09-checkpoint.checkpoint.yaml
+  - 09-checkpoint.mc.yaml

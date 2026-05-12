@@ -1,0 +1,50 @@
+xp: 6
+estSeconds: 150
+concept: adjust-the-plan-when-life-intervenes
+prompt: |
+  Final drill of chapter zero. Step 07 of this lesson asked you what
+  an honest 30-day plan looks like *before* you start. This drill is
+  what to do *after* you start, when life intervenes.
+
+  **Scenario.** It is the Sunday of week three. You committed to ten
+  hours per week. Week one you got eleven. Week two you got nine. This
+  past week your kid was sick on Tuesday, your manager pulled you into
+  a Friday deadline you didn't see coming, and Saturday's two-hour
+  block became a one-hour block when your partner reminded you about
+  the in-laws. You ended the week with four hours of course time
+  instead of ten.
+
+  You're three days behind the plan. What's the right move?
+options:
+  - id: rigid
+    label: "Catch up on Sunday. Pull a six-hour session and make the week's quota. The plan is the plan."
+    explain: "Six hours in one sitting by a learner with no Python fluency yet is the highest-probability way to confuse yourself for two chapters in a row and wake up Monday thinking 'I'm too dumb for this.' Lesson 01 of this chapter named that exact failure mode out loud."
+  - id: quit
+    label: "Three days behind in week three of a thirty-day plan means the plan isn't going to work. Cut losses. Try something else."
+    explain: "Almost every adult learner who finishes a multi-month curriculum has a week where they fall three days behind. The ones who finish notice the slip, adjust, and continue. Quitting in week three because a kid got sick is the manufactured failure ch00 was built to prevent."
+  - id: adjust
+    label: "Move the target chapter back by one. Keep tomorrow's daily-minute habit. Don't try to catch up — the plan was a forecast, not a contract."
+  - id: change_path
+    label: "Switch into the engineer path so the plan starts at ch04 — that way you'll naturally cover less ground per chapter and the math works out."
+    explain: "The engineer path is for people who already know Python syntax. Skipping ch01-03 because you fell three hours behind in week three will leave you trying to write conditional logic without having learned variables. Same failure mode as 'rigid catch-up,' a different doorway in."
+answerIds:
+  - adjust
+hint:
+  - level: 1
+    body: |
+      Two of the four wrong answers (rigid catch-up, quitting outright)
+      are the failure modes ch00 lesson 01 named directly. One wrong
+      answer (switch into the engineer path) breaks the rule for *why*
+      the routing logic exists in the first place. The remaining option
+      is the one that preserves the daily habit, accepts the slip, and
+      moves the target — which is the only one of the four that treats
+      the plan the way the previous step said to treat it: a forecast
+      you steer, not a contract you're locked into.
+  - level: 2
+    body: |
+      The honest version of this drill is that *most* learners will be
+      somewhere between a week and ten days behind the original plan
+      by week four. The plan is calibrated assuming that. Treating a
+      three-day slip as a crisis is the move that turns a normal
+      learning slip into a learning loss. Adjust the target, keep the
+      cadence, and the four-month skill is still on the table.

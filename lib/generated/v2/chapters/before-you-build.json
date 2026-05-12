@@ -387,26 +387,55 @@
           }
         },
         {
-          "type": "checkpoint",
+          "type": "mc",
           "id": "before-you-build/what-an-llm-actually-is/s09-09-checkpoint",
-          "xp": 8,
-          "hint": [],
+          "xp": 6,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Three of the four wrong answers blame *the model*. The lesson made\none point very forcefully: the model is stateless between calls.\nWhatever feels like \"memory\" in a chatbot is the harness layer\nre-sending prior turns. So the bug class is harness-level, and\nfine-tuning the model is fixing the wrong layer.\n",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "The fix is in the code around the model, not the model itself.\nSpecifically: when the user sends a new message, the harness has\nto look up that user's prior conversation history (from a DB or\ncache) and concatenate it into the prompt the model sees. That's\nthe goldfish-with-a-notebook pattern from earlier — the model\ncan't remember, but the notebook (your harness) can.\n",
+              "cost": 0
+            }
+          ],
           "personalize": false,
           "phase": "check",
-          "estSeconds": 240,
-          "concept": "classify-llm-framings",
-          "prompt": "Final drill for this lesson. Write `classify_framings(framings)`\nthat takes a list of dicts shaped like:\n\n```python\n{\"statement\": \"...\", \"correct\": True or False}\n```\n\nand returns a TUPLE of two things:\n\n1. `correct_count` — an integer, how many of the framings are\n   marked `correct: True`.\n2. `wrong_statements` — a list of strings, the `statement` text\n   from every framing marked `correct: False`, in the order they\n   appeared in the input.\n\nFive framings run. Expected output:\n```\ncorrect: 3\nwrong:\n  - When I correct an LLM mid-conversation, the model updates its weights so the next user sees the corrected answer.\n  - LLMs are essentially search engines that retrieve the most relevant answer from their training corpus.\n```\n\nThe point of this drill: you can now read these five statements\nand FEEL which ones are right. That feeling is the mental model\nthis lesson was designed to install. The function just makes the\nclassification explicit.\n",
-          "starter": "framings = [\n    {\n        \"statement\": \"An LLM returns a probability distribution over the next token, and the output is a sample from that distribution.\",\n        \"correct\": True,\n    },\n    {\n        \"statement\": \"When I correct an LLM mid-conversation, the model updates its weights so the next user sees the corrected answer.\",\n        \"correct\": False,\n    },\n    {\n        \"statement\": \"The model has no memory between API calls; the harness re-sends the conversation history every turn.\",\n        \"correct\": True,\n    },\n    {\n        \"statement\": \"Same weights plus different system prompt produces a different assistant personality.\",\n        \"correct\": True,\n    },\n    {\n        \"statement\": \"LLMs are essentially search engines that retrieve the most relevant answer from their training corpus.\",\n        \"correct\": False,\n    },\n]\n\n# define classify_framings(framings) below\n\ncorrect_count, wrong_statements = classify_framings(framings)\nprint(f\"correct: {correct_count}\")\nprint(\"wrong:\")\nfor s in wrong_statements:\n    print(f\"  - {s}\")\n",
-          "grader": {
-            "kind": "stdout-equality",
-            "expected": "correct: 3\nwrong:\n  - When I correct an LLM mid-conversation, the model updates its weights so the next user sees the corrected answer.\n  - LLMs are essentially search engines that retrieve the most relevant answer from their training corpus.\n",
-            "normalize": "collapse-trailing-newline"
-          },
-          "solution": "framings = [\n    {\n        \"statement\": \"An LLM returns a probability distribution over the next token, and the output is a sample from that distribution.\",\n        \"correct\": True,\n    },\n    {\n        \"statement\": \"When I correct an LLM mid-conversation, the model updates its weights so the next user sees the corrected answer.\",\n        \"correct\": False,\n    },\n    {\n        \"statement\": \"The model has no memory between API calls; the harness re-sends the conversation history every turn.\",\n        \"correct\": True,\n    },\n    {\n        \"statement\": \"Same weights plus different system prompt produces a different assistant personality.\",\n        \"correct\": True,\n    },\n    {\n        \"statement\": \"LLMs are essentially search engines that retrieve the most relevant answer from their training corpus.\",\n        \"correct\": False,\n    },\n]\n\ndef classify_framings(framings):\n    correct_count = sum(1 for f in framings if f[\"correct\"])\n    wrong_statements = [f[\"statement\"] for f in framings if not f[\"correct\"]]\n    return (correct_count, wrong_statements)\n\ncorrect_count, wrong_statements = classify_framings(framings)\nprint(f\"correct: {correct_count}\")\nprint(\"wrong:\")\nfor s in wrong_statements:\n    print(f\"  - {s}\")\n",
-          "passThreshold": 0.66
+          "estSeconds": 150,
+          "concept": "integrate-llm-mental-model",
+          "prompt": "Final drill. A scenario that pulls together everything this lesson\ntaught: probability over tokens, training vs inference, statelessness,\nthe context window, and same-model-different-personality.\n\n**Scenario.** A small team ships a customer-support chatbot built\non top of an LLM API. Two days after launch they get this bug\nreport from a user:\n\n> \"Yesterday I told the bot my company has 30 employees. Today I\n> asked it to recommend a plan and it asked me how many employees\n> we have. It forgot.\"\n\nThe team's first engineer says: *\"We need to fine-tune the model on\nlonger conversations so it remembers across sessions.\"*\n\nPick the most accurate diagnosis of what actually went wrong.\n",
+          "options": [
+            {
+              "id": "weights_drift",
+              "label": "The model's weights drifted between yesterday and today. Re-pin the model version and the recall problem goes away.",
+              "explain": "Model weights are static at inference time. They were the same yesterday and today. Weight drift isn't a real explanation here — it's a misapplication of the training/inference distinction the lesson covered."
+            },
+            {
+              "id": "temperature",
+              "label": "Temperature was too high on the recall call, so the model 'sampled' a different answer. Drop temperature to 0.",
+              "explain": "Temperature governs sampling within a single call. It cannot pull information from a prior session into the current one. With temperature 0 and no prior context in the payload, recall is still impossible."
+            },
+            {
+              "id": "harness_didnt_resend",
+              "label": "The model is stateless between API calls. Yesterday's '30 employees' line was never re-sent in today's request. The bug is in the harness — not in the model, and not fixable by fine-tuning."
+            },
+            {
+              "id": "bigger_model",
+              "label": "The free-tier model the team used is too small. Swap to a flagship-tier model and recall across sessions will improve.",
+              "explain": "Parameter count does not grant memory. Every commercial LLM is stateless between API calls regardless of size. A 1-trillion-parameter model called with no prior conversation in its context recalls exactly as much as a 1-billion-parameter one — nothing."
+            }
+          ],
+          "answerIds": [
+            "harness_didnt_resend"
+          ],
+          "shuffle": false,
+          "runnable": true
         }
       ],
-      "xpTotal": 20
+      "xpTotal": 18
     },
     {
       "slug": "how-to-talk-to-one",
@@ -622,26 +651,55 @@
           ]
         },
         {
-          "type": "checkpoint",
+          "type": "mc",
           "id": "before-you-build/how-to-talk-to-one/s08-08-checkpoint",
-          "xp": 8,
-          "hint": [],
+          "xp": 6,
+          "hint": [
+            {
+              "level": 1,
+              "body": "Count the knobs in each draft against the five the lesson taught.\nDraft A has one. Draft B has three. Draft C has all five — and\nthe Examples knob is the one that's hardest to substitute for in\nwords. When the format is \"tagged bullets,\" one shown example\nbeats two paragraphs of description.\n",
+              "cost": 0
+            },
+            {
+              "level": 2,
+              "body": "The right answer isn't \"whichever prompt is longest.\" It's\nwhichever prompt is closest to all-five-knobs-filled — because\nevery missing knob is a thing the model has to guess, and a\nrouter downstream cannot consume a guessed output.\n",
+              "cost": 0
+            }
+          ],
           "personalize": false,
           "phase": "check",
-          "estSeconds": 240,
-          "concept": "score-prompts-by-knobs",
-          "prompt": "Final drill. Synthesize the 5-knob rubric into one function:\n`score_prompts(prompts)` that takes a list of prompt-audit\ndicts and returns a list of tuples sorted by score descending.\n\nEach input dict has six fields:\n- `name`: string (an identifier for the prompt)\n- `has_role`: bool\n- `has_task`: bool\n- `has_context`: bool\n- `has_format`: bool\n- `has_examples`: bool\n\nScore each prompt: every present knob adds 20 points (max 100).\n\nReturn a list of tuples `(name, score, missing)` where `missing` is\na list of the knob field names that are False, in this exact knob\norder: `has_role`, `has_task`, `has_context`, `has_format`,\n`has_examples`. Sort the returned list by score descending. On a\ntie, preserve the input order (Python's `sort` is stable).\n\nFive prompts run. Expected output:\n```\n('support-triage-v1', 100, [])\n('contract-summary-v2', 80, ['has_examples'])\n('marketing-blurb-draft', 60, ['has_context', 'has_examples'])\n('deposition-summary-v0', 40, ['has_role', 'has_format', 'has_examples'])\n('tell-me-everything', 20, ['has_role', 'has_context', 'has_format', 'has_examples'])\n```\n",
-          "starter": "prompts = [\n    {\"name\": \"support-triage-v1\",     \"has_role\": True,  \"has_task\": True, \"has_context\": True,  \"has_format\": True,  \"has_examples\": True},\n    {\"name\": \"contract-summary-v2\",   \"has_role\": True,  \"has_task\": True, \"has_context\": True,  \"has_format\": True,  \"has_examples\": False},\n    {\"name\": \"marketing-blurb-draft\", \"has_role\": True,  \"has_task\": True, \"has_context\": False, \"has_format\": True,  \"has_examples\": False},\n    {\"name\": \"deposition-summary-v0\", \"has_role\": False, \"has_task\": True, \"has_context\": True,  \"has_format\": False, \"has_examples\": False},\n    {\"name\": \"tell-me-everything\",    \"has_role\": False, \"has_task\": True, \"has_context\": False, \"has_format\": False, \"has_examples\": False},\n]\n\n# define score_prompts(prompts) below\n\nfor row in score_prompts(prompts):\n    print(row)\n",
-          "grader": {
-            "kind": "stdout-equality",
-            "expected": "('support-triage-v1', 100, [])\n('contract-summary-v2', 80, ['has_examples'])\n('marketing-blurb-draft', 60, ['has_context', 'has_examples'])\n('deposition-summary-v0', 40, ['has_role', 'has_format', 'has_examples'])\n('tell-me-everything', 20, ['has_role', 'has_context', 'has_format', 'has_examples'])\n",
-            "normalize": "collapse-trailing-newline"
-          },
-          "solution": "prompts = [\n    {\"name\": \"support-triage-v1\",     \"has_role\": True,  \"has_task\": True, \"has_context\": True,  \"has_format\": True,  \"has_examples\": True},\n    {\"name\": \"contract-summary-v2\",   \"has_role\": True,  \"has_task\": True, \"has_context\": True,  \"has_format\": True,  \"has_examples\": False},\n    {\"name\": \"marketing-blurb-draft\", \"has_role\": True,  \"has_task\": True, \"has_context\": False, \"has_format\": True,  \"has_examples\": False},\n    {\"name\": \"deposition-summary-v0\", \"has_role\": False, \"has_task\": True, \"has_context\": True,  \"has_format\": False, \"has_examples\": False},\n    {\"name\": \"tell-me-everything\",    \"has_role\": False, \"has_task\": True, \"has_context\": False, \"has_format\": False, \"has_examples\": False},\n]\n\nKNOBS = [\"has_role\", \"has_task\", \"has_context\", \"has_format\", \"has_examples\"]\n\ndef score_prompts(prompts):\n    results = []\n    for p in prompts:\n        score = sum(20 for k in KNOBS if p.get(k))\n        missing = [k for k in KNOBS if not p.get(k)]\n        results.append((p[\"name\"], score, missing))\n    results.sort(key=lambda row: -row[1])\n    return results\n\nfor row in score_prompts(prompts):\n    print(row)\n",
-          "passThreshold": 0.66
+          "estSeconds": 150,
+          "concept": "pick-the-shippable-prompt",
+          "prompt": "Final drill. Three prompt drafts from three teammates. Same job —\n*summarize incoming support emails so a router can decide where they\ngo in under 10 seconds.* The model and the inputs are identical\nacross all three. Which one ships into production today?\n\n**Draft A**\n> Summarize this support email.\n\n**Draft B**\n> Role: customer service lead. Task: summarize this email.\n> Format: 3 bullets, each under 15 words.\n\n**Draft C**\n> Role: customer service lead at a 30-person SaaS company.\n> Task: summarize this email so a human router can decide where it\n> goes in under 10 seconds.\n> Context: inbound queue averages 200 emails/day; refund requests go\n> to finance; status checks get an auto-reply; everything else routes\n> to a human.\n> Format: 3 bullets, each under 15 words, with a category tag in\n> brackets as the first word of bullet 1.\n> Examples:\n> [REFUND] customer wants money back, mentions 30-day guarantee, urgent.\n> [STATUS] customer asking where their order is, polite tone.\n> [ESCALATION] customer threatens to cancel, mentions competitor.\n",
+          "options": [
+            {
+              "id": "a",
+              "label": "Draft A. Shorter prompts are better; the model has been trained on enough support emails that it knows what 'summarize' means.",
+              "explain": "The lesson named this directly: 'the model is trained on enough X that it knows what Y means' is the move that fails when you actually run the prompt 200 times. Draft A's bullet count, bullet length, and tag taxonomy are all left for the model to guess, which means three different calls will produce three differently-shaped outputs. A router downstream cannot consume that."
+            },
+            {
+              "id": "b",
+              "label": "Draft B. Three knobs is the right balance — the other two would add complexity without much value.",
+              "explain": "Two missing knobs is two missing knobs, not 'balance.' Without Context, the model doesn't know what 'route' means at this company. Without Examples, it doesn't know what a routed bullet should look like. The bullets will come out the right length (Format is set) but the wrong shape — no tag, no category, no usable handoff to the next system."
+            },
+            {
+              "id": "c",
+              "label": "Draft C. All five knobs filled. The Examples line is doing the most work here — it locks in the tag taxonomy ([REFUND] / [STATUS] / [ESCALATION]) that the Format line couldn't pin down in words alone."
+            },
+            {
+              "id": "depends",
+              "label": "It depends on the model. Draft A might work fine with a flagship-tier model; Draft C is overkill for one.",
+              "explain": "Technically true in narrow cases — a frontier model can sometimes carry an under-specified prompt — but the lesson's point was that you don't ship prompts that depend on the model being smart. You ship prompts that work when the model is having a bad day, or when you swap to a cheaper model next quarter."
+            }
+          ],
+          "answerIds": [
+            "c"
+          ],
+          "shuffle": false,
+          "runnable": true
         }
       ],
-      "xpTotal": 20
+      "xpTotal": 18
     },
     {
       "slug": "where-this-course-goes",
@@ -853,38 +911,56 @@
           "runnable": true
         },
         {
-          "type": "checkpoint",
+          "type": "mc",
           "id": "before-you-build/where-this-course-goes/s09-08-checkpoint",
-          "xp": 8,
+          "xp": 6,
           "hint": [
             {
               "level": 1,
-              "body": "Extract the per-learner planning logic into a helper, then loop the list once. Build `routes` with `(name, start, target)` tuples in input order, and tally `by_background` with `dict.get(bg, 0) + 1`. The aggregate dict preserves insertion order in modern Python, so as long as you iterate learners in order, the by_background key order matches the expected output.",
+              "body": "Two of the four wrong answers (rigid catch-up, quitting outright)\nare the failure modes ch00 lesson 01 named directly. One wrong\nanswer (switch into the engineer path) breaks the rule for *why*\nthe routing logic exists in the first place. The remaining option\nis the one that preserves the daily habit, accepts the slip, and\nmoves the target — which is the only one of the four that treats\nthe plan the way the previous step said to treat it: a forecast\nyou steer, not a contract you're locked into.\n",
               "cost": 0
             },
             {
               "level": 2,
-              "body": "Per-learner math: Maya (engineer, 20h) -> start=4, weekly=max(2,4)=4, target=min(30, 4+16-1)=19. Devon (copywriter, 16h) -> start=1, weekly=max(1,2)=2, target=min(30, 1+8-1)=8. Priya (cs_rep, 8h) -> start=1, weekly=1, target=4. Jules (designer, 14h) -> start=1, weekly=max(1, 14//7)=2, target=8. Sam (paralegal, 10h) -> start=1, weekly=1, target=4.",
+              "body": "The honest version of this drill is that *most* learners will be\nsomewhere between a week and ten days behind the original plan\nby week four. The plan is calibrated assuming that. Treating a\nthree-day slip as a crisis is the move that turns a normal\nlearning slip into a learning loss. Adjust the target, keep the\ncadence, and the four-month skill is still on the table.\n",
               "cost": 0
             }
           ],
           "personalize": false,
           "phase": "check",
-          "estSeconds": 240,
-          "concept": "route-a-cohort-through-the-course",
-          "prompt": "Final drill of chapter zero. Write `route_learners(learners)` that\ntakes a list of learner profile dicts and returns a dict with two\nkeys:\n\n- `routes`: a list of tuples `(name, starting_chapter,\n  target_chapter_at_30_days)`, in the same order as the input list.\n- `by_background`: a dict mapping background string -> integer\n  count of learners with that background.\n\nReuse the same routing rules from the previous lesson:\n\n- Engineer: starts at ch04, weekly_chapters = max(2, hours // 5).\n- Designer: starts at ch01, weekly_chapters = max(1, hours // 7).\n- Copywriter, cs_rep, paralegal: start at ch01,\n  weekly_chapters = max(1, hours // 8).\n- target_chapter_at_30_days = min(30, starting_chapter + 4\n  * weekly_chapters - 1).\n\nFive learners run, one per background. Expected output:\n```\nroutes:\n('Maya', 4, 19)\n('Devon', 1, 8)\n('Priya', 1, 4)\n('Jules', 1, 8)\n('Sam', 1, 4)\nby_background: {'engineer': 1, 'copywriter': 1, 'cs_rep': 1, 'designer': 1, 'paralegal': 1}\n```\n",
-          "starter": "learners = [\n    {\"name\": \"Maya\",  \"background\": \"engineer\",   \"hours_per_week\": 20},\n    {\"name\": \"Devon\", \"background\": \"copywriter\", \"hours_per_week\": 16},\n    {\"name\": \"Priya\", \"background\": \"cs_rep\",     \"hours_per_week\": 8},\n    {\"name\": \"Jules\", \"background\": \"designer\",   \"hours_per_week\": 14},\n    {\"name\": \"Sam\",   \"background\": \"paralegal\",  \"hours_per_week\": 10},\n]\n\n# define route_learners(learners) below\n\nresult = route_learners(learners)\nprint(\"routes:\")\nfor r in result[\"routes\"]:\n    print(r)\nprint(f\"by_background: {result['by_background']}\")\n",
-          "grader": {
-            "kind": "stdout-equality",
-            "expected": "routes:\n('Maya', 4, 19)\n('Devon', 1, 8)\n('Priya', 1, 4)\n('Jules', 1, 8)\n('Sam', 1, 4)\nby_background: {'engineer': 1, 'copywriter': 1, 'cs_rep': 1, 'designer': 1, 'paralegal': 1}\n",
-            "normalize": "collapse-trailing-newline"
-          },
-          "solution": "learners = [\n    {\"name\": \"Maya\",  \"background\": \"engineer\",   \"hours_per_week\": 20},\n    {\"name\": \"Devon\", \"background\": \"copywriter\", \"hours_per_week\": 16},\n    {\"name\": \"Priya\", \"background\": \"cs_rep\",     \"hours_per_week\": 8},\n    {\"name\": \"Jules\", \"background\": \"designer\",   \"hours_per_week\": 14},\n    {\"name\": \"Sam\",   \"background\": \"paralegal\",  \"hours_per_week\": 10},\n]\n\ndef _plan(background, hours):\n    if background == \"engineer\":\n        starting_chapter = 4\n        weekly_chapters = max(2, hours // 5)\n    elif background == \"designer\":\n        starting_chapter = 1\n        weekly_chapters = max(1, hours // 7)\n    else:\n        starting_chapter = 1\n        weekly_chapters = max(1, hours // 8)\n    target = min(30, starting_chapter + 4 * weekly_chapters - 1)\n    return starting_chapter, target\n\ndef route_learners(learners):\n    routes = []\n    by_background = {}\n    for learner in learners:\n        start, target = _plan(learner[\"background\"], learner[\"hours_per_week\"])\n        routes.append((learner[\"name\"], start, target))\n        by_background[learner[\"background\"]] = by_background.get(learner[\"background\"], 0) + 1\n    return {\"routes\": routes, \"by_background\": by_background}\n\nresult = route_learners(learners)\nprint(\"routes:\")\nfor r in result[\"routes\"]:\n    print(r)\nprint(f\"by_background: {result['by_background']}\")\n",
-          "passThreshold": 0.66
+          "estSeconds": 150,
+          "concept": "adjust-the-plan-when-life-intervenes",
+          "prompt": "Final drill of chapter zero. Step 07 of this lesson asked you what\nan honest 30-day plan looks like *before* you start. This drill is\nwhat to do *after* you start, when life intervenes.\n\n**Scenario.** It is the Sunday of week three. You committed to ten\nhours per week. Week one you got eleven. Week two you got nine. This\npast week your kid was sick on Tuesday, your manager pulled you into\na Friday deadline you didn't see coming, and Saturday's two-hour\nblock became a one-hour block when your partner reminded you about\nthe in-laws. You ended the week with four hours of course time\ninstead of ten.\n\nYou're three days behind the plan. What's the right move?\n",
+          "options": [
+            {
+              "id": "rigid",
+              "label": "Catch up on Sunday. Pull a six-hour session and make the week's quota. The plan is the plan.",
+              "explain": "Six hours in one sitting by a learner with no Python fluency yet is the highest-probability way to confuse yourself for two chapters in a row and wake up Monday thinking 'I'm too dumb for this.' Lesson 01 of this chapter named that exact failure mode out loud."
+            },
+            {
+              "id": "quit",
+              "label": "Three days behind in week three of a thirty-day plan means the plan isn't going to work. Cut losses. Try something else.",
+              "explain": "Almost every adult learner who finishes a multi-month curriculum has a week where they fall three days behind. The ones who finish notice the slip, adjust, and continue. Quitting in week three because a kid got sick is the manufactured failure ch00 was built to prevent."
+            },
+            {
+              "id": "adjust",
+              "label": "Move the target chapter back by one. Keep tomorrow's daily-minute habit. Don't try to catch up — the plan was a forecast, not a contract."
+            },
+            {
+              "id": "change_path",
+              "label": "Switch into the engineer path so the plan starts at ch04 — that way you'll naturally cover less ground per chapter and the math works out.",
+              "explain": "The engineer path is for people who already know Python syntax. Skipping ch01-03 because you fell three hours behind in week three will leave you trying to write conditional logic without having learned variables. Same failure mode as 'rigid catch-up,' a different doorway in."
+            }
+          ],
+          "answerIds": [
+            "adjust"
+          ],
+          "shuffle": false,
+          "runnable": true
         }
       ],
-      "xpTotal": 20
+      "xpTotal": 18
     }
   ],
-  "xpTotal": 78
+  "xpTotal": 72
 }

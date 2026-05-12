@@ -1,0 +1,57 @@
+xp: 6
+estSeconds: 150
+concept: pick-the-shippable-prompt
+prompt: |
+  Final drill. Three prompt drafts from three teammates. Same job —
+  *summarize incoming support emails so a router can decide where they
+  go in under 10 seconds.* The model and the inputs are identical
+  across all three. Which one ships into production today?
+
+  **Draft A**
+  > Summarize this support email.
+
+  **Draft B**
+  > Role: customer service lead. Task: summarize this email.
+  > Format: 3 bullets, each under 15 words.
+
+  **Draft C**
+  > Role: customer service lead at a 30-person SaaS company.
+  > Task: summarize this email so a human router can decide where it
+  > goes in under 10 seconds.
+  > Context: inbound queue averages 200 emails/day; refund requests go
+  > to finance; status checks get an auto-reply; everything else routes
+  > to a human.
+  > Format: 3 bullets, each under 15 words, with a category tag in
+  > brackets as the first word of bullet 1.
+  > Examples:
+  > [REFUND] customer wants money back, mentions 30-day guarantee, urgent.
+  > [STATUS] customer asking where their order is, polite tone.
+  > [ESCALATION] customer threatens to cancel, mentions competitor.
+options:
+  - id: a
+    label: "Draft A. Shorter prompts are better; the model has been trained on enough support emails that it knows what 'summarize' means."
+    explain: "The lesson named this directly: 'the model is trained on enough X that it knows what Y means' is the move that fails when you actually run the prompt 200 times. Draft A's bullet count, bullet length, and tag taxonomy are all left for the model to guess, which means three different calls will produce three differently-shaped outputs. A router downstream cannot consume that."
+  - id: b
+    label: "Draft B. Three knobs is the right balance — the other two would add complexity without much value."
+    explain: "Two missing knobs is two missing knobs, not 'balance.' Without Context, the model doesn't know what 'route' means at this company. Without Examples, it doesn't know what a routed bullet should look like. The bullets will come out the right length (Format is set) but the wrong shape — no tag, no category, no usable handoff to the next system."
+  - id: c
+    label: "Draft C. All five knobs filled. The Examples line is doing the most work here — it locks in the tag taxonomy ([REFUND] / [STATUS] / [ESCALATION]) that the Format line couldn't pin down in words alone."
+  - id: depends
+    label: "It depends on the model. Draft A might work fine with a flagship-tier model; Draft C is overkill for one."
+    explain: "Technically true in narrow cases — a frontier model can sometimes carry an under-specified prompt — but the lesson's point was that you don't ship prompts that depend on the model being smart. You ship prompts that work when the model is having a bad day, or when you swap to a cheaper model next quarter."
+answerIds:
+  - c
+hint:
+  - level: 1
+    body: |
+      Count the knobs in each draft against the five the lesson taught.
+      Draft A has one. Draft B has three. Draft C has all five — and
+      the Examples knob is the one that's hardest to substitute for in
+      words. When the format is "tagged bullets," one shown example
+      beats two paragraphs of description.
+  - level: 2
+    body: |
+      The right answer isn't "whichever prompt is longest." It's
+      whichever prompt is closest to all-five-knobs-filled — because
+      every missing knob is a thing the model has to guess, and a
+      router downstream cannot consume a guessed output.
