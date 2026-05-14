@@ -1,6 +1,6 @@
 slug: why-every-framework-is-thirty-lines
 title: "Why every framework is the same thirty lines — and what that means for buy-vs-build"
-estMinutes: 18
+estMinutes: 21
 prerequisites:
   - evaluator-optimizer
 order:
@@ -9,6 +9,7 @@ order:
   - 03-which-framework-fits.mc.yaml
   - 04-vercel-ai-sdk-walkthrough.read.md
   - 05-the-five-canonical-patterns.read.md
+  - 05b-the-industry-map.read.md
   - 06-when-to-stay-framework-free.mc.yaml
   - 07-write-the-tradeoff-memo.write.yaml
   - 08-checkpoint.checkpoint.yaml
