@@ -1,0 +1,25 @@
+xp: 2
+estSeconds: 60
+concept: cd-navigation
+prompt: |
+  You're deep in some folder, you've lost track of where you are, and
+  you want to get back to your home folder in one move and start over.
+
+  Which command does that?
+options:
+  - id: cd
+    label: "cd"
+  - id: pwd
+    label: "pwd"
+    explain: "pwd tells you where you are, which is useful when you're lost, but it doesn't move you. You'd still be standing in the same spot."
+  - id: ls
+    label: "ls"
+    explain: "ls shows you what's in the current folder. It doesn't move you anywhere. You'd see the furniture but still be stuck in the same room."
+  - id: cd-dotdot
+    label: "cd .."
+    explain: "cd .. moves you up exactly one level. If you're deep in the tree, one level up isn't home yet. You'd have to run it many times. `cd` on its own jumps all the way home in one move."
+answerIds:
+  - cd
+hint:
+  - level: 1
+    body: "Two commands move you: cd. The other two (pwd, ls) only show you things. And cd with nothing after it is the panic button that drops you straight home."

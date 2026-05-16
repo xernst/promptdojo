@@ -1,0 +1,29 @@
+xp: 2
+estSeconds: 75
+concept: pwd-and-ls
+prompt: |
+  You run `ls` in a folder and get this back:
+
+  ```
+  budget.xlsx    invoices    notes.txt    vendors
+  ```
+
+  You know `invoices` and `vendors` are folders, and `budget.xlsx` and
+  `notes.txt` are files. Based on that, which statement is true?
+options:
+  - id: cd-folders
+    label: "You can cd into invoices or vendors, but not into budget.xlsx or notes.txt"
+  - id: cd-all
+    label: "You can cd into any of the four, since ls listed all of them"
+    explain: "ls lists everything in the folder, files and folders together. But cd means 'step into a folder'. There's nothing to step into for a file, so cd only works on the folder names here."
+  - id: cd-none
+    label: "You can't cd into anything until you run pwd first"
+    explain: "pwd and cd are independent. pwd tells you where you are; you don't need it before cd. You can cd into invoices right now."
+  - id: cd-files
+    label: "You can cd into the files, and the folders are just for looking at"
+    explain: "It's the other way around. cd steps into a folder. A file isn't a place you can stand, so you cd into invoices and vendors, not into the two files."
+answerIds:
+  - cd-folders
+hint:
+  - level: 1
+    body: "cd means 'change directory', which is 'step into a folder and stand there'. A file isn't a folder, so it isn't a place you can stand. cd only works on the folder names in the listing."

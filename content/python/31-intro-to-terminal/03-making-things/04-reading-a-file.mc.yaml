@@ -1,0 +1,29 @@
+xp: 3
+estSeconds: 90
+concept: cat-and-echo
+prompt: |
+  A file called `tasks.txt` already has three lines in it. You run:
+
+  ```
+  echo call the vendor > tasks.txt
+  cat tasks.txt
+  ```
+
+  What does `cat tasks.txt` print?
+options:
+  - id: one-line
+    label: "Just one line: call the vendor"
+  - id: four-lines
+    label: "Four lines: the original three, plus call the vendor at the end"
+    explain: "That's what the two-arrow version `>>` would do. A single `>` replaces the whole file. The original three lines are gone."
+  - id: original
+    label: "The original three lines. echo doesn't change files"
+    explain: "echo on its own just prints to the screen, but echo with a `>` writes into the file. The redirect did change tasks.txt."
+  - id: error
+    label: "An error, because the file already had content"
+    explain: "No error. A single `>` happily overwrites a file that already has content. That's exactly the sharp edge to watch for: it replaces without warning."
+answerIds:
+  - one-line
+hint:
+  - level: 1
+    body: "A single `>` replaces the entire contents of the file. The three original lines are thrown away and the one new line is all that's left. The two-arrow `>>` is the one that adds to the end."

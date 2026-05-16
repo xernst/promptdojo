@@ -1,0 +1,26 @@
+xp: 2
+estSeconds: 60
+concept: terminal-and-finder-same-files
+prompt: |
+  You type `mkdir reports` in the terminal, which makes a new folder
+  called `reports`. Then you open your normal file window (Finder on a
+  Mac, File Explorer on Windows) and look at the same location.
+
+  What do you see?
+options:
+  - id: there
+    label: "The reports folder is sitting right there, same as if you'd made it by clicking"
+  - id: nothing
+    label: "Nothing changed. The terminal made a folder, but only the terminal can see it"
+    explain: "The terminal isn't a separate computer or a separate set of files. It's a different door into the exact files you already have. A folder made by typing is identical to a folder made by clicking."
+  - id: separate
+    label: "A folder, but in a special hidden terminal-only area"
+    explain: "There's no terminal-only area. `mkdir reports` makes a folder in whatever location you're currently in, and your file window shows that same location."
+  - id: restart
+    label: "Nothing yet. You'd need to restart the computer for the file window to catch up"
+    explain: "No restart needed. The change is instant and real. The file window and the terminal are both just views of the same live filesystem."
+answerIds:
+  - there
+hint:
+  - level: 1
+    body: "Remember the core idea from two steps ago: the terminal is a different door into the one computer you already own, not a separate machine. A folder is a folder no matter which door you used to make it."

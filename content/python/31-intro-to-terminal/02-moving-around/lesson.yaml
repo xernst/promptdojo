@@ -1,0 +1,14 @@
+slug: moving-around
+title: "Moving around"
+estMinutes: 9
+prerequisites:
+  - what-the-terminal-is
+order:
+  - 01-the-filesystem-is-a-tree.read.md
+  - 02-pwd-and-ls.read.md
+  - 03-where-am-i.mc.yaml
+  - 04-read-this-listing.mc.yaml
+  - 05-cd.read.md
+  - 06-follow-the-moves.mc.yaml
+  - 07-pick-the-command.mc.yaml
+  - 08-checkpoint.checkpoint.yaml

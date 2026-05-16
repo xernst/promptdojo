@@ -1,0 +1,8 @@
+number: 31
+slug: intro-to-terminal
+title: "intro to terminal, the text way to drive your computer"
+blurb: "you've never opened a terminal. by the end of this chapter you have, and you can move around your files, make folders, and read files without touching the mouse. it's a keyboard shortcut, not a cockpit. every tool in the rest of this course assumes you can do this, so we do it first."
+lessons:
+  - 01-what-the-terminal-is
+  - 02-moving-around
+  - 03-making-things

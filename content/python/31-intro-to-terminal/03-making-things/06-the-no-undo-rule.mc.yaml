@@ -1,0 +1,26 @@
+xp: 2
+estSeconds: 60
+concept: rm-and-no-undo
+prompt: |
+  You meant to delete a file called `draft-old.txt`, but you typed
+  `rm draft.txt` by mistake and pressed enter. `draft.txt` was a file
+  you actually needed.
+
+  What's the situation?
+options:
+  - id: gone
+    label: "draft.txt is deleted for good. There's no trash can to recover it from"
+  - id: trash
+    label: "It's fine, it went to the Trash. Open the Trash and drag it back"
+    explain: "That's how your normal file window works, not rm. rm has no trash can. The file is deleted immediately and for real."
+  - id: undo
+    label: "Press Ctrl+Z in the terminal to undo it"
+    explain: "There's no undo for rm. The terminal ran exactly what you typed the instant you pressed enter. This is why the safety rule is to read the line before pressing enter, not after."
+  - id: confirm
+    label: "Nothing happened yet, rm will ask you to confirm first"
+    explain: "Plain rm does not ask for confirmation. It deletes the moment you press enter. The confirmation step has to come from you, reading the line before you run it."
+answerIds:
+  - gone
+hint:
+  - level: 1
+    body: "rm has no trash can and no undo. It deletes for real, the instant you press enter. The only safety net is the one you provide: read the line before running it."

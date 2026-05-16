@@ -1,0 +1,60 @@
+xp: 6
+estSeconds: 165
+concept: mkdir-and-touch
+prompt: |
+  Last step of the chapter. One more checkpoint, then you're done.
+
+  You've now opened a terminal, moved around it, and made things in it.
+  That's eight commands total: whoami, echo, pwd, ls, cd, mkdir, touch,
+  cat, rm. Eight commands is enough to get through the rest of this
+  course. The next chapter, the Claude CLI, is a program you'll run by
+  typing in exactly this terminal. You're ready for it now.
+
+  The starter declares three variables for the making-things commands.
+  Write three `print(f"...")` lines so the output is exactly:
+
+  ```
+  mkdir: makes a new folder
+  touch: makes a new empty file
+  rm: deletes a file for good, with no undo
+  ```
+
+  Type the three lines, run it, and the chapter is yours.
+starter: |
+  mkdir = "makes a new folder"
+  touch = "makes a new empty file"
+  rm = "deletes a file for good, with no undo"
+
+  # write three print() lines below, one per variable, using f-strings.
+  # the grader expects the three sentences shown above, exactly.
+grader:
+  kind: stdout-equality
+  expected: |
+    mkdir: makes a new folder
+    touch: makes a new empty file
+    rm: deletes a file for good, with no undo
+  normalize: collapse-trailing-newline
+solution: |
+  mkdir = "makes a new folder"
+  touch = "makes a new empty file"
+  rm = "deletes a file for good, with no undo"
+
+  print(f"mkdir: {mkdir}")
+  print(f"touch: {touch}")
+  print(f"rm: {rm}")
+passThreshold: 0.66
+hint:
+  - level: 1
+    body: "Same shape you've used three times now: `print(f\"label: {variable}\")`. Labels are mkdir, touch, rm. The variables are defined at the top of the starter."
+  - level: 2
+    body: |
+      Here are the three lines:
+
+      ```python
+      print(f"mkdir: {mkdir}")
+      print(f"touch: {touch}")
+      print(f"rm: {rm}")
+      ```
+
+      That's the chapter done. Next up: the Claude CLI, run from the
+      terminal you just learned.

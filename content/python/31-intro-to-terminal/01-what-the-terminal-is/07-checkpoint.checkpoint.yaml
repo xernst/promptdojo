@@ -1,0 +1,62 @@
+xp: 6
+estSeconds: 150
+concept: command-anatomy
+prompt: |
+  Quick lock-in before lesson two. The code sandbox on this page runs
+  Python, the language you'll start learning in chapter one. We'll use
+  it once at the end of each lesson to pin down what you just learned.
+  Same `print()` and f-string move you used in chapter zero.
+
+  The starter declares three variables that name the parts of lesson
+  one. Write three `print(f"...")` lines below them so the output is
+  exactly:
+
+  ```
+  command: the verb, the thing to do
+  argument: what the command acts on
+  shell: the program that reads commands and runs them
+  ```
+
+  The grader runs against these values. You don't need the terminal
+  open for this step. Just type the three lines and run.
+starter: |
+  command = "the verb, the thing to do"
+  argument = "what the command acts on"
+  shell = "the program that reads commands and runs them"
+
+  # write three print() lines below, one per variable, using f-strings.
+  # the grader expects the three sentences shown above, exactly.
+grader:
+  kind: stdout-equality
+  expected: |
+    command: the verb, the thing to do
+    argument: what the command acts on
+    shell: the program that reads commands and runs them
+  normalize: collapse-trailing-newline
+solution: |
+  command = "the verb, the thing to do"
+  argument = "what the command acts on"
+  shell = "the program that reads commands and runs them"
+
+  print(f"command: {command}")
+  print(f"argument: {argument}")
+  print(f"shell: {shell}")
+passThreshold: 0.66
+hint:
+  - level: 1
+    body: |
+      Each line is the same shape: `print(f"label: {variable}")`. The
+      labels are `command`, `argument`, and `shell`. The variable names
+      are already defined for you at the top of the starter.
+  - level: 2
+    body: |
+      Here are the three lines:
+
+      ```python
+      print(f"command: {command}")
+      print(f"argument: {argument}")
+      print(f"shell: {shell}")
+      ```
+
+      The `f` before the quote lets `{variable}` get swapped for its
+      value. The text before the colon is plain text you type yourself.

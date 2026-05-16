@@ -1,0 +1,32 @@
+xp: 3
+estSeconds: 90
+concept: cd-navigation
+prompt: |
+  You start in your home folder, `/Users/maya`. You run these four
+  commands, in order:
+
+  ```
+  cd Documents
+  cd taxes
+  cd ..
+  cd ../Downloads
+  ```
+
+  After the last command, what does `pwd` print?
+options:
+  - id: downloads
+    label: "/Users/maya/Downloads"
+  - id: documents
+    label: "/Users/maya/Documents"
+    explain: "Close, but the last command keeps going. `cd ../Downloads` first goes up to /Users/maya, then steps into Downloads. You stop in Downloads, not Documents."
+  - id: taxes
+    label: "/Users/maya/Documents/taxes"
+    explain: "That's where you were after the first two commands. The last two commands both move you, so taxes isn't your final spot."
+  - id: home
+    label: "/Users/maya"
+    explain: "That's the midpoint of the last command, not the end. `cd ../Downloads` goes up to /Users/maya AND THEN into Downloads, in one move. Downloads is the destination."
+answerIds:
+  - downloads
+hint:
+  - level: 1
+    body: "Walk it one line at a time. cd Documents goes down, cd taxes goes down, cd .. goes up one. Then cd ../Downloads is two moves in one: up with `..`, then into Downloads."

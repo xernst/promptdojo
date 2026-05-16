@@ -1,0 +1,26 @@
+xp: 3
+estSeconds: 90
+concept: combining-commands
+prompt: |
+  Real task. You want to end up with a folder named `q3-report`, and
+  inside it a file named `summary.txt` that contains the text
+  `draft one`.
+
+  You're standing in your home folder. Which sequence does it?
+options:
+  - id: correct
+    label: "mkdir q3-report  →  cd q3-report  →  echo draft one > summary.txt"
+  - id: no-cd
+    label: "mkdir q3-report  →  echo draft one > summary.txt"
+    explain: "This makes the folder but never steps into it. echo writes summary.txt into your home folder, next to q3-report instead of inside it. The cd is what puts you in the right place first."
+  - id: cd-first
+    label: "cd q3-report  →  mkdir q3-report  →  echo draft one > summary.txt"
+    explain: "The very first command fails: you can't cd into q3-report because it doesn't exist yet. You have to mkdir the folder before you can cd into it."
+  - id: cat
+    label: "mkdir q3-report  →  cd q3-report  →  cat draft one > summary.txt"
+    explain: "cat reads files, it doesn't write text you typed. cat draft one would look for files named draft and one. To put the text draft one into a file, use echo with the > redirect."
+answerIds:
+  - correct
+hint:
+  - level: 1
+    body: "Three jobs: make the folder (mkdir), step into it (cd), write the file (echo with >). They have to happen in that order, because cd needs the folder to exist, and echo needs you standing inside it. Note that echo with > creates the file too, so no touch is needed."

@@ -1,0 +1,12 @@
+slug: what-the-terminal-is
+title: "What the terminal is"
+estMinutes: 8
+prerequisites: []
+order:
+  - 01-not-a-cockpit.read.md
+  - 02-what-it-actually-is.read.md
+  - 03-open-it.read.md
+  - 04-which-app.mc.yaml
+  - 05-the-prompt.read.md
+  - 06-what-a-command-is.read.md
+  - 07-checkpoint.checkpoint.yaml

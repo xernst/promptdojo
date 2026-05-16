@@ -1,0 +1,28 @@
+xp: 2
+estSeconds: 60
+concept: pwd-and-ls
+prompt: |
+  You run `pwd` and the terminal prints:
+
+  ```
+  /Users/maya/Documents/taxes
+  ```
+
+  Which folder are you standing in right now?
+options:
+  - id: taxes
+    label: "taxes"
+  - id: users
+    label: "Users"
+    explain: "Users is near the top of the path, not the end. A pwd path reads top-to-bottom from left to right. The folder you're standing in is the last one on the line."
+  - id: maya
+    label: "maya"
+    explain: "maya is your home folder, in the middle of this path. You're standing further down the tree. The current folder is always the rightmost name in a pwd path."
+  - id: slash
+    label: "The whole path is the folder name"
+    explain: "The whole path is the address, the trail of folders from the top of the tree down to you. Each name between the slashes is a separate folder. You're standing in the last one."
+answerIds:
+  - taxes
+hint:
+  - level: 1
+    body: "A pwd path is a trail of folders separated by slashes, top of the tree first. The folder you're actually standing in is the very end of the trail, the last name on the line."

@@ -1,0 +1,14 @@
+slug: making-things
+title: "Making things"
+estMinutes: 9
+prerequisites:
+  - moving-around
+order:
+  - 01-mkdir-and-touch.read.md
+  - 02-folder-or-file.mc.yaml
+  - 03-cat-and-echo.read.md
+  - 04-reading-a-file.mc.yaml
+  - 05-rm-carefully.read.md
+  - 06-the-no-undo-rule.mc.yaml
+  - 07-string-it-together.mc.yaml
+  - 08-checkpoint.checkpoint.yaml

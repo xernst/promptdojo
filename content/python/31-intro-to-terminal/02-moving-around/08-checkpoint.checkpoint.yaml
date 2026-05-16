@@ -1,0 +1,53 @@
+xp: 6
+estSeconds: 150
+concept: cd-navigation
+prompt: |
+  Lesson two lock-in. Back to the Python sandbox for one step.
+
+  The starter declares three variables, one per command you learned
+  for moving around. Write three `print(f"...")` lines so the output
+  is exactly:
+
+  ```
+  pwd: prints the folder you are standing in
+  ls: lists what is inside the current folder
+  cd: changes which folder you are standing in
+  ```
+
+  The grader runs against these values. Type the three lines, run it,
+  and that's lesson two done.
+starter: |
+  pwd = "prints the folder you are standing in"
+  ls = "lists what is inside the current folder"
+  cd = "changes which folder you are standing in"
+
+  # write three print() lines below, one per variable, using f-strings.
+  # the grader expects the three sentences shown above, exactly.
+grader:
+  kind: stdout-equality
+  expected: |
+    pwd: prints the folder you are standing in
+    ls: lists what is inside the current folder
+    cd: changes which folder you are standing in
+  normalize: collapse-trailing-newline
+solution: |
+  pwd = "prints the folder you are standing in"
+  ls = "lists what is inside the current folder"
+  cd = "changes which folder you are standing in"
+
+  print(f"pwd: {pwd}")
+  print(f"ls: {ls}")
+  print(f"cd: {cd}")
+passThreshold: 0.66
+hint:
+  - level: 1
+    body: "Same shape as the lesson-one checkpoint: `print(f\"label: {variable}\")`, three times. The labels are pwd, ls, and cd. The variables are already defined at the top."
+  - level: 2
+    body: |
+      Here are the three lines:
+
+      ```python
+      print(f"pwd: {pwd}")
+      print(f"ls: {ls}")
+      print(f"cd: {cd}")
+      ```

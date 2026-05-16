@@ -1,0 +1,25 @@
+xp: 2
+estSeconds: 60
+concept: mkdir-and-touch
+prompt: |
+  You want to end up with a folder named `campaign` that has an empty
+  file named `brief.txt` inside it.
+
+  Which sequence of commands gets you there?
+options:
+  - id: correct
+    label: "mkdir campaign  →  cd campaign  →  touch brief.txt"
+  - id: touch-first
+    label: "touch campaign  →  cd campaign  →  touch brief.txt"
+    explain: "touch campaign makes a FILE named campaign, not a folder. You can't cd into a file, so the next command fails. Use mkdir to make the folder."
+  - id: no-cd
+    label: "mkdir campaign  →  touch brief.txt"
+    explain: "This makes the folder, but without the cd step you never step inside it. touch brief.txt then makes the file next to the campaign folder, not inside it."
+  - id: mkdir-both
+    label: "mkdir campaign  →  cd campaign  →  mkdir brief.txt"
+    explain: "mkdir brief.txt makes a FOLDER named brief.txt (the .txt in the name doesn't make it a file). To make an actual empty file, use touch."
+answerIds:
+  - correct
+hint:
+  - level: 1
+    body: "mkdir makes folders, touch makes files. And to put something INSIDE a folder, you have to cd into that folder first, because commands act on wherever you're standing."
