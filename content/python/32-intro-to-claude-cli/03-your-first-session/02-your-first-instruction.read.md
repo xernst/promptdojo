@@ -15,10 +15,10 @@ Create a file called plan.txt with three lines: one goal I have
 for learning to build, one worry, and one small first step.
 ```
 
-Notice what that instruction is not. It's not code. It's not a special
-command with dashes and flags. It's a sentence, the way you'd brief a
-capable coworker. That's the whole interface. You describe the
-outcome you want, in normal words, and the CLI works out the steps.
+That instruction isn't code, and it isn't a special command with
+dashes and flags. It's a sentence, the way you'd brief a capable
+coworker. That's the whole interface. You describe the outcome you
+want, in normal words, and the CLI works out the steps.
 
 ## What makes it a good first instruction
 
