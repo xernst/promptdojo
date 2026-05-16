@@ -61,10 +61,21 @@ export function usePyodide() {
   const [status, setStatus] = useState<"idle" | "loading" | "ready">("loading");
   const pendingRef = useRef<Map<number, (r: RunResult) => void>>(new Map());
   const pendingAstRef = useRef<Map<number, (r: AstGradeResult) => void>>(new Map());
+  // Live timeout handles for in-flight run()/gradeAst() calls, so unmount can
+  // cancel them. Without this, unmounting mid-run leaves a 30s timer that
+  // fires into a dead component and resolves an orphaned promise. Typed as
+  // number — the code uses window.setTimeout, which returns a numeric id.
+  const timersRef = useRef<Set<number>>(new Set());
   const idRef = useRef(0);
 
   useEffect(() => {
     const w = getWorker();
+    // Capture ref contents now — these Maps/Sets are created once and never
+    // reassigned, but the lint rule wants the cleanup closure to read a
+    // local, not ref.current, since a ref *could* change before cleanup.
+    const pending = pendingRef.current;
+    const pendingAst = pendingAstRef.current;
+    const timers = timersRef.current;
     const onMsg = (e: MessageEvent<WorkerMsg>) => {
       const msg = e.data;
       if (msg.type === "status") {
@@ -90,6 +101,10 @@ export function usePyodide() {
     w.postMessage({ type: "init", id: -1 });
     return () => {
       w.removeEventListener("message", onMsg);
+      for (const t of timers) window.clearTimeout(t);
+      timers.clear();
+      pending.clear();
+      pendingAst.clear();
     };
   }, []);
 
@@ -98,6 +113,7 @@ export function usePyodide() {
     const id = ++idRef.current;
     return new Promise((resolve) => {
       const timer = window.setTimeout(() => {
+        timersRef.current.delete(timer);
         pendingRef.current.delete(id);
         resolve({
           ok: false,
@@ -106,7 +122,9 @@ export function usePyodide() {
           durationMs: PENDING_TIMEOUT_MS,
         });
       }, PENDING_TIMEOUT_MS);
+      timersRef.current.add(timer);
       pendingRef.current.set(id, (r) => {
+        timersRef.current.delete(timer);
         window.clearTimeout(timer);
         resolve(r);
       });
@@ -120,6 +138,7 @@ export function usePyodide() {
       const id = ++idRef.current;
       return new Promise((resolve) => {
         const timer = window.setTimeout(() => {
+          timersRef.current.delete(timer);
           pendingAstRef.current.delete(id);
           resolve({
             parsed: false,
@@ -129,7 +148,9 @@ export function usePyodide() {
             durationMs: PENDING_TIMEOUT_MS,
           });
         }, PENDING_TIMEOUT_MS);
+        timersRef.current.add(timer);
         pendingAstRef.current.set(id, (r) => {
+          timersRef.current.delete(timer);
           window.clearTimeout(timer);
           resolve(r);
         });

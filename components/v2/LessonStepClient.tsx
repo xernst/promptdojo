@@ -81,10 +81,22 @@ export default function LessonStepClient({
     const progress = loadProgressV2();
     return progress.profile ? { ...FRESH_PROFILE, ...progress.profile } : FRESH_PROFILE;
   });
-  const [latestAttempt, setLatestAttempt] = useState<StepAttempt | null>(() => {
-    const prior = getStepProgress(step.id);
-    return prior?.attempts?.slice().reverse().find((a) => a.correct) ?? null;
-  });
+  const [latestAttempt, setLatestAttempt] = useState<StepAttempt | null>(() =>
+    priorPassFor(step.id),
+  );
+  // LessonStepClient is REUSED, not remounted, across step navigation: only
+  // the [stepIndex] route segment changes, so React keeps this instance and
+  // the lazy initializer above runs once (for the first step only). Re-seed
+  // latestAttempt whenever step.id changes via the adjust-state-during-render
+  // pattern — https://react.dev/reference/react/useState#storing-information-
+  // from-previous-renders — so `passed` (and the Continue gate that depends
+  // on it) is correct on the first render of every step, with no flash of a
+  // stale pass carried over from the previous step.
+  const [seenStepId, setSeenStepId] = useState(step.id);
+  if (seenStepId !== step.id) {
+    setSeenStepId(step.id);
+    setLatestAttempt(priorPassFor(step.id));
+  }
   const ideRef = useRef<PersistentIDEHandle>(null);
   const announceRef = useRef<HTMLHeadingElement>(null);
   const isFirstStep = useRef(true);
@@ -368,6 +380,14 @@ function ProgressBar({ value, label }: { value: number; label?: string }) {
       />
     </div>
   );
+}
+
+// Most-recent passing attempt for a step, read from persisted progress.
+// Used to seed (and re-seed) latestAttempt so a reload — or navigating back
+// to an already-passed step — restores the passed state without re-grading.
+function priorPassFor(stepId: string): StepAttempt | null {
+  const prior = getStepProgress(stepId);
+  return prior?.attempts?.slice().reverse().find((a) => a.correct) ?? null;
 }
 
 function buildFilesForStep(step: Step): IDEFile[] {

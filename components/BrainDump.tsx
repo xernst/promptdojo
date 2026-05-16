@@ -120,8 +120,8 @@ export default function BrainDump() {
           </div>
           {items.length > 0 && (
             <div className="max-h-48 overflow-auto border-t border-ink-800 px-3 py-2 text-xs text-ink-400">
-              {items.slice(0, 8).map((it, i) => (
-                <div key={i} className="py-0.5 truncate" title={it}>
+              {items.slice(0, 8).map((it) => (
+                <div key={it} className="py-0.5 truncate" title={it}>
                   {it}
                 </div>
               ))}

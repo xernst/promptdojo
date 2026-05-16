@@ -55,7 +55,16 @@ export default function ReorderStepView({
 
   function handleSubmit() {
     if (submitted?.passed) return;
-    const userIds = order.map((f) => f.id);
+    // Distractors are decoy fragments mixed into the list; they are not part
+    // of correctOrder (which lists real fragment ids only). Grade the real
+    // fragments in the relative order the user placed them. Without this
+    // filter, `order` always carries fragments + distractors, so the length
+    // check below never matches correctOrder and any step with distractors
+    // is permanently unwinnable.
+    const distractorIds = new Set(step.distractors.map((d) => d.id));
+    const userIds = order
+      .map((f) => f.id)
+      .filter((id) => !distractorIds.has(id));
     const expected = step.correctOrder;
     const passed =
       userIds.length === expected.length &&
