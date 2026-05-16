@@ -2,7 +2,7 @@
 
 For: @TFisPython, day 0 of launch.
 Angle: personal story. First person, conversational, lowercase to match the
-promptdojo brand. No em dashes. End on the link.
+promptdojo brand. No em dashes, no emoji (per VOICE.md). End on the link.
 
 Post the seven tweets below as a thread, in order.
 
@@ -15,7 +15,7 @@ brutal for anyone who can't build with ai.
 
 so i spent the last stretch building a free school for exactly that problem.
 
-it's called promptdojo. here's why it exists 🧵
+it's called promptdojo. here's why it exists, and who it's for.
 
 ---
 

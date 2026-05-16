@@ -34,14 +34,14 @@ AI is reshaping every job. Not someday. Now.
 
 The people who stay valuable are the ones who can work with AI deliberately:
 point it at real work, read what it writes back, and catch what it got wrong.
-That used to be a programmer's skill. It is now everyone's skill. Marketers,
+That used to be a programmer's skill. It's everyone's skill now. Marketers,
 lawyers, designers, ops people, support teams. The job changed under all of you
 at once.
 
 promptdojo teaches that skill, from zero. We built it free for individuals, and
-we are keeping it that way, because the next five years are going to be brutal
-for anyone who cannot work with AI tools, and a paywall on the way out of that
-is the last thing people need.
+we're keeping it that way, because the next five years are going to be brutal
+for anyone who can't work with AI tools, and a paywall on the way out of that is
+the last thing people need.
 
 ---
 
@@ -50,7 +50,7 @@ is the last thing people need.
 Headline: **how it works**
 
 - **Pick your path.** Ten career paths, each a curated route through the
-  chapters that matter for your role. You are not handed a generic syllabus.
+  chapters that matter for your role. You're not handed a generic syllabus.
 - **Take a quick placement.** A short survey, then a path quiz. They set your
   starting point and let you skip what you already know.
 - **Learn by doing.** Every chapter runs in your browser. You read real
@@ -93,7 +93,7 @@ Headline: **for teams**
 The same course, built for whole teams.
 
 When AI reshapes a role, it reshapes it for everyone in that role at once.
-Reskilling one person at a time does not keep up. promptdojo for teams puts the
+Reskilling one person at a time doesn't keep up. promptdojo for teams puts the
 ten career paths in front of your whole organization, with the parts a company
 actually needs:
 
@@ -104,9 +104,9 @@ actually needs:
   a generic syllabus.
 
 And the part worth saying plainly: buying promptdojo for your team is what keeps
-the platform free for everyone else. There is no individual paywall, and there
-will not be one. Companies fund the free version by training their own people on
-it. That is the whole model.
+the platform free for everyone else. There's no individual paywall, and there
+won't be one. Companies fund the free version by training their own people on
+it. That's the whole model.
 
 - **CTA:** talk to us about your team
 - **CTA behavior:** opens a contact form. No public per-seat pricing. Pricing is
