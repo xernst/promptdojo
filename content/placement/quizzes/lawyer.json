@@ -1,0 +1,115 @@
+{
+  "id": "quiz-lawyer",
+  "kind": "path-quiz",
+  "version": "1.0.0",
+  "path": "lawyer",
+  "pathTitle": "Lawyer",
+  "title": "lawyer path placement",
+  "description": "A short quiz on the core ideas of the Lawyer path. Answer what you know. Each chapter you place out of is one you can skip ahead on, and you can revisit any chapter any time.",
+  "estMinutes": 4,
+  "scoring": {
+    "method": "sum-of-selected-option-points",
+    "selection": "single-select",
+    "maxScore": 16,
+    "overallSkipThreshold": { "points": 8, "percent": 0.5 },
+    "chapterSkipRule": "Each chapter is tested by 2 questions worth 2 points each. A learner places out of a chapter (skips its Version A) by answering both of its questions correctly. Overall, 50 percent or more of maxScore recommends Version B as the default for chapters not individually skipped."
+  },
+  "questions": [
+    {
+      "id": "q01", "testsChapter": "13-llm-apis", "type": "scenario", "concept": "why-an-api",
+      "prompt": "You want a tool that produces a first-pass summary of every document that comes into the practice, automatically. What makes that possible?",
+      "options": [
+        { "id": "a", "label": "Calling an AI model through its API from code, so each document triggers the model", "points": 2 },
+        { "id": "b", "label": "Nothing, document review cannot be assisted by code", "points": 0 },
+        { "id": "c", "label": "A larger filing cabinet", "points": 0 },
+        { "id": "d", "label": "Reading each one aloud", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q02", "testsChapter": "13-llm-apis", "type": "multiple-choice", "concept": "model-reliability",
+      "prompt": "An AI model produces a confident summary of a contract. In a legal context, what should you assume?",
+      "options": [
+        { "id": "a", "label": "It can be wrong even when it sounds certain, so a lawyer verifies it before anyone relies on it", "points": 2 },
+        { "id": "b", "label": "A confident summary from AI is reliable as written", "points": 0 },
+        { "id": "c", "label": "AI output cannot be checked, so trust it", "points": 0 },
+        { "id": "d", "label": "The model would refuse if it were unsure", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q03", "testsChapter": "19-prompting", "type": "multiple-choice", "concept": "prompting-with-standards",
+      "prompt": "You want AI help reviewing contracts against your firm's standard positions. What gets a consistent result?",
+      "options": [
+        { "id": "a", "label": "Put the firm's standards and review checklist into the prompt as explicit instructions", "points": 2 },
+        { "id": "b", "label": "Assume the model knows your firm's private positions", "points": 0 },
+        { "id": "c", "label": "Give no guidance and accept whatever it returns", "points": 0 },
+        { "id": "d", "label": "Use legal jargon and nothing else", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q04", "testsChapter": "19-prompting", "type": "scenario", "concept": "improving-a-prompt",
+      "prompt": "An AI review missed the clauses you care about most. What is the best fix?",
+      "options": [
+        { "id": "a", "label": "Name those clauses explicitly in the prompt and tell the model to check for each", "points": 2 },
+        { "id": "b", "label": "Run the same prompt again unchanged", "points": 0 },
+        { "id": "c", "label": "Accept that the model decides what matters", "points": 0 },
+        { "id": "d", "label": "Stop using AI for review entirely", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q05", "testsChapter": "22-context-and-retrieval", "type": "scenario", "concept": "context-from-source",
+      "prompt": "You want the model to answer questions about a specific 80-page contract. What is the right approach?",
+      "options": [
+        { "id": "a", "label": "Give the model the actual contract as context, rather than relying on its memory", "points": 2 },
+        { "id": "b", "label": "Ask the model from memory and trust it knows that specific document", "points": 0 },
+        { "id": "c", "label": "Describe the contract in one sentence and hope that is enough", "points": 0 },
+        { "id": "d", "label": "Documents cannot be given to a model", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q06", "testsChapter": "22-context-and-retrieval", "type": "multiple-choice", "concept": "why-context",
+      "prompt": "Why does giving the model the actual document beat relying on what it already knows?",
+      "options": [
+        { "id": "a", "label": "Your specific document is not in the model's training, so without it the model can only guess", "points": 2 },
+        { "id": "b", "label": "It does not matter, the model has read every document ever written", "points": 0 },
+        { "id": "c", "label": "It only makes the answer longer", "points": 0 },
+        { "id": "d", "label": "Context is just for image tasks", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q07", "testsChapter": "24-debugging-output", "type": "scenario", "concept": "hallucinated-citations",
+      "prompt": "An AI-drafted brief cites a court case with a name, court, and year that all look plausible. What must you do?",
+      "options": [
+        { "id": "a", "label": "Verify the case is real and says what the brief claims, because AI can invent citations that look correct", "points": 2 },
+        { "id": "b", "label": "Trust it, the citation is detailed and well-formatted", "points": 0 },
+        { "id": "c", "label": "Assume the model looked it up in a real database", "points": 0 },
+        { "id": "d", "label": "Add more citations like it to be safe", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q08", "testsChapter": "24-debugging-output", "type": "multiple-choice", "concept": "what-to-verify",
+      "prompt": "In AI-generated legal work, what most needs careful verification?",
+      "options": [
+        { "id": "a", "label": "Every citation, case name, quote, date, and factual claim", "points": 2 },
+        { "id": "b", "label": "Only the formatting and spelling", "points": 0 },
+        { "id": "c", "label": "Nothing, if it reads like a lawyer wrote it", "points": 0 },
+        { "id": "d", "label": "Only the first paragraph", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    }
+  ],
+  "skipLogic": {
+    "byChapter": [
+      { "chapter": "13-llm-apis", "questions": ["q01", "q02"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 13-llm-apis" },
+      { "chapter": "19-prompting", "questions": ["q03", "q04"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 19-prompting" },
+      { "chapter": "22-context-and-retrieval", "questions": ["q05", "q06"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 22-context-and-retrieval" },
+      { "chapter": "24-debugging-output", "questions": ["q07", "q08"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 24-debugging-output" }
+    ]
+  }
+}

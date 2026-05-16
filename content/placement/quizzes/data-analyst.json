@@ -1,0 +1,117 @@
+{
+  "id": "quiz-data-analyst",
+  "kind": "path-quiz",
+  "version": "1.0.0",
+  "path": "data-analyst",
+  "pathTitle": "Data Analyst",
+  "title": "data analyst path placement",
+  "description": "A short quiz on the core ideas of the Data Analyst path. Answer what you know. Each chapter you place out of is one you can skip ahead on, and you can revisit any chapter any time.",
+  "estMinutes": 4,
+  "scoring": {
+    "method": "sum-of-selected-option-points",
+    "selection": "single-select",
+    "maxScore": 16,
+    "overallSkipThreshold": { "points": 8, "percent": 0.5 },
+    "chapterSkipRule": "Each chapter is tested by 2 questions worth 2 points each. A learner places out of a chapter (skips its Version A) by answering both of its questions correctly. Overall, 50 percent or more of maxScore recommends Version B as the default for chapters not individually skipped."
+  },
+  "questions": [
+    {
+      "id": "q01", "testsChapter": "03-lists-and-dicts", "type": "scenario", "concept": "dict-as-record",
+      "prompt": "One row of a dataset is stored like this:",
+      "code": "row = {\"name\": \"Sam\", \"region\": \"West\", \"sales\": 120}",
+      "codeQuestion": "How do you get this row's sales number?",
+      "options": [
+        { "id": "a", "label": "row[\"sales\"]", "points": 2 },
+        { "id": "b", "label": "row[3]", "points": 0 },
+        { "id": "c", "label": "sales(row)", "points": 0 },
+        { "id": "d", "label": "row.sales.value", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q02", "testsChapter": "03-lists-and-dicts", "type": "multiple-choice", "concept": "list-of-dicts",
+      "prompt": "A dataset is often stored as a list of dictionaries. What does the first item in that list represent?",
+      "options": [
+        { "id": "a", "label": "The first record, one full row of the data", "points": 2 },
+        { "id": "b", "label": "The column headers only", "points": 0 },
+        { "id": "c", "label": "The total number of rows", "points": 0 },
+        { "id": "d", "label": "Nothing, lists cannot hold dictionaries", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q03", "testsChapter": "10-files-and-io", "type": "scenario", "concept": "reading-a-file",
+      "prompt": "You have a year of sales data in a CSV file and want to analyze it in code. What is the first step?",
+      "options": [
+        { "id": "a", "label": "Open and read the file so its contents are available to your code", "points": 2 },
+        { "id": "b", "label": "Email the file to yourself", "points": 0 },
+        { "id": "c", "label": "Print the file out on paper", "points": 0 },
+        { "id": "d", "label": "Nothing, code cannot read files", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q04", "testsChapter": "10-files-and-io", "type": "multiple-choice", "concept": "parsing-file-data",
+      "prompt": "You read a CSV file and the values come in as text, including the numbers. What is true?",
+      "options": [
+        { "id": "a", "label": "You often need to convert text to numbers before you can do math on it", "points": 2 },
+        { "id": "b", "label": "Text and numbers are the same to a computer, so math just works", "points": 0 },
+        { "id": "c", "label": "A file can never contain numbers", "points": 0 },
+        { "id": "d", "label": "You must retype the whole file by hand", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q05", "testsChapter": "12-http-and-apis", "type": "scenario", "concept": "calling-an-api",
+      "prompt": "The data you need lives in another company's web service, not in a file you have. How do you pull it into your analysis?",
+      "options": [
+        { "id": "a", "label": "Call their API, the web address that hands data back to a program", "points": 2 },
+        { "id": "b", "label": "Screenshot their website and read the numbers off the image", "points": 0 },
+        { "id": "c", "label": "You cannot use data unless it starts as a file on your computer", "points": 0 },
+        { "id": "d", "label": "Ask them to mail you a printout", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q06", "testsChapter": "12-http-and-apis", "type": "multiple-choice", "concept": "api-response-format",
+      "prompt": "When an API hands data back to your program, what form does that data usually take?",
+      "options": [
+        { "id": "a", "label": "Structured text, commonly JSON, that your code can read field by field", "points": 2 },
+        { "id": "b", "label": "A printed document", "points": 0 },
+        { "id": "c", "label": "A spoken summary", "points": 0 },
+        { "id": "d", "label": "A blank response, APIs never return data", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q07", "testsChapter": "14-structured-output", "type": "scenario", "concept": "structured-output-for-analysis",
+      "prompt": "You have 1,000 messy free-text customer reviews and need each one turned into a sentiment rating and a topic, in columns you can analyze. What do you do?",
+      "options": [
+        { "id": "a", "label": "Ask an AI model for structured output: a defined sentiment and topic field per review", "points": 2 },
+        { "id": "b", "label": "Read all 1,000 yourself and type the columns by hand", "points": 0 },
+        { "id": "c", "label": "Ask the model for a friendly paragraph about each review", "points": 0 },
+        { "id": "d", "label": "Conclude free text cannot be analyzed", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q08", "testsChapter": "14-structured-output", "type": "multiple-choice", "concept": "why-structured-output",
+      "prompt": "Why does structured output matter for analysis work specifically?",
+      "options": [
+        { "id": "a", "label": "It lands in consistent fields every time, so you can sort, count, and compute on it", "points": 2 },
+        { "id": "b", "label": "It makes the AI model think harder", "points": 0 },
+        { "id": "c", "label": "It does not matter, any text can be analyzed equally well", "points": 0 },
+        { "id": "d", "label": "It is only useful for writing emails", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    }
+  ],
+  "skipLogic": {
+    "byChapter": [
+      { "chapter": "03-lists-and-dicts", "questions": ["q01", "q02"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 03-lists-and-dicts" },
+      { "chapter": "10-files-and-io", "questions": ["q03", "q04"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 10-files-and-io" },
+      { "chapter": "12-http-and-apis", "questions": ["q05", "q06"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 12-http-and-apis" },
+      { "chapter": "14-structured-output", "questions": ["q07", "q08"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 14-structured-output" }
+    ]
+  }
+}

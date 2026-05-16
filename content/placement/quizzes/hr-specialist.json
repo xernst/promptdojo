@@ -1,0 +1,115 @@
+{
+  "id": "quiz-hr-specialist",
+  "kind": "path-quiz",
+  "version": "1.0.0",
+  "path": "hr-specialist",
+  "pathTitle": "HR Specialist",
+  "title": "hr specialist path placement",
+  "description": "A short quiz on the core ideas of the HR Specialist path. Answer what you know. Each chapter you place out of is one you can skip ahead on, and you can revisit any chapter any time.",
+  "estMinutes": 4,
+  "scoring": {
+    "method": "sum-of-selected-option-points",
+    "selection": "single-select",
+    "maxScore": 16,
+    "overallSkipThreshold": { "points": 8, "percent": 0.5 },
+    "chapterSkipRule": "Each chapter is tested by 2 questions worth 2 points each. A learner places out of a chapter (skips its Version A) by answering both of its questions correctly. Overall, 50 percent or more of maxScore recommends Version B as the default for chapters not individually skipped."
+  },
+  "questions": [
+    {
+      "id": "q01", "testsChapter": "13-llm-apis", "type": "scenario", "concept": "why-an-api",
+      "prompt": "You want a tool that drafts a first-pass interview guide whenever a new role opens, with no one opening a chat window. What makes that possible?",
+      "options": [
+        { "id": "a", "label": "Calling an AI model through its API from code, so the tool runs the model itself", "points": 2 },
+        { "id": "b", "label": "Nothing, HR tasks cannot be automated", "points": 0 },
+        { "id": "c", "label": "A shared folder of old documents", "points": 0 },
+        { "id": "d", "label": "A longer job posting", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q02", "testsChapter": "13-llm-apis", "type": "multiple-choice", "concept": "model-reliability",
+      "prompt": "An AI model drafts a candidate summary. Because HR decisions affect people's livelihoods, what should you assume?",
+      "options": [
+        { "id": "a", "label": "The draft can be wrong or biased, so a person reviews it and a person makes the decision", "points": 2 },
+        { "id": "b", "label": "The model is neutral and correct, so it can decide on its own", "points": 0 },
+        { "id": "c", "label": "AI output cannot be reviewed", "points": 0 },
+        { "id": "d", "label": "Whatever it drafts is final", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q03", "testsChapter": "19-prompting", "type": "multiple-choice", "concept": "prompting-with-standards",
+      "prompt": "You want AI help screening resumes against a specific role rubric. What gets you a consistent result?",
+      "options": [
+        { "id": "a", "label": "Put the rubric and standards into the prompt as clear, explicit instructions", "points": 2 },
+        { "id": "b", "label": "Assume the model knows your company's specific rubric", "points": 0 },
+        { "id": "c", "label": "Give no instructions and accept whatever it returns", "points": 0 },
+        { "id": "d", "label": "Use a shorter prompt every time", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q04", "testsChapter": "19-prompting", "type": "scenario", "concept": "improving-a-prompt",
+      "prompt": "An AI-drafted job description came back generic and missed required sections. What is the best fix?",
+      "options": [
+        { "id": "a", "label": "Add the required sections, tone, and an example to the prompt, then run it again", "points": 2 },
+        { "id": "b", "label": "Run the same prompt again unchanged", "points": 0 },
+        { "id": "c", "label": "Give up on AI for job descriptions", "points": 0 },
+        { "id": "d", "label": "Make the prompt vaguer", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q05", "testsChapter": "34-team-skills", "type": "multiple-choice", "concept": "what-a-skill-is",
+      "prompt": "What is a Claude skill?",
+      "options": [
+        { "id": "a", "label": "A packaged set of instructions, your playbook for a task, that Claude loads automatically when that task comes up", "points": 2 },
+        { "id": "b", "label": "A faster version of the AI model", "points": 0 },
+        { "id": "c", "label": "A single chat message you send once", "points": 0 },
+        { "id": "d", "label": "A type of employee", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q06", "testsChapter": "34-team-skills", "type": "scenario", "concept": "skill-governance",
+      "prompt": "Before you deploy a new skill to your whole HR team, what should happen?",
+      "options": [
+        { "id": "a", "label": "Check where it came from, evaluate it on real example cases, and name an owner for it", "points": 2 },
+        { "id": "b", "label": "Push it to everyone immediately, skills are always safe", "points": 0 },
+        { "id": "c", "label": "Keep it secret and let people find it by accident", "points": 0 },
+        { "id": "d", "label": "Nothing, a skill needs no review", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q07", "testsChapter": "18-secrets-and-env", "type": "scenario", "concept": "handling-sensitive-data",
+      "prompt": "An automation you are setting up needs an API key and will handle confidential employee records. How do you treat that key and data?",
+      "options": [
+        { "id": "a", "label": "Keep secrets and sensitive data out of shared code and out of public places, and limit who can see them", "points": 2 },
+        { "id": "b", "label": "Paste the API key directly into the code and share it widely so it is convenient", "points": 0 },
+        { "id": "c", "label": "Post the key in a team chat so nobody loses it", "points": 0 },
+        { "id": "d", "label": "Secrets do not need protecting", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q08", "testsChapter": "18-secrets-and-env", "type": "multiple-choice", "concept": "what-a-secret-is",
+      "prompt": "Why should an API key never be written directly into code that gets shared or published?",
+      "options": [
+        { "id": "a", "label": "Anyone who sees the code then has the key, and can use it as if they were you", "points": 2 },
+        { "id": "b", "label": "It makes the code run slower", "points": 0 },
+        { "id": "c", "label": "Keys stop working once they are written down", "points": 0 },
+        { "id": "d", "label": "There is no reason, hardcoding keys is fine", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    }
+  ],
+  "skipLogic": {
+    "byChapter": [
+      { "chapter": "13-llm-apis", "questions": ["q01", "q02"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 13-llm-apis" },
+      { "chapter": "19-prompting", "questions": ["q03", "q04"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 19-prompting" },
+      { "chapter": "34-team-skills", "questions": ["q05", "q06"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 34-team-skills" },
+      { "chapter": "18-secrets-and-env", "questions": ["q07", "q08"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 18-secrets-and-env" }
+    ]
+  }
+}

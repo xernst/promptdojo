@@ -1,0 +1,115 @@
+{
+  "id": "quiz-project-manager",
+  "kind": "path-quiz",
+  "version": "1.0.0",
+  "path": "project-manager",
+  "pathTitle": "Project Manager",
+  "title": "project manager path placement",
+  "description": "A short quiz on the core ideas of the Project Manager path. Answer what you know. Each chapter you place out of is one you can skip ahead on, and you can revisit any chapter any time.",
+  "estMinutes": 4,
+  "scoring": {
+    "method": "sum-of-selected-option-points",
+    "selection": "single-select",
+    "maxScore": 16,
+    "overallSkipThreshold": { "points": 8, "percent": 0.5 },
+    "chapterSkipRule": "Each chapter is tested by 2 questions worth 2 points each. A learner places out of a chapter (skips its Version A) by answering both of its questions correctly. Overall, 50 percent or more of maxScore recommends Version B as the default for chapters not individually skipped."
+  },
+  "questions": [
+    {
+      "id": "q01", "testsChapter": "13-llm-apis", "type": "multiple-choice", "concept": "what-an-api-call-is",
+      "prompt": "Your team is scoping a feature that calls an AI model. What is an API call, in plain terms?",
+      "options": [
+        { "id": "a", "label": "One request from your code to the model, which has a cost and a response time", "points": 2 },
+        { "id": "b", "label": "A meeting with the AI vendor", "points": 0 },
+        { "id": "c", "label": "A one-time setup that then runs free forever", "points": 0 },
+        { "id": "d", "label": "A type of bug report", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q02", "testsChapter": "13-llm-apis", "type": "scenario", "concept": "planning-for-scale",
+      "prompt": "A feature you are scoping will call an AI model once per user action, for thousands of users a day. What belongs in the plan?",
+      "options": [
+        { "id": "a", "label": "Cost and response time per call, since both add up at that volume", "points": 2 },
+        { "id": "b", "label": "Nothing, model calls are free and instant at any scale", "points": 0 },
+        { "id": "c", "label": "Only the visual design", "points": 0 },
+        { "id": "d", "label": "A plan to call the model as few times as one per month", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q03", "testsChapter": "19-prompting", "type": "multiple-choice", "concept": "prompting-is-briefing",
+      "prompt": "What does writing a good prompt for an AI model most resemble?",
+      "options": [
+        { "id": "a", "label": "Writing a clear brief: context, the goal, constraints, and what success looks like", "points": 2 },
+        { "id": "b", "label": "Writing code in a secret language", "points": 0 },
+        { "id": "c", "label": "Guessing magic words", "points": 0 },
+        { "id": "d", "label": "Nothing, prompts cannot be planned", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q04", "testsChapter": "19-prompting", "type": "scenario", "concept": "improving-an-instruction",
+      "prompt": "An AI tool gave a vague, off-target result from the instruction \"make this better.\" What is the fix?",
+      "options": [
+        { "id": "a", "label": "Rewrite the instruction to say what 'better' means here: the goal, the constraints, an example", "points": 2 },
+        { "id": "b", "label": "Send \"make this better\" again, louder", "points": 0 },
+        { "id": "c", "label": "Accept the vague result", "points": 0 },
+        { "id": "d", "label": "Conclude the model cannot help", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q05", "testsChapter": "20-agent-traces", "type": "multiple-choice", "concept": "what-a-trace-is",
+      "prompt": "An AI agent finished a task. It left behind a trace. What is a trace?",
+      "options": [
+        { "id": "a", "label": "A step-by-step record of what the agent did: what it read, decided, and acted on", "points": 2 },
+        { "id": "b", "label": "A leftover error that has to be cleaned up", "points": 0 },
+        { "id": "c", "label": "The agent's final answer, with nothing else", "points": 0 },
+        { "id": "d", "label": "A type of chart", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q06", "testsChapter": "20-agent-traces", "type": "scenario", "concept": "why-traces-matter",
+      "prompt": "An AI feature produced a wrong result and you need to know why. How does the trace help?",
+      "options": [
+        { "id": "a", "label": "You read the trace to see which step went wrong, instead of guessing", "points": 2 },
+        { "id": "b", "label": "It does not help, traces are random", "points": 0 },
+        { "id": "c", "label": "It tells you the result is fine after all", "points": 0 },
+        { "id": "d", "label": "Traces only exist for successful runs", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q07", "testsChapter": "21-evals", "type": "scenario", "concept": "what-evals-are",
+      "prompt": "Your team wants to know whether an AI feature is good enough to ship. What actually answers that?",
+      "options": [
+        { "id": "a", "label": "Evals: running the feature against many real example cases and scoring the results", "points": 2 },
+        { "id": "b", "label": "One demo that happened to go well", "points": 0 },
+        { "id": "c", "label": "Asking the model if it thinks it is good", "points": 0 },
+        { "id": "d", "label": "The size of the model", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q08", "testsChapter": "21-evals", "type": "multiple-choice", "concept": "why-one-test-is-not-enough",
+      "prompt": "\"It worked when I tried it once.\" Why is that not enough to trust an AI feature?",
+      "options": [
+        { "id": "a", "label": "AI output varies, so one good result does not show it works across the range of real cases", "points": 2 },
+        { "id": "b", "label": "It is enough, one success proves it always works", "points": 0 },
+        { "id": "c", "label": "Trying it once is actually too many tests", "points": 0 },
+        { "id": "d", "label": "AI features never need testing", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    }
+  ],
+  "skipLogic": {
+    "byChapter": [
+      { "chapter": "13-llm-apis", "questions": ["q01", "q02"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 13-llm-apis" },
+      { "chapter": "19-prompting", "questions": ["q03", "q04"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 19-prompting" },
+      { "chapter": "20-agent-traces", "questions": ["q05", "q06"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 20-agent-traces" },
+      { "chapter": "21-evals", "questions": ["q07", "q08"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 21-evals" }
+    ]
+  }
+}

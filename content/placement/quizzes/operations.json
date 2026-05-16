@@ -1,0 +1,140 @@
+{
+  "id": "quiz-operations",
+  "kind": "path-quiz",
+  "version": "1.0.0",
+  "path": "operations",
+  "pathTitle": "Operations",
+  "title": "operations path placement",
+  "description": "A short quiz on the core ideas of the Operations path. Answer what you know. Each chapter you place out of is one you can skip ahead on, and you can revisit any chapter any time.",
+  "estMinutes": 5,
+  "scoring": {
+    "method": "sum-of-selected-option-points",
+    "selection": "single-select",
+    "maxScore": 20,
+    "overallSkipThreshold": { "points": 10, "percent": 0.5 },
+    "chapterSkipRule": "Each chapter is tested by 2 questions worth 2 points each. A learner places out of a chapter (skips its Version A) by answering both of its questions correctly. Overall, 50 percent or more of maxScore recommends Version B as the default for chapters not individually skipped."
+  },
+  "questions": [
+    {
+      "id": "q01", "testsChapter": "31-intro-to-terminal", "type": "multiple-choice", "concept": "cd-command",
+      "prompt": "In a terminal, what does the cd command do?",
+      "options": [
+        { "id": "a", "label": "Changes which folder you are currently in", "points": 2 },
+        { "id": "b", "label": "Copies a file", "points": 0 },
+        { "id": "c", "label": "Deletes a folder", "points": 0 },
+        { "id": "d", "label": "Closes the terminal", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q02", "testsChapter": "31-intro-to-terminal", "type": "multiple-choice", "concept": "ls-command",
+      "prompt": "In a terminal, what does the ls command do?",
+      "options": [
+        { "id": "a", "label": "Lists what is inside the folder you are currently in", "points": 2 },
+        { "id": "b", "label": "Logs you out", "points": 0 },
+        { "id": "c", "label": "Loads a saved file", "points": 0 },
+        { "id": "d", "label": "Locks the screen", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q03", "testsChapter": "04-loops", "type": "scenario", "concept": "loops-for-repetition",
+      "prompt": "You need to run the same three-step process on every vendor in a list of 200. What tool fits?",
+      "options": [
+        { "id": "a", "label": "A loop, which repeats the same steps once for each item in the list", "points": 2 },
+        { "id": "b", "label": "Writing the three steps out 200 times by hand", "points": 0 },
+        { "id": "c", "label": "Doing it for one vendor and hoping the rest sort themselves out", "points": 0 },
+        { "id": "d", "label": "A single variable", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q04", "testsChapter": "04-loops", "type": "scenario", "concept": "predict-loop",
+      "prompt": "Predict the output:",
+      "code": "for status in [\"open\", \"open\", \"closed\"]:\n    print(status)",
+      "codeQuestion": "What does this print?",
+      "options": [
+        { "id": "a", "label": "open, then open, then closed, each on its own line", "points": 2 },
+        { "id": "b", "label": "open, then closed (duplicates are skipped)", "points": 0 },
+        { "id": "c", "label": "3", "points": 0 },
+        { "id": "d", "label": "status, status, status", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q05", "testsChapter": "09-error-handling", "type": "multiple-choice", "concept": "what-error-handling-is",
+      "prompt": "What is error handling, in plain terms?",
+      "options": [
+        { "id": "a", "label": "Code that catches a failure and decides what to do, instead of letting the program crash", "points": 2 },
+        { "id": "b", "label": "Code that guarantees nothing ever goes wrong", "points": 0 },
+        { "id": "c", "label": "A way to hide errors so nobody notices", "points": 0 },
+        { "id": "d", "label": "A type of error message", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q06", "testsChapter": "09-error-handling", "type": "scenario", "concept": "handling-failures-in-automation",
+      "prompt": "A nightly automation processes 1,000 records and hits one bad record. What is the well-designed behavior?",
+      "options": [
+        { "id": "a", "label": "Catch the failure on that record, note it, and keep processing the other 999", "points": 2 },
+        { "id": "b", "label": "Crash the whole job and process nothing", "points": 0 },
+        { "id": "c", "label": "Silently skip the bad record and leave no record that it happened", "points": 1 },
+        { "id": "d", "label": "Delete all 1,000 records to be safe", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q07", "testsChapter": "13-llm-apis", "type": "scenario", "concept": "why-an-api",
+      "prompt": "You want an automation that reads each incoming request and classifies it with an AI model, on its own. What makes that possible?",
+      "options": [
+        { "id": "a", "label": "Calling an AI model through its API from code, so each request triggers the model", "points": 2 },
+        { "id": "b", "label": "A person pasting every request into a chat window", "points": 0 },
+        { "id": "c", "label": "Nothing, classification cannot be automated", "points": 0 },
+        { "id": "d", "label": "A spreadsheet with no formulas", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q08", "testsChapter": "13-llm-apis", "type": "multiple-choice", "concept": "api-cost-and-reliability",
+      "prompt": "Your automation will call an AI model thousands of times a day. What belongs in your thinking?",
+      "options": [
+        { "id": "a", "label": "Each call has a cost and a small chance of a wrong result, so you budget and add checks", "points": 2 },
+        { "id": "b", "label": "Calls are free, instant, and always correct at any scale", "points": 0 },
+        { "id": "c", "label": "The model gets cheaper the more you call it", "points": 0 },
+        { "id": "d", "label": "Nothing needs planning", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q09", "testsChapter": "16-agent-loops", "type": "scenario", "concept": "agent-loop",
+      "prompt": "An automation gets a request, looks up a record, checks a status, and then takes an action based on what it found, repeating until done. What is this pattern called?",
+      "options": [
+        { "id": "a", "label": "An agent loop: it takes a step, uses what it learns, and continues until the task is finished", "points": 2 },
+        { "id": "b", "label": "A single fixed formula", "points": 0 },
+        { "id": "c", "label": "A printout", "points": 0 },
+        { "id": "d", "label": "A keyboard shortcut", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    },
+    {
+      "id": "q10", "testsChapter": "16-agent-loops", "type": "multiple-choice", "concept": "agent-vs-single-step",
+      "prompt": "What can an agent loop do that a single one-shot step cannot?",
+      "options": [
+        { "id": "a", "label": "React to what it finds at each step and adjust the next step accordingly", "points": 2 },
+        { "id": "b", "label": "Nothing, they are identical", "points": 0 },
+        { "id": "c", "label": "Run with no instructions at all", "points": 0 },
+        { "id": "d", "label": "Avoid ever needing review", "points": 0 }
+      ],
+      "correctOptionId": "a"
+    }
+  ],
+  "skipLogic": {
+    "byChapter": [
+      { "chapter": "31-intro-to-terminal", "questions": ["q01", "q02"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 31-intro-to-terminal" },
+      { "chapter": "04-loops", "questions": ["q03", "q04"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 04-loops" },
+      { "chapter": "09-error-handling", "questions": ["q05", "q06"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 09-error-handling" },
+      { "chapter": "13-llm-apis", "questions": ["q07", "q08"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 13-llm-apis" },
+      { "chapter": "16-agent-loops", "questions": ["q09", "q10"], "skipVersionAIf": "both correct", "outcome": "skip Version A of 16-agent-loops" }
+    ]
+  }
+}
