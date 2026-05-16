@@ -1,0 +1,12 @@
+slug: what-the-claude-cli-is
+title: "What the Claude CLI is"
+estMinutes: 10
+prerequisites: []
+order:
+  - 01-the-glass-is-gone.read.md
+  - 02-chat-vs-cli.read.md
+  - 03-which-tool.mc.yaml
+  - 04-the-agent-loop.read.md
+  - 05-read-the-loop.mc.yaml
+  - 06-permission-and-limits.read.md
+  - 07-checkpoint.checkpoint.yaml

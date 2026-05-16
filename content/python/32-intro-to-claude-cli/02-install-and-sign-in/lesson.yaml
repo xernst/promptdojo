@@ -1,0 +1,14 @@
+slug: install-and-sign-in
+title: "Install and sign in"
+estMinutes: 11
+prerequisites:
+  - what-the-claude-cli-is
+order:
+  - 01-two-ways-to-install.read.md
+  - 02-run-the-installer.read.md
+  - 03-install-check.mc.yaml
+  - 04-sign-in.read.md
+  - 05-what-sign-in-did.read.md
+  - 06-auth-check.mc.yaml
+  - 07-account-not-api-key.read.md
+  - 08-checkpoint.checkpoint.yaml

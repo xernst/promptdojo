@@ -1,0 +1,25 @@
+xp: 2
+estSeconds: 70
+concept: cli-vs-chat-core
+prompt: |
+  You have a folder with 30 text files. Every file has a date written
+  as `01/05/2026`, and you need all of them changed to `2026-05-01`.
+
+  You ask Claude for help. Which tool fits the job, and why?
+options:
+  - id: cli
+    label: "The CLI, because the task is a change to 30 real files, and the CLI can make those changes directly"
+  - id: chat
+    label: "The chat, because Claude is smartest in the chat"
+    explain: "Claude is the same model in both places, so the chat isn't smarter. The chat could tell you HOW to change the dates, but you'd still open and edit all 30 files yourself. The CLI does the changing."
+  - id: chat-paste
+    label: "The chat, because you can ask it for the 30 fixed files and paste them back"
+    explain: "That's 30 rounds of copy-and-paste, which is exactly the work the CLI exists to remove. The moment you're pasting output into files, the task has outgrown the chat."
+  - id: neither
+    label: "Neither, a job that size needs a human"
+    explain: "A repetitive, well-defined change across many files is the easiest kind of CLI job, not a too-big one. The CLI doesn't get tired at 30 files, or 300."
+answerIds:
+  - cli
+hint:
+  - level: 1
+    body: "Ask the splitting question from the last step: does the task need thinking, or does it need real files changed? Thirty files getting edited is doing, not thinking. Doing is the CLI."

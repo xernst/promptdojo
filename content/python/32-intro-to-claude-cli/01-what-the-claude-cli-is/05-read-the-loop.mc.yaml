@@ -1,0 +1,28 @@
+xp: 3
+estSeconds: 80
+concept: agent-loop-basics
+prompt: |
+  You tell the CLI to fix a program. It reads the file, makes an edit,
+  runs the program, and the program prints an error. The CLI then reads
+  the error, makes a second edit, runs the program again, and this time
+  it works.
+
+  What does this show about how the CLI works that a one-shot chat
+  answer does not?
+options:
+  - id: course-correct
+    label: "It saw the result of its first edit, noticed the error, and corrected. It works in a loop instead of guessing once"
+  - id: smarter
+    label: "It shows the CLI is a smarter model than the chat"
+    explain: "Same model in both. The difference isn't intelligence, it's that the CLI runs the program and sees the error, so it can react. A chat writes one answer and never sees whether it ran."
+  - id: lucky
+    label: "It got lucky on the second try"
+    explain: "It wasn't luck. The CLI read the actual error message before making the second edit. The check step feeds real information into the next plan. That's the loop working as designed."
+  - id: random
+    label: "It just keeps editing randomly until something works"
+    explain: "Not random. Each edit is planned from what the previous step revealed. The error message told it what was wrong, and the next plan addressed that specific thing."
+answerIds:
+  - course-correct
+hint:
+  - level: 1
+    body: "Look at the order: edit, run, SEE the error, edit again. The CLI checked the result before its next move. A one-shot answer never gets to see whether it worked."

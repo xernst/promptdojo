@@ -1,0 +1,23 @@
+xp: 3
+estSeconds: 90
+concept: cli-vs-chat-core
+prompt: |
+  Four real situations. In which one is the browser chat the better
+  tool than the CLI?
+options:
+  - id: thinking
+    label: "You're not sure how to organize a new project and want to talk through three possible structures before deciding anything"
+  - id: many-files
+    label: "You need to add a copyright line to the top of 50 files in a folder"
+    explain: "That's 50 real files getting changed. It's a doing job, and doing across many files is exactly what the CLI is for. The chat would leave you editing all 50 by hand."
+  - id: fix-code
+    label: "A program in your folder crashes and you want it found and fixed"
+    explain: "Fixing a crash means reading the file, changing it, and running it to confirm. That's the agent loop on real files, which is the CLI. The chat can't run your program or see the crash."
+  - id: build-files
+    label: "You want a starter set of project files created with specific contents"
+    explain: "Creating real files with specific contents is a doing job. The CLI creates them in place. The chat would only hand you the text to create each one yourself."
+answerIds:
+  - thinking
+hint:
+  - level: 1
+    body: "The splitting question: does the situation need thinking, or does it need real files changed? Three of these change files (doing, so CLI). One is purely talking an idea through before any files exist (thinking, so chat)."

@@ -1,0 +1,14 @@
+slug: your-first-session
+title: "Your first session"
+estMinutes: 11
+prerequisites:
+  - install-and-sign-in
+order:
+  - 01-start-in-a-folder.read.md
+  - 02-your-first-instruction.read.md
+  - 03-watch-the-loop.read.md
+  - 04-read-what-it-did.mc.yaml
+  - 05-one-shot-or-interactive.read.md
+  - 06-chat-or-cli-decision.mc.yaml
+  - 07-where-this-goes.read.md
+  - 08-checkpoint.checkpoint.yaml

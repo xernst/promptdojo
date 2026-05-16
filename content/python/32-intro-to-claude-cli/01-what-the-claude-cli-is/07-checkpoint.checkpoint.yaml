@@ -1,0 +1,58 @@
+xp: 6
+estSeconds: 150
+concept: agent-loop-basics
+prompt: |
+  Lesson one lock-in. Back to the Python sandbox for one step, same
+  print and f-string move as the terminal chapter.
+
+  The starter declares variables for the four moves of the agent loop.
+  Write four `print(f"...")` lines so the output is exactly:
+
+  ```
+  1. look: read files, run a check, or ask a question
+  2. plan: decide the next concrete step
+  3. act: do that step, edit or create or run
+  4. check: see what happened, then loop again
+  ```
+
+  Type the four lines and run it.
+starter: |
+  look = "read files, run a check, or ask a question"
+  plan = "decide the next concrete step"
+  act = "do that step, edit or create or run"
+  check = "see what happened, then loop again"
+
+  # write four print() lines below, one per variable, using f-strings.
+  # the grader expects the four numbered lines shown above, exactly.
+grader:
+  kind: stdout-equality
+  expected: |
+    1. look: read files, run a check, or ask a question
+    2. plan: decide the next concrete step
+    3. act: do that step, edit or create or run
+    4. check: see what happened, then loop again
+  normalize: collapse-trailing-newline
+solution: |
+  look = "read files, run a check, or ask a question"
+  plan = "decide the next concrete step"
+  act = "do that step, edit or create or run"
+  check = "see what happened, then loop again"
+
+  print(f"1. look: {look}")
+  print(f"2. plan: {plan}")
+  print(f"3. act: {act}")
+  print(f"4. check: {check}")
+passThreshold: 0.75
+hint:
+  - level: 1
+    body: "Each line is `print(f\"N. label: {variable}\")` where N is the move's number. The labels are look, plan, act, check, in that order. Variables are defined at the top."
+  - level: 2
+    body: |
+      Here are the four lines:
+
+      ```python
+      print(f"1. look: {look}")
+      print(f"2. plan: {plan}")
+      print(f"3. act: {act}")
+      print(f"4. check: {check}")
+      ```

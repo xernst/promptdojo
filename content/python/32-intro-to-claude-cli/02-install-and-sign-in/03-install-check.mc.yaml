@@ -1,0 +1,29 @@
+xp: 2
+estSeconds: 70
+concept: installing-the-cli
+prompt: |
+  You run the installer, it finishes without errors, and you type
+  `claude --version`. The terminal says:
+
+  ```
+  command not found: claude
+  ```
+
+  What's the most likely situation, and the first thing to try?
+options:
+  - id: fresh-window
+    label: "The install probably worked, but this terminal window started before it. Close the window, open a fresh one, and try again"
+  - id: reinstall
+    label: "The install failed. Run the installer three or four more times until it sticks"
+    explain: "Re-running an installer that reported no errors won't change anything. The likely issue isn't the install, it's that this terminal window hasn't picked up the new command yet. A fresh window fixes that."
+  - id: broken
+    label: "The CLI is broken and you should give up on the native installer"
+    explain: "Nothing here points to a broken CLI. A terminal only checks for available commands when it opens, so a window that was already open won't see a just-installed command. Open a new window first."
+  - id: restart-computer
+    label: "Restart the whole computer"
+    explain: "A full restart would work, but it's far more than needed. Only the terminal needs to be fresh, not the machine. Close and reopen just the terminal window."
+answerIds:
+  - fresh-window
+hint:
+  - level: 1
+    body: "A terminal checks which commands exist at the moment it starts up. A window that was already open when you installed something won't know about the new command. The smallest fix is a brand-new window."

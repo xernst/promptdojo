@@ -1,0 +1,25 @@
+xp: 3
+estSeconds: 80
+concept: authenticating-the-cli
+prompt: |
+  After the browser sign-in, the CLI saved a token on your machine and
+  stopped asking you to sign in every time.
+
+  Which statement about that token is correct?
+options:
+  - id: token-not-password
+    label: "The token lets the CLI act as you, but it isn't your password. You can switch it off in your account settings without changing your password"
+  - id: is-password
+    label: "The token is basically your password saved in a file"
+    explain: "It isn't. The whole point of the OAuth flow is that the CLI never received your password. The token is a separate credential that can be revoked on its own."
+  - id: sign-in-always
+    label: "You'll need to redo the browser sign-in every time you start the CLI"
+    explain: "No. The saved token is exactly what makes sign-in a one-time step. The CLI presents the token on later runs instead of sending you back to the browser."
+  - id: api-key-needed
+    label: "You still need to add an API key and a credit card before the CLI will work"
+    explain: "Not for an individual signing in on your own machine. The browser sign-in with your normal Claude account is the whole setup. API keys are for servers and automated jobs, covered next."
+answerIds:
+  - token-not-password
+hint:
+  - level: 1
+    body: "The OAuth flow was built so the CLI never sees your password. It holds a token instead, and a token can be revoked on its own, leaving your password untouched."

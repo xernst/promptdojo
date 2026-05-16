@@ -1,0 +1,8 @@
+number: 32
+slug: intro-to-claude-cli
+title: "intro to claude cli, the door to real building"
+blurb: "you've used claude in a chat window. the claude cli is the same model with its hands on your actual files. this chapter installs it, signs you in, and runs your first real command. by the end you've watched an ai read, plan, and change things on your machine, and you know when to reach for the cli instead of the chat box."
+lessons:
+  - 01-what-the-claude-cli-is
+  - 02-install-and-sign-in
+  - 03-your-first-session

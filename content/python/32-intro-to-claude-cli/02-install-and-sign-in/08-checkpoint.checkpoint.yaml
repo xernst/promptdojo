@@ -1,0 +1,54 @@
+xp: 6
+estSeconds: 150
+concept: authenticating-the-cli
+prompt: |
+  Lesson two lock-in. The starter declares three variables for the
+  setup steps you just did. Write three `print(f"...")` lines so the
+  output is exactly:
+
+  ```
+  install: one command, the native installer script
+  verify: claude --version prints a version number
+  sign in: claude auth login, a browser approval, no password shared
+  ```
+
+  Type the three lines and run it.
+starter: |
+  install = "one command, the native installer script"
+  verify = "claude --version prints a version number"
+  sign_in = "claude auth login, a browser approval, no password shared"
+
+  # write three print() lines below using f-strings.
+  # note the label "sign in" has a space, but the variable is sign_in.
+  # the grader expects the three lines shown above, exactly.
+grader:
+  kind: stdout-equality
+  expected: |
+    install: one command, the native installer script
+    verify: claude --version prints a version number
+    sign in: claude auth login, a browser approval, no password shared
+  normalize: collapse-trailing-newline
+solution: |
+  install = "one command, the native installer script"
+  verify = "claude --version prints a version number"
+  sign_in = "claude auth login, a browser approval, no password shared"
+
+  print(f"install: {install}")
+  print(f"verify: {verify}")
+  print(f"sign in: {sign_in}")
+passThreshold: 0.66
+hint:
+  - level: 1
+    body: "Watch the third line: the text label is `sign in` with a space, but a variable name can't have a space, so the variable is `sign_in` with an underscore. The label you type and the variable you reference don't have to match."
+  - level: 2
+    body: |
+      Here are the three lines:
+
+      ```python
+      print(f"install: {install}")
+      print(f"verify: {verify}")
+      print(f"sign in: {sign_in}")
+      ```
+
+      The label before the colon is plain text. `{sign_in}` in the curly
+      braces is the variable, and its name uses an underscore.

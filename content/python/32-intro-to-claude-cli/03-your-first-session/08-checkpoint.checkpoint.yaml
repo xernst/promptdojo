@@ -1,0 +1,53 @@
+xp: 6
+estSeconds: 165
+concept: starting-a-session
+prompt: |
+  Last step of the chapter. The starter declares three variables for
+  what you can now do with the Claude CLI. Write three `print(f"...")`
+  lines so the output is exactly:
+
+  ```
+  start: cd into a folder, then run claude to begin a session
+  instruct: describe the outcome you want in plain english
+  approve: read the proposed action, then press y if it is right
+  ```
+
+  Type the three lines, run it, and the chapter is done.
+starter: |
+  start = "cd into a folder, then run claude to begin a session"
+  instruct = "describe the outcome you want in plain english"
+  approve = "read the proposed action, then press y if it is right"
+
+  # write three print() lines below using f-strings.
+  # the grader expects the three lines shown above, exactly.
+grader:
+  kind: stdout-equality
+  expected: |
+    start: cd into a folder, then run claude to begin a session
+    instruct: describe the outcome you want in plain english
+    approve: read the proposed action, then press y if it is right
+  normalize: collapse-trailing-newline
+solution: |
+  start = "cd into a folder, then run claude to begin a session"
+  instruct = "describe the outcome you want in plain english"
+  approve = "read the proposed action, then press y if it is right"
+
+  print(f"start: {start}")
+  print(f"instruct: {instruct}")
+  print(f"approve: {approve}")
+passThreshold: 0.66
+hint:
+  - level: 1
+    body: "Same pattern as every checkpoint so far: `print(f\"label: {variable}\")`, three times. Labels are start, instruct, approve. Variables are defined at the top."
+  - level: 2
+    body: |
+      Here are the three lines:
+
+      ```python
+      print(f"start: {start}")
+      print(f"instruct: {instruct}")
+      print(f"approve: {approve}")
+      ```
+
+      Next chapter: the OpenAI Codex CLI, the same skills for a second
+      tool.

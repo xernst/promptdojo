@@ -1,0 +1,29 @@
+xp: 3
+estSeconds: 80
+concept: approving-actions
+prompt: |
+  You ask the CLI to create `plan.txt`. It stops and shows you:
+
+  ```
+  Claude wants to create plan.txt
+  [y] yes   [n] no
+  ```
+
+  You're about to press `y`. What is the actual point of this pause?
+options:
+  - id: read-first
+    label: "It's your chance to read the exact action before it happens, so you catch anything that isn't what you meant"
+  - id: formality
+    label: "It's just a formality. Always press y, the CLI knows what it's doing"
+    explain: "Pressing y without reading defeats the entire purpose of the pause. The CLI is the same model as the chat, which means it can misread you. The pause exists precisely so a wrong action gets caught."
+  - id: loading
+    label: "The CLI is loading and needs a moment, so it shows a prompt to fill the time"
+    explain: "It isn't a loading screen. The CLI has fully decided on the action and is genuinely waiting for your decision. Nothing happens until you choose."
+  - id: legal
+    label: "It's a legal disclaimer you have to click through"
+    explain: "It's not legal boilerplate. It's a real control: the action only happens if you approve it. Reading it is how you stay in charge of what touches your files."
+answerIds:
+  - read-first
+hint:
+  - level: 1
+    body: "The CLI can be wrong, because it's the same model as the chat. The pause is a real checkpoint, not decoration. Its value is entirely in you reading the proposed action before you approve it."
