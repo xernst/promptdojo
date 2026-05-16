@@ -1,0 +1,208 @@
+{
+  "id": "general-placement-survey",
+  "version": "1.0.0",
+  "kind": "placement-survey",
+  "title": "where should you start",
+  "description": "A short survey everyone takes after picking a path. It places you into Version A (beginner) or Version B (intermediate) so the chapters meet you where you are. There are no wrong answers. Answer honestly and the course fits better.",
+  "estMinutes": 4,
+  "instructions": "Pick the answer closest to true for you. Honest beats impressive: a high score you can't back up just means harder chapters.",
+  "scoring": {
+    "method": "sum-of-selected-option-points",
+    "selection": "single-select",
+    "maxScore": 52,
+    "threshold": 26,
+    "thresholdPercent": 0.5,
+    "outcomes": [
+      {
+        "band": "version-b",
+        "label": "Version B (intermediate)",
+        "rule": "score >= 26",
+        "result": "Start every chapter in Version B: faster pace, less hand-holding, more under-the-hood detail."
+      },
+      {
+        "band": "version-a",
+        "label": "Version A (beginner)",
+        "rule": "score < 26",
+        "result": "Start every chapter in Version A: slower pace, more explanation, full hand-holding through errors."
+      }
+    ],
+    "notes": "Each question is worth a maximum of 4 points; 13 questions give a maxScore of 52. The Version B threshold is 50 percent (26 points). A learner can switch versions at any time from the chapter view; this survey only sets the starting point."
+  },
+  "questions": [
+    {
+      "id": "q01",
+      "type": "multiple-choice",
+      "topic": "ai-tools",
+      "maxPoints": 4,
+      "prompt": "How often do you use AI chat tools like ChatGPT, Claude, or Gemini?",
+      "options": [
+        { "id": "a", "label": "I have never used one", "points": 0 },
+        { "id": "b", "label": "I tried one once or twice", "points": 1 },
+        { "id": "c", "label": "I use one now and then, maybe monthly", "points": 2 },
+        { "id": "d", "label": "I use one most weeks", "points": 3 },
+        { "id": "e", "label": "I use one most days", "points": 4 }
+      ]
+    },
+    {
+      "id": "q02",
+      "type": "multiple-choice",
+      "topic": "ai-tools",
+      "maxPoints": 4,
+      "prompt": "Have you used an AI coding tool, like Cursor, Claude Code, GitHub Copilot, or the Codex CLI?",
+      "options": [
+        { "id": "a", "label": "I had not heard of these before now", "points": 0 },
+        { "id": "b", "label": "I have heard of them but never used one", "points": 1 },
+        { "id": "c", "label": "I have tried one a little", "points": 2 },
+        { "id": "d", "label": "I use one regularly", "points": 4 }
+      ]
+    },
+    {
+      "id": "q03",
+      "type": "scenario",
+      "topic": "ai-tools",
+      "maxPoints": 4,
+      "prompt": "An AI tool gives you a block of work, text or code, and says it is finished. What do you usually do with it?",
+      "options": [
+        { "id": "a", "label": "I have not gotten output from an AI tool yet", "points": 0 },
+        { "id": "b", "label": "I use it as-is and trust that it is right", "points": 1 },
+        { "id": "c", "label": "I skim it quickly before using it", "points": 2 },
+        { "id": "d", "label": "I read it carefully, and I often catch things that are wrong", "points": 4 }
+      ]
+    },
+    {
+      "id": "q04",
+      "type": "scenario",
+      "topic": "ai-tools",
+      "maxPoints": 4,
+      "prompt": "An AI assistant hands you some code and says it works. What is your next move?",
+      "options": [
+        { "id": "a", "label": "I would not know how to read the code", "points": 0 },
+        { "id": "b", "label": "Run it and assume it is fine", "points": 1 },
+        { "id": "c", "label": "Ask the AI if it is sure", "points": 1 },
+        { "id": "d", "label": "Read through it myself to understand what it does before trusting it", "points": 4 }
+      ]
+    },
+    {
+      "id": "q05",
+      "type": "multiple-choice",
+      "topic": "coding-concepts",
+      "maxPoints": 4,
+      "prompt": "Have you written code before, in any language?",
+      "options": [
+        { "id": "a", "label": "Never", "points": 0 },
+        { "id": "b", "label": "I have copied and pasted snippets that other people or AI wrote", "points": 1 },
+        { "id": "c", "label": "I have written small scripts with a lot of help", "points": 2 },
+        { "id": "d", "label": "I have written working programs on my own", "points": 4 }
+      ]
+    },
+    {
+      "id": "q06",
+      "type": "multiple-choice",
+      "topic": "coding-concepts",
+      "maxPoints": 4,
+      "prompt": "Have you written Python specifically?",
+      "options": [
+        { "id": "a", "label": "Never", "points": 0 },
+        { "id": "b", "label": "A little, following tutorials step by step", "points": 2 },
+        { "id": "c", "label": "Yes, and I am fairly comfortable with it", "points": 4 }
+      ]
+    },
+    {
+      "id": "q07",
+      "type": "multiple-choice",
+      "topic": "coding-concepts",
+      "maxPoints": 4,
+      "prompt": "In programming, what is a variable?",
+      "options": [
+        { "id": "a", "label": "I am not sure", "points": 0 },
+        { "id": "b", "label": "A named place that holds a value you can use and change later", "points": 4 },
+        { "id": "c", "label": "A kind of error message", "points": 0 },
+        { "id": "d", "label": "A math equation the computer solves", "points": 0 }
+      ]
+    },
+    {
+      "id": "q08",
+      "type": "scenario",
+      "topic": "coding-concepts",
+      "maxPoints": 4,
+      "prompt": "You see this line of code:",
+      "code": "total = price * 3",
+      "codeQuestion": "What does this line do?",
+      "options": [
+        { "id": "a", "label": "I am not sure", "points": 0 },
+        { "id": "b", "label": "Multiplies price by 3 and stores the result in total", "points": 4 },
+        { "id": "c", "label": "Checks whether price is equal to 3", "points": 0 },
+        { "id": "d", "label": "Prints price three times", "points": 0 }
+      ]
+    },
+    {
+      "id": "q09",
+      "type": "multiple-choice",
+      "topic": "terminal",
+      "maxPoints": 4,
+      "prompt": "Have you used a terminal, also called the command line?",
+      "options": [
+        { "id": "a", "label": "I have never opened one", "points": 0 },
+        { "id": "b", "label": "I have opened one but was not sure what to do", "points": 1 },
+        { "id": "c", "label": "I run commands in it occasionally", "points": 3 },
+        { "id": "d", "label": "I am comfortable working in it", "points": 4 }
+      ]
+    },
+    {
+      "id": "q10",
+      "type": "multiple-choice",
+      "topic": "terminal",
+      "maxPoints": 4,
+      "prompt": "In a terminal, what does the cd command do?",
+      "options": [
+        { "id": "a", "label": "I am not sure", "points": 0 },
+        { "id": "b", "label": "Changes which folder you are currently in", "points": 4 },
+        { "id": "c", "label": "Copies a file from one place to another", "points": 0 },
+        { "id": "d", "label": "Closes the terminal", "points": 0 }
+      ]
+    },
+    {
+      "id": "q11",
+      "type": "scenario",
+      "topic": "reading-code",
+      "maxPoints": 4,
+      "prompt": "Read this code and predict what it prints:",
+      "code": "items = [\"a\", \"b\", \"c\"]\nprint(len(items))",
+      "codeQuestion": "What does this print?",
+      "options": [
+        { "id": "a", "label": "I am not sure", "points": 0 },
+        { "id": "b", "label": "3", "points": 4 },
+        { "id": "c", "label": "a b c", "points": 0 },
+        { "id": "d", "label": "An error", "points": 0 }
+      ]
+    },
+    {
+      "id": "q12",
+      "type": "scenario",
+      "topic": "reading-code",
+      "maxPoints": 4,
+      "prompt": "Read this code and predict what it prints:",
+      "code": "for n in [1, 2, 3]:\n    print(n * 2)",
+      "codeQuestion": "What does this print?",
+      "options": [
+        { "id": "a", "label": "I am not sure", "points": 0 },
+        { "id": "b", "label": "2, then 4, then 6, each on its own line", "points": 4 },
+        { "id": "c", "label": "1, then 2, then 3, each on its own line", "points": 0 },
+        { "id": "d", "label": "6", "points": 1 }
+      ]
+    },
+    {
+      "id": "q13",
+      "type": "multiple-choice",
+      "topic": "reading-code",
+      "maxPoints": 4,
+      "prompt": "How comfortable are you reading code that someone else, or an AI, wrote?",
+      "options": [
+        { "id": "a", "label": "I cannot read code at all yet", "points": 0 },
+        { "id": "b", "label": "I can guess at what simple lines do", "points": 2 },
+        { "id": "c", "label": "I can follow most of it", "points": 3 },
+        { "id": "d", "label": "I read it fluently", "points": 4 }
+      ]
+    }
+  ]
+}
